@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>KiddyFun Code - by Programming School</title>
+
+  <!-- Local Bootstrap -->
+  <link rel="stylesheet" href="assets/css/bootstrap.min.css" />
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="assets/css/style.css" />
+
+  <!-- Preconnect for fonts if online, fallback to sans-serif locally -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+  
+  <!-- Open Graph Meta Tags -->
+  <meta property="og:title" content="KiddyFun Code - by Programming School" />
+  <meta property="og:description" content="A magically easy programming language for kids! Write simple English code, watch your story come alive." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://mostakahmad.github.io/kiddy/" />
+  <!-- A beautiful gradient placeholder image generated via placehold.co -->
+  <meta property="og:image" content="https://placehold.co/1200x630/0f172a/eab308.png?text=KiddyFun+Code%0Aby+Programming+School" />
+  
+  <!-- Twitter Card Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="KiddyFun Code - by Programming School" />
+  <meta name="twitter:description" content="A magically easy programming language for kids! Write simple English code, watch your story come alive." />
+  <meta name="twitter:image" content="https://placehold.co/1200x630/0f172a/eab308.png?text=KiddyFun+Code%0Aby+Programming+School" />
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar navbar-expand bg-white border-bottom shadow-sm fixed-top py-1" style="z-index: 1030; height: 56px;">
+    <div class="container-fluid px-2 px-md-3">
+      <div class="d-flex align-items-center">
+        <button class="btn btn-light me-2 border border-secondary border-opacity-25 d-flex align-items-center justify-content-center shadow-sm rounded-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#leftMenu" aria-controls="leftMenu" style="width: 38px; height: 38px;" title="Open Menu">
+          <span class="fs-5 fw-bold text-dark">☰</span>
+        </button>
+        <a class="navbar-brand fw-bold text-dark m-0 d-flex align-items-center" href="#">
+          <svg width="32" height="32" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" class="me-2 shadow-sm rounded bg-white">
+            <path d="M30 80 V20 h25 c15 0, 25 10, 25 20 c0 15, -15 20, -25 20 h-10" fill="none" stroke="#0f172a" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M70 20 v10 c0 0, -5 -10, -20 -10 H30" fill="none" stroke="#eab308" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M70 80 H45 c-15 0, -25 -10, -25 -20 c0 -15, 15 -20, 25 -20 h10" fill="none" stroke="#eab308" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+            <text x="55" y="53" font-family="monospace" font-size="18" font-weight="900" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">&lt;/&gt;</text>
+          </svg> <span style="font-size: 1.15rem;">KiddyFun Code</span>
+        </a>
+        <span class="d-none d-lg-inline text-muted ms-3 small border-start ps-3 border-2 fw-medium">by Programming School</span>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <div class="dropdown">
+          <button class="btn btn-light border btn-sm dropdown-toggle fw-bold py-1 px-3 shadow-sm rounded-pill text-dark" type="button" data-bs-toggle="dropdown">
+            📚 Examples
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-3 mt-2" id="example-dropdown-menu">
+            <!-- Populated by JS -->
+          </ul>
+        </div>
+        <button class="btn btn-danger btn-sm fw-bold py-1 px-3 shadow-sm rounded-pill text-white" id="btn-reset-progress">Reset</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- OFFCANVAS LEFT MENU -->
+  <div class="offcanvas offcanvas-start shadow-lg border-0" tabindex="-1" id="leftMenu" style="width: 320px;">
+    <div class="offcanvas-header border-bottom bg-light py-3">
+      <h5 class="offcanvas-title fw-bold text-dark m-0 d-flex align-items-center"><span class="fs-4 me-2">📚</span> KiddyFun Menu</h5>
+      <button type="button" class="btn-close shadow-none" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body p-0 d-flex flex-column bg-light">
+      <div class="ss-nav-panel m-0 p-2 border-bottom bg-white d-flex gap-1 shadow-sm position-sticky top-0" style="z-index: 10;">
+        <button class="ss-nav-btn active flex-fill rounded bg-light border-0 fw-bold py-2 text-dark" data-panel="guide">📖 Guide</button>
+        <button class="ss-nav-btn flex-fill rounded bg-light border-0 fw-bold py-2 text-secondary" data-panel="missions">🎯 Missions</button>
+        <button class="ss-nav-btn flex-fill rounded bg-light border-0 fw-bold py-2 text-secondary" data-panel="saved">💾 Saved</button>
+      </div>
+      <div class="p-3 flex-grow-1 overflow-auto bg-light ss-side-panel">
+        <div id="panel-guide"></div>
+        <div id="panel-missions" class="d-none"></div>
+        <div id="panel-saved" class="d-none"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WORKSPACE -->
+  <div class="container-fluid ss-workspace" id="workspace" style="margin-top: 56px; height: calc(100vh - 56px); overflow-y: auto; overflow-x: hidden; background-color: #f3f4f6; padding: 0;">
+    
+    <!-- Mobile Tabs -->
+    <div class="d-flex d-lg-none w-100 bg-white border-bottom shadow-sm p-2" id="mobile-tabs" style="position: sticky; top: 0; z-index: 100;">
+      <button class="btn btn-dark flex-fill me-1 fw-bold" id="tab-code-btn">✏️ Code</button>
+      <button class="btn btn-outline-dark flex-fill ms-1 fw-bold" id="tab-output-btn">📺 Output</button>
+    </div>
+
+    <div class="row align-items-stretch g-0 p-2 p-md-3 ss-main-row" style="min-height: 100%;">
+      
+      <!-- Code Editor -->
+      <div class="col-lg-5 col-xl-6 d-flex flex-column pe-lg-2 mb-3 mb-lg-0 transition-all ss-col" id="code-col">
+        <div class="d-flex flex-column bg-white rounded-3 shadow-sm border w-100 p-2 h-100">
+          <div class="bg-dark text-white rounded-top-2 px-3 py-2 d-flex justify-content-between align-items-center flex-shrink-0 shadow-sm border border-dark">
+            <div class="fw-bold fs-6 d-flex align-items-center"><span class="me-2 text-warning fs-5">✏️</span><span style="letter-spacing: 0.5px;">Your Code</span></div>
+            <div class="d-flex gap-2">
+              <button class="btn btn-sm btn-outline-secondary text-light border-0 py-1 px-2 rounded-2 fw-medium shadow-sm transition-all" id="btn-clear" title="Clear Code" style="background: rgba(255,255,255,0.1);"><span class="me-1">🗑️</span> Clear</button>
+              <button class="btn btn-sm btn-outline-secondary text-light border-0 py-1 px-2 rounded-2 fw-medium shadow-sm transition-all d-none d-sm-block" id="btn-save" title="Save Program" style="background: rgba(255,255,255,0.1);"><span class="me-1">💾</span> Save</button>
+              <button class="btn btn-sm btn-outline-secondary text-light border-0 py-1 px-2 rounded-2 fw-medium shadow-sm transition-all d-none d-md-block" id="btn-download" title="Download Code" style="background: rgba(255,255,255,0.1);"><span class="me-1">📥</span> Down</button>
+            </div>
+          </div>
+
+          <div class="d-flex border border-dark border-top-0 rounded-bottom-2 ss-editor-wrap flex-grow-1 position-relative shadow-inner" style="background: #1e1e1e; min-height: 0; overflow: hidden;">
+            <div class="ss-line-numbers border-end border-secondary pt-3 pe-1 text-end text-muted opacity-75" id="ss-line-numbers" style="width: 40px; font-size: 1rem; font-family: var(--font-code); user-select: none; overflow-y: hidden;"></div>
+            <textarea class="ss-editor flex-grow-1 p-3 border-0 text-white" id="ss-editor" style="background: transparent; outline: none; box-shadow: none; font-size: 1.15rem; font-family: var(--font-code); line-height: 1.6; resize: none; overflow-y: auto;" spellcheck="false" placeholder="scene &quot;school&quot;&#10;&#10;Rafi appears&#10;Rafi says &quot;Hello!&quot;"></textarea>
+          </div>
+
+          <div class="d-flex flex-column flex-sm-row gap-2 mt-2 flex-shrink-0">
+            <button class="btn btn-success flex-fill fw-bold py-3 fs-5 shadow-sm border-0 rounded-3 text-white d-flex align-items-center justify-content-center gap-2" id="btn-run" style="background: linear-gradient(180deg, #10b981 0%, #059669 100%); transition: transform 0.2s, box-shadow 0.2s;"><span style="filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2)); text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">▶️ RUN SCRIPT</span></button>
+            <button class="btn btn-danger flex-fill fw-bold py-3 fs-5 shadow-sm border-0 rounded-3 d-none text-white d-flex align-items-center justify-content-center gap-2" id="btn-stop" style="background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);"><span style="filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2));">⏹️ STOP</span></button>
+          </div>
+          
+          <div class="ss-error-panel mt-2 d-none shadow-sm rounded-2 flex-shrink-0 bg-danger bg-opacity-10 border border-danger border-opacity-50 text-danger p-2" id="ss-error-panel" style="font-size: 0.95rem; font-weight: 500;"></div>
+        </div>
+      </div>
+      
+      <!-- Output Panel -->
+      <div class="col-lg-7 col-xl-6 d-flex flex-column ps-lg-2 mb-3 mb-lg-0 transition-all ss-col mobile-hidden" id="output-col">
+        <div class="d-flex flex-column bg-white rounded-3 shadow-md border w-100 p-2 h-100">
+          <div class="d-flex justify-content-between align-items-center mb-2 px-2 flex-shrink-0">
+            <h6 class="m-0 fw-bold text-dark d-flex align-items-center"><span class="me-2 text-primary fs-5">📺</span> Live Output</h6>
+            <div class="d-flex gap-2">
+              <button class="btn btn-sm btn-primary fw-bold py-1 px-3 shadow-sm rounded-pill d-none d-lg-block" id="btn-toggle-code">🔲 Full Screen</button>
+              <button class="btn btn-sm btn-light border border-secondary border-opacity-25 fw-bold text-dark py-1 px-3 shadow-sm rounded-pill" id="btn-reset">🔄 Reset</button>
+            </div>
+          </div>
+          
+          <div class="ss-stage w-100 rounded-3 shadow-inner border border-2 border-dark flex-grow-1 position-relative" id="ss-stage" style="min-height: 0; overflow: hidden; background: linear-gradient(180deg,#e8eaf6 0%,#e8eaf6 60%,#cfd8dc 100%);"></div>
+
+          <div class="row g-2 mt-2 flex-shrink-0" style="min-height: 120px;">
+            <div class="col-12 col-sm-6 d-flex flex-column h-100">
+              <div class="ss-log-panel flex-grow-1 w-100 rounded-2 shadow-sm border border-secondary p-2" id="ss-log" style="overflow-y: auto; background: #1a1a1a; font-size: 0.85rem; color: #a5d6a7; font-family: var(--font-code); min-height: 80px;"></div>
+            </div>
+            <div class="col-12 col-sm-6 d-flex flex-row flex-sm-column gap-2 h-100">
+              <div class="ss-score-panel flex-fill rounded-2 shadow-sm d-flex align-items-center justify-content-center m-0 border border-warning" id="ss-score" style="background: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%); color: #856404; font-weight: 800; font-size: 1.25rem; min-height: 50px;">🏆 Score: 0</div>
+              <div class="ss-vocab-panel flex-fill rounded-2 shadow-sm bg-white border border-info overflow-auto p-2" id="ss-vocab" style="font-size: 0.85rem; background: #f8fbff; min-height: 60px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Badge Popup Overlay -->
+  <div class="ss-badge-overlay d-none" id="ss-badge-overlay">
+    <div class="ss-badge-popup ss-anim-jump">
+      <div class="ss-badge-text" id="ss-badge-text">🎉 Mission Complete!</div>
+      <p class="text-muted mt-2 mb-0" style="font-size:0.9rem">Click to close</p>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="ss-toast" class="ss-toast d-none">Saved!</div>
+
+  <!-- Local Scripts -->
+  <script src="assets/js/bootstrap.bundle.min.js"></script>
+  
+  <script src="assets/js/lexer.js"></script>
+  <script src="assets/js/parser.js"></script>
+  <script src="assets/js/errors.js"></script>
+  <script src="assets/js/storage.js"></script>
+  <script src="assets/js/examples.js"></script>
+  <script src="assets/js/missions.js"></script>
+  
+  <script src="assets/js/runtime.js"></script>
+  <script src="assets/js/interpreter.js"></script>
+  
+  <script src="assets/js/ui.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
