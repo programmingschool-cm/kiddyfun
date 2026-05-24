@@ -358,6 +358,9 @@
         if (window.KiddySmartEditor && window.KiddySmartEditor.notifyExternalChange) {
           KiddySmartEditor.notifyExternalChange();
         }
+        if (window.KiddyCodeBuilder && window.KiddyCodeBuilder.setMode) {
+          KiddyCodeBuilder.setMode('blocks');
+        }
         editorEl.focus();
         UI.showToast('🗑 Editor cleared');
       });

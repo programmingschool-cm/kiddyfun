@@ -72,8 +72,8 @@
     highlightEl: null,
     guidesEl: null,
     lineNosEl: null,
-    chipsEl: null,
     onChange: null,
+    beginner: true,
     onScroll: null,
     items: [],
     selected: 0,
@@ -83,6 +83,8 @@
     replaceStart: 0,
     replaceEnd: 0,
     debounce: null,
+    acLocked: false,
+    acClickBound: false,
     drag: null,
     dropLine: null,
     gutterBound: false,
@@ -255,7 +257,7 @@
     var seen = {};
 
     function add(item) {
-      var key = item.insert + '|' + item.label;
+      var key = (item.blockId || item.insert) + '|' + item.label;
       if (seen[key]) return;
       seen[key] = true;
       results.push(item);
@@ -274,7 +276,7 @@
       ACTIONS.forEach(function (a) {
         var charMatch = trimmed.match(/^([A-Za-z][\w]*)\s*$/i);
         if (charMatch) {
-          add({ label: charMatch[1] + ' ' + a, insert: a, detail: '🎭 Action', score: 90,
+          add({ label: charMatch[1] + ' ' + a, insert: ' ' + a, detail: '🎭 Action', score: 90,
             replaceStart: pos, replaceEnd: pos });
         }
       });
@@ -456,7 +458,7 @@
 
   function syncHighlight() {
     var ed = state.editor;
-    if (!ed || !state.highlightEl || !window.KiddyEditorHighlight) return;
+    if (!ed || !state.highlightEl || !window.KiddyEditorHighlight || state.beginner) return;
     state.highlightEl.innerHTML = KiddyEditorHighlight.highlightCode(ed.value);
     if (state.guidesEl) {
       state.guidesEl.innerHTML = KiddyEditorHighlight.indentGuides(ed.value);
@@ -505,9 +507,26 @@
   function updateGutter() {
     var ed = state.editor;
     var lineNos = state.lineNosEl;
-    if (!ed || !lineNos || !window.KiddyEditorBlocks) return;
+    if (!ed || !lineNos) return;
 
     var lines = ed.value.split('\n');
+
+    if (state.beginner) {
+      var simple = '';
+      for (var s = 0; s < lines.length; s++) {
+        simple += '<div class="kf-ln-row kf-ln-simple" data-line="' + s + '">' +
+          '<span class="kf-ln-num">' + (s + 1) + '</span></div>';
+      }
+      if (!lines.length) {
+        simple = '<div class="kf-ln-row kf-ln-simple" data-line="0"><span class="kf-ln-num">1</span></div>';
+      }
+      lineNos.innerHTML = simple;
+      lineNos.scrollTop = ed.scrollTop;
+      return;
+    }
+
+    if (!window.KiddyEditorBlocks) return;
+
     var regions = KiddyEditorBlocks.parseBlockRegions(lines);
     var html = '';
     for (var i = 0; i < lines.length; i++) {
@@ -732,17 +751,6 @@
     lineNos.addEventListener('touchcancel', clearTouchUI);
   }
 
-  function bindChips() {
-    if (!state.chipsEl) return;
-    state.chipsEl.addEventListener('click', function (e) {
-      var btn = e.target.closest('.kf-chip');
-      if (!btn) return;
-      var snip = btn.getAttribute('data-snippet');
-      if (!snip) return;
-      snip = snip.replace(/&#10;/g, '\n').replace(/&quot;/g, '"');
-      insertAtCursor(snip);
-    });
-  }
 
   function closeAutocomplete() {
     state.open = false;
@@ -754,6 +762,36 @@
     }
   }
 
+  function lockAutocomplete() {
+    state.acLocked = true;
+    clearTimeout(state.debounce);
+    closeAutocomplete();
+  }
+
+  function unlockAutocomplete() {
+    state.acLocked = false;
+  }
+
+  function bindAutocompleteClicks() {
+    if (!state.acList || state.acClickBound) return;
+    state.acClickBound = true;
+    state.acList.addEventListener('mousedown', function (e) {
+      var item = e.target.closest('.kf-ac-item');
+      if (!item || !state.items.length) return;
+      e.preventDefault();
+      e.stopPropagation();
+      var idx = parseInt(item.getAttribute('data-idx'), 10);
+      if (!isNaN(idx) && state.items[idx]) applyCompletion(state.items[idx]);
+    });
+    state.acList.addEventListener('touchstart', function (e) {
+      var item = e.target.closest('.kf-ac-item');
+      if (!item || !state.items.length) return;
+      e.preventDefault();
+      var idx = parseInt(item.getAttribute('data-idx'), 10);
+      if (!isNaN(idx) && state.items[idx]) applyCompletion(state.items[idx]);
+    }, { passive: false });
+  }
+
   function renderAutocomplete() {
     var list = state.acList;
     if (!list) return;
@@ -763,39 +801,38 @@
     }
     state.open = true;
     list.classList.remove('d-none');
-    var html = '';
+    var html = '<li class="kf-ac-hint">Pick one — or press Enter</li>';
     for (var i = 0; i < state.items.length; i++) {
       var it = state.items[i];
       html += '<li class="kf-ac-item' + (i === state.selected ? ' active' : '') + '" data-idx="' + i + '">' +
         '<span class="kf-ac-label">' + esc(it.label) + '</span>' +
-        '<span class="kf-ac-detail">' + esc(it.detail || '') + '</span></li>';
+        '<span class="kf-ac-detail">' + esc(it.detail || 'Tap to add') + '</span></li>';
     }
     list.innerHTML = html;
-    list.querySelectorAll('.kf-ac-item').forEach(function (el) {
-      el.addEventListener('mousedown', function (e) {
-        e.preventDefault();
-        applyCompletion(state.items[+el.dataset.idx]);
-      });
-    });
     var active = list.querySelector('.kf-ac-item.active');
     if (active) active.scrollIntoView({ block: 'nearest' });
   }
 
   function applyCompletion(item) {
     if (!item) return;
+    lockAutocomplete();
+    hideGhost();
+    if (item.blockId && window.KiddyCodeBuilder && KiddyCodeBuilder.smartInsert) {
+      KiddyCodeBuilder.smartInsert(item.blockId);
+      flashMagic();
+      return;
+    }
     var rs = item.replaceStart != null ? item.replaceStart : state.replaceStart;
     var re = item.replaceEnd != null ? item.replaceEnd : state.replaceEnd;
     insertText(rs, re, item.insert);
-    closeAutocomplete();
-    hideGhost();
     flashMagic();
   }
 
   function acceptGhost() {
     if (!state.ghostInsert) return false;
+    lockAutocomplete();
     insertText(state.replaceStart, state.replaceEnd, state.ghostInsert);
     hideGhost();
-    closeAutocomplete();
     flashMagic();
     return true;
   }
@@ -835,24 +872,33 @@
   function refresh() {
     clearTimeout(state.debounce);
     state.debounce = setTimeout(function () {
+      if (state.acLocked) {
+        closeAutocomplete();
+        return;
+      }
       var ed = state.editor;
       if (!ed) return;
       var pos = ed.selectionStart;
+      var wb = wordBefore(ed.value, pos);
+      var wordLen = wb.word.trim().length;
       state.items = getCompletions(ed.value, pos);
-      if (state.items.length && wordBefore(ed.value, pos).word.length >= 1) {
+
+      var minWord = state.beginner ? 2 : 1;
+      if (state.items.length && wordLen >= minWord) {
         state.selected = 0;
-        var wb = wordBefore(ed.value, pos);
         state.replaceStart = state.items[0].replaceStart != null ? state.items[0].replaceStart : wb.start;
         state.replaceEnd = pos;
-        renderAutocomplete();
-      } else if (state.items.length >= 3 && ed.value.trim().length < 3) {
-        state.selected = 0;
         renderAutocomplete();
       } else {
         closeAutocomplete();
       }
-      updateGhost();
-    }, 80);
+
+      if (state.beginner) {
+        hideGhost();
+      } else {
+        updateGhost();
+      }
+    }, 120);
   }
 
   function flashMagic() {
@@ -978,7 +1024,13 @@
   }
 
   function onKeyDown(e) {
+    if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+      var typing = e.key.length === 1 || e.key === 'Backspace' || e.key === 'Delete';
+      if (typing && e.key !== 'Enter') unlockAutocomplete();
+    }
+
     if (e.key === 'Escape') {
+      unlockAutocomplete();
       closeAutocomplete();
       hideGhost();
       return;
@@ -1031,6 +1083,7 @@
 
     if ((e.ctrlKey || e.metaKey) && e.key === ' ') {
       e.preventDefault();
+      unlockAutocomplete();
       var ed = state.editor;
       state.items = getCompletions(ed.value, ed.selectionStart);
       state.selected = 0;
@@ -1133,6 +1186,7 @@
       state.acList.setAttribute('role', 'listbox');
       stack.appendChild(state.acList);
     }
+    bindAutocompleteClicks();
 
     state.ghostBar = stack.querySelector('#kf-editor-ghost') || document.getElementById('kf-editor-ghost');
     if (!state.ghostBar) {
@@ -1142,7 +1196,6 @@
       stack.appendChild(state.ghostBar);
     }
 
-    state.chipsEl = stack.querySelector('#kf-editor-chips') || document.getElementById('kf-editor-chips');
     state.lineNosEl = wrap.querySelector('#ss-line-numbers');
     state.highlightEl = document.getElementById('kf-editor-highlight');
     state.guidesEl = document.getElementById('kf-editor-guides');
@@ -1161,9 +1214,15 @@
       layer.insertBefore(state.highlightEl, editor);
     }
 
-    editor.classList.add('kf-editor-code-input');
+    state.beginner = !(options && options.beginner === false);
+    wrap.classList.add('kf-beginner');
+    if (state.beginner) wrap.classList.add('kf-editor-simple');
+
     bindGutterDrag();
-    bindChips();
+
+    if (window.KiddyCodeBuilder) {
+      KiddyCodeBuilder.init(editor, stack);
+    }
 
     editor.setAttribute('autocomplete', 'off');
     editor.setAttribute('autocorrect', 'off');
@@ -1181,7 +1240,7 @@
     editor.addEventListener('keyup', updateCurrentLine);
     editor.addEventListener('click', function () {
       updateCurrentLine();
-      refresh();
+      if (!state.acLocked) refresh();
     });
     editor.addEventListener('select', updateCurrentLine);
     editor.addEventListener('blur', function () {
@@ -1200,10 +1259,11 @@
     var ed = state.editor;
     if (!ed) return;
     var pos = ed.selectionStart || ed.value.length;
-    var prefix = ed.value.length > 0 && pos > 0 ? '\n' : '';
-    var suffix = ed.value.length > 0 ? '\n' : '';
-    insertText(pos, pos, prefix + text + suffix);
+    var needsNl = ed.value.length > 0 && pos > 0 && ed.value[pos - 1] !== '\n';
+    var prefix = needsNl ? '\n' : '';
+    insertText(pos, pos, prefix + text);
     flashMagic();
+    notifyChange();
   }
 
   window.KiddySmartEditor = {
@@ -1211,6 +1271,7 @@
     refresh: refresh,
     insertAtCursor: insertAtCursor,
     notifyExternalChange: notifyChange,
+    flashMagic: flashMagic,
     syncHighlight: syncHighlight,
     updateGutter: updateGutter,
     expandForRun: expandForRun,
