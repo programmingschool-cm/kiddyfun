@@ -59,6 +59,12 @@
   var BLOCK_START = /^(repeat\s+\d+\s+times|repeat\s+while\b|if\b|else\b|define\b|for\s+each\b)/i;
   var BLOCK_END = /^end\b/i;
 
+  var LINE_ACTION_ICONS = {
+    appears: '✨', says: '💬', waves: '👋', walks: '🚶', runs: '🏃', jumps: '⬆️',
+    flies: '🪽', hides: '👻', shows: '👀', bows: '🙇', smiles: '😊', nods: '🙂', cheers: '🎉',
+    dances: '💃', claps: '👏', scene: '🎬', wait: '⏸️',
+  };
+
   var state = {
     editor: null,
     acList: null,
@@ -514,6 +520,10 @@
         info.role === 'inner' ? ' kf-ln-block-inner' : '';
       if (isFoldLine) roleCls += ' kf-ln-folded-line';
 
+      var actM = lines[i].match(/^\s*[A-Za-z][\w]*\s+(\w+)/);
+      var actIcon = actM && LINE_ACTION_ICONS[actM[1].toLowerCase()] ? LINE_ACTION_ICONS[actM[1].toLowerCase()] : '';
+      if (actIcon) roleCls += ' kf-ln-action-line';
+
       var reg = info.role === 'start' ? KiddyEditorBlocks.findRegionAtStart(regions, i) : null;
       var nextIsFold = reg && lines[i + 1] && KiddyEditorBlocks.isFoldMarker(lines[i + 1]);
       var canFold = reg && reg.end > reg.start && !nextIsFold;
@@ -526,6 +536,8 @@
         html += '<span class="kf-ln-fold" data-fold="' + i + '" title="Fold block" aria-label="Fold">▼</span>';
       } else if (isFoldLine) {
         html += '<span class="kf-ln-unfold" data-unfold="' + i + '" title="Expand block" aria-label="Expand">▶</span>';
+      } else if (actIcon) {
+        html += '<span class="kf-ln-act-icon" title="Stage action">' + actIcon + '</span>';
       } else {
         html += '<span class="kf-ln-fold-placeholder" aria-hidden="true"></span>';
       }

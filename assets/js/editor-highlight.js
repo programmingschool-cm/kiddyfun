@@ -14,7 +14,8 @@
 
   var CTRL_KW = /^(if|else|end|repeat|while|define|call|return|for|each|break|continue|and|or|not|with|as)$/i;
   var DATA_KW = /^(set|to|const|list|item|in|of|type|value|empty|true|false|answer|user)$/i;
-  var ACTION_KW = /^(says|waves|smiles|jumps|flies|runs|walks|hides|shows|bows|nods|cheers|dances|claps|flaps|appears|wait|means|plus|minus|equals|from|remainder|remove|add|points|sound|scene|show|word|play|score|starts|at|second|seconds|number)$/i;
+  var STAGE_KW = /^(appears|says|waves|smiles|jumps|flies|runs|walks|hides|shows|bows|nods|cheers|dances|claps|flaps|moves|right|left|wait|scene|play|sound|word|means)$/i;
+  var ACTION_KW = /^(plus|minus|equals|from|remainder|remove|add|points|show|score|starts|at|second|seconds|number)$/i;
 
   function esc(s) {
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -44,6 +45,7 @@
     var w = word.toLowerCase();
     if (CTRL_KW.test(w)) return 'hl-control';
     if (DATA_KW.test(w)) return 'hl-data';
+    if (STAGE_KW.test(w)) return 'hl-stage';
     if (ACTION_KW.test(w)) return 'hl-action';
     if (/^\d+(\.\d+)?$/.test(word)) return 'hl-number';
     return 'hl-name';
@@ -107,6 +109,13 @@
   function highlightLine(line) {
     if (/^\s*# @fold:/.test(line)) {
       return '<span class="hl-fold">' + esc(line) + '</span>';
+    }
+    if (/^\s*[A-Z][A-Za-z0-9]*\s+(appears|says|waves|walks|runs|jumps|flies|hides|shows)/i.test(line)) {
+      var m = line.match(/^(\s*)([A-Z][A-Za-z0-9]*)(\s+)(.+)$/);
+      if (m) {
+        return esc(m[1]) + '<span class="hl-char">' + esc(m[2]) + '</span>' + esc(m[3]) +
+          '<span class="hl-stage-line">' + highlightSegment(m[4]) + '</span>';
+      }
     }
     var ci = findCommentIndex(line);
     var code = ci >= 0 ? line.slice(0, ci) : line;

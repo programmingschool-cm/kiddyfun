@@ -260,6 +260,16 @@ body.kf-mobile-mode.kf-tab-output-active .kf-tab-btn#tab-output-btn {
 .kf-ln-drag:active { cursor: grabbing; }
 .kf-ln-drag-placeholder { width: 10px; flex-shrink: 0; }
 .kf-ln-fold-placeholder { width: 10px; flex-shrink: 0; }
+.kf-ln-act-icon {
+  font-size: 0.55rem;
+  line-height: 1;
+  flex-shrink: 0;
+  width: 10px;
+  text-align: center;
+}
+.kf-ln-row.kf-ln-action-line {
+  background: rgba(126, 231, 135, 0.08);
+}
 
 .kf-ln-fold,
 .kf-ln-unfold {
@@ -365,6 +375,8 @@ body.kf-mobile-mode.kf-tab-output-active .kf-tab-btn#tab-output-btn {
 .hl-control { color: #c678dd; font-weight: 600; }
 .hl-data { color: #56d4dd; }
 .hl-action { color: #61afef; }
+.hl-stage { color: #7ee787; font-weight: 600; }
+.hl-stage-line { border-bottom: 1px dashed rgba(126, 231, 135, 0.25); }
 .hl-char { color: #e5c07b; font-weight: 600; }
 .hl-string { color: #98c379; }
 .hl-scene-str { color: #7ee787; font-weight: 500; }
