@@ -101,26 +101,85 @@
       if (window.KiddyTutorial && window.KiddyTutorial.openInMenu) window.KiddyTutorial.openInMenu();
     });
     bind('btn-toggle-code', toggleDesktopCodePanel);
-    bind('tab-code-btn', function () { setMobileTab('code'); });
-    bind('tab-output-btn', function () { setMobileTab('output'); });
+    bind('tab-code-btn', function () {
+      unlockMobileTab();
+      setMobileTab('code');
+    });
+    bind('tab-output-btn', function () {
+      setMobileTab('output');
+    });
     bind('ss-badge-overlay', function () { $id('ss-badge-overlay').classList.add('d-none'); });
 
     var currentMobileTab = 'code';
+    var mobileTabLock = null;
+    var resizeDebounce = null;
 
-    initMobileLayout();
-    window.addEventListener('resize', function () { initMobileLayout(); });
+    function isMobileLayout() {
+      return window.innerWidth < 992;
+    }
+
+    function isOutputInputActive() {
+      var dock = $id('kf-input-dock');
+      if (dock && !dock.classList.contains('d-none')) return true;
+      if (document.querySelector('.kf-waiting-input')) return true;
+      var dialog = $id('kf-dialog-overlay');
+      if (dialog && !dialog.classList.contains('d-none')) return true;
+      return false;
+    }
+
+    function shouldForceOutputTab() {
+      if (mobileTabLock === 'output') return true;
+      return isOutputInputActive();
+    }
+
+    function lockMobileTab(tab) {
+      mobileTabLock = tab;
+      if (isMobileLayout()) setMobileTab(tab, true);
+    }
+
+    function unlockMobileTab() {
+      mobileTabLock = null;
+    }
 
     function initMobileLayout() {
-      if (window.innerWidth >= 992) {
+      if (!isMobileLayout()) {
         $id('code-col').classList.remove('mobile-hidden');
         $id('output-col').classList.remove('mobile-hidden');
-      } else {
-        /* Do not reset to Code on resize — mobile keyboard triggers resize and hid the input panel */
-        var waitingInput = document.querySelector('.kf-waiting-input');
-        if (waitingInput) setMobileTab('output');
-        else setMobileTab(currentMobileTab);
+        document.body.classList.remove('kf-mobile-mode');
+        return;
       }
+      document.body.classList.add('kf-mobile-mode');
+      if (shouldForceOutputTab()) setMobileTab('output', true);
+      else setMobileTab(currentMobileTab, true);
     }
+
+    function scheduleLayoutRefresh() {
+      clearTimeout(resizeDebounce);
+      resizeDebounce = setTimeout(initMobileLayout, 120);
+    }
+
+    initMobileLayout();
+    window.addEventListener('resize', scheduleLayoutRefresh);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', scheduleLayoutRefresh);
+    }
+
+    document.addEventListener('focusin', function (e) {
+      if (!isMobileLayout()) return;
+      var target = e.target;
+      if (!target) return;
+      var outCol = $id('output-col');
+      var editor = $id('ss-editor');
+      if (editor && (target === editor || editor.contains(target))) {
+        unlockMobileTab();
+        setMobileTab('code');
+        return;
+      }
+      if (target.id === 'kf-dialog-input' || target.id === 'kf-input-field' ||
+          (outCol && outCol.contains(target))) {
+        lockMobileTab('output');
+      }
+    });
 
     var desktopCodeVisible = true;
 
@@ -144,26 +203,37 @@
       }
     }
 
-    function setMobileTab(tab) {
-      if (window.innerWidth >= 992) return;
+    function setMobileTab(tab, silent) {
+      if (!isMobileLayout()) return;
+      if (tab !== 'code' && tab !== 'output') return;
+      if (!silent && tab === 'code' && shouldForceOutputTab()) {
+        tab = 'output';
+      }
+      currentMobileTab = tab;
+
       var codeCol = $id('code-col');
       var outCol  = $id('output-col');
       var tabCode = $id('tab-code-btn');
       var tabOut  = $id('tab-output-btn');
-
       if (tab === 'code') {
         codeCol.classList.remove('mobile-hidden');
         outCol.classList.add('mobile-hidden');
-        tabCode.classList.add('active');
-        tabOut.classList.remove('active');
+        if (tabCode) tabCode.classList.add('active');
+        if (tabOut) tabOut.classList.remove('active');
+        document.body.classList.remove('kf-tab-output-active');
       } else {
         codeCol.classList.add('mobile-hidden');
         outCol.classList.remove('mobile-hidden');
-        tabCode.classList.remove('active');
-        tabOut.classList.add('active');
+        if (tabCode) tabCode.classList.remove('active');
+        if (tabOut) tabOut.classList.add('active');
+        document.body.classList.add('kf-tab-output-active');
         requestAnimationFrame(function () {
           var stage = $id('ss-stage');
           if (stage) void stage.offsetHeight;
+          var field = $id('kf-input-field');
+          if (field && !field.closest('.d-none')) {
+            try { field.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (err) { /* ignore */ }
+          }
         });
       }
     }
@@ -218,7 +288,11 @@
       }, { once: true });
     }
 
-    window.KiddyApp = { setMobileTab: setMobileTab };
+    window.KiddyApp = {
+      setMobileTab: setMobileTab,
+      lockMobileTab: lockMobileTab,
+      unlockMobileTab: unlockMobileTab,
+    };
 
     console.log('✅ KiddyFun Code v1.0 ready');
 
@@ -228,7 +302,7 @@
       UI.clearErrors();
       UI.setRunning(true);
 
-      if (window.innerWidth < 992) setMobileTab('output');
+      if (isMobileLayout()) lockMobileTab('output');
 
       var ast;
       try {
@@ -236,6 +310,7 @@
       } catch (err) {
         UI.showErrors(Errors.renderError(Errors.friendlyError(err)));
         UI.setRunning(false);
+        unlockMobileTab();
         if (window.KiddyAudio) KiddyAudio.playSound('wrong');
         return;
       }
@@ -254,6 +329,7 @@
     function stopProgram() {
       if (interpreter) interpreter.stop();
       UI.setRunning(false);
+      unlockMobileTab();
       UI.showToast('⏹️ Stopped.');
     }
 

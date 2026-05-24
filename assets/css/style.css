@@ -33,6 +33,9 @@
   --kf-font: 'Fredoka', 'Segoe UI', system-ui, sans-serif;
   --kf-code: 'Fira Code', 'Cascadia Code', monospace;
   --kf-transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --kf-transition-slow: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  --kf-safe-top: env(safe-area-inset-top, 0px);
+  --kf-safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -50,7 +53,8 @@ html, body {
 
 /* ── Navbar ──────────────────────────────────────────────────────────── */
 .kf-navbar {
-  height: var(--kf-nav-h);
+  height: calc(var(--kf-nav-h) + var(--kf-safe-top));
+  padding-top: var(--kf-safe-top);
   background: rgba(255,255,255,0.92);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -91,8 +95,8 @@ html, body {
 
 /* ── Workspace ───────────────────────────────────────────────────────── */
 .kf-workspace {
-  margin-top: var(--kf-nav-h);
-  height: calc(100dvh - var(--kf-nav-h));
+  margin-top: calc(var(--kf-nav-h) + var(--kf-safe-top));
+  height: calc(100dvh - var(--kf-nav-h) - var(--kf-safe-top) - var(--kf-safe-bottom));
   overflow: hidden;
   padding: 0;
   display: flex;
@@ -148,31 +152,42 @@ html, body {
 .kf-mobile-tabs {
   position: sticky;
   top: 0;
-  z-index: 100;
-  background: white;
+  z-index: 200;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--kf-border);
   padding: 8px 12px;
   gap: 8px;
   flex-shrink: 0;
+  box-shadow: var(--kf-shadow-sm);
 }
 
 .kf-tab-btn {
   flex: 1;
-  padding: 12px;
+  padding: 12px 10px;
   border-radius: var(--kf-radius-sm);
   font-weight: 700;
   font-size: 0.95rem;
   border: 2px solid var(--kf-border);
   background: white;
   color: var(--kf-text-muted);
-  transition: var(--kf-transition);
+  transition: background var(--kf-transition), color var(--kf-transition),
+    border-color var(--kf-transition), transform 0.15s ease, box-shadow var(--kf-transition);
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
+.kf-tab-btn:active { transform: scale(0.98); }
 .kf-tab-btn.active {
   background: linear-gradient(135deg, var(--kf-dark) 0%, var(--kf-dark-soft) 100%);
   color: white;
   border-color: var(--kf-dark);
-  box-shadow: var(--kf-shadow-sm);
+  box-shadow: var(--kf-shadow-md);
+}
+
+body.kf-mobile-mode.kf-tab-output-active .kf-tab-btn#tab-output-btn {
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.35);
 }
 
 /* ── Editor ──────────────────────────────────────────────────────────── */
@@ -757,7 +772,30 @@ html, body {
 }
 
 .kf-panel-body.kf-waiting-input .kf-input-dock.kf-input-visible {
-  border-color: var(--kf-info);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.35);
+}
+
+body.kf-mobile-mode.kf-tab-output-active .kf-panel-body.kf-waiting-input {
+  display: flex;
+  flex-direction: column;
+}
+
+body.kf-mobile-mode.kf-tab-output-active .kf-panel-body.kf-waiting-input .kf-stage-wrap {
+  flex: 1 1 auto;
+  min-height: 160px;
+  max-height: 38vh;
+}
+
+body.kf-mobile-mode.kf-tab-output-active .kf-panel-body.kf-waiting-input .kf-input-dock {
+  flex: 0 0 auto;
+  order: 2;
+  z-index: 5;
+}
+
+body.kf-mobile-mode.kf-tab-output-active .kf-panel-body.kf-waiting-input .kf-bottom-grid {
+  flex: 0 0 auto;
+  order: 3;
+  max-height: 88px;
 }
 
 /* Bottom panels — fixed height so stage keeps space */
@@ -1449,44 +1487,73 @@ html, body {
 
 @media (max-width: 991px) {
   .mobile-hidden { display: none !important; }
-  .kf-workspace { overflow: hidden; height: calc(100dvh - var(--kf-nav-h)); min-height: 0; }
+
+  .kf-workspace {
+    overflow: hidden;
+    min-height: 0;
+  }
+
   .kf-main-row {
     flex: 1 1 0;
-    height: auto;
+    height: 100%;
     min-height: 0;
     flex-direction: column;
     overflow: hidden;
     padding: 8px;
+    position: relative;
   }
+
   .kf-col {
     flex: 1 1 auto;
     min-height: 0;
     overflow: hidden;
+    transition: opacity var(--kf-transition-slow);
   }
+
   #code-col:not(.mobile-hidden),
   #output-col:not(.mobile-hidden) {
     display: flex !important;
     flex-direction: column;
     height: 100%;
     min-height: 0;
+    animation: kf-mobile-panel-in 0.28s ease;
   }
+
+  @keyframes kf-mobile-panel-in {
+    from { opacity: 0.85; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
   #output-col:not(.mobile-hidden) .kf-panel,
   #code-col:not(.mobile-hidden) .kf-panel {
     height: 100%;
     min-height: 0;
     flex: 1;
   }
+
   #output-col .kf-panel-body {
     flex: 1;
     min-height: 0;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
+
   #output-col .kf-stage-wrap {
     flex: 1 1 0;
-    min-height: 220px;
+    min-height: 200px;
     height: auto;
+    max-height: 52vh;
   }
-  .kf-editor-wrap { min-height: 200px; flex: 1 1 0; }
+
+  .kf-editor-wrap { min-height: 180px; flex: 1 1 0; }
+
+  .kf-editor,
+  .kf-user-input-field,
+  .kf-dialog-input {
+    font-size: 16px;
+  }
+
   .kf-bottom-grid {
     grid-template-columns: 1fr;
     height: auto;
@@ -1494,20 +1561,44 @@ html, body {
     min-height: 0;
     flex: 0 0 auto;
   }
+
   .ss-log-panel {
-    height: 96px;
-    max-height: 96px;
+    height: 88px;
+    max-height: 88px;
   }
+
   .kf-bottom-side {
     height: auto;
-    max-height: 110px;
+    max-height: 96px;
   }
-  .kf-btn-run, .kf-btn-stop { padding: 16px; font-size: 1.15rem; }
+
+  .kf-btn-run, .kf-btn-stop {
+    padding: 16px;
+    font-size: 1.1rem;
+    min-height: 48px;
+  }
+
+  .kf-dialog-card {
+    max-width: min(400px, calc(100vw - 24px));
+    margin: 12px;
+  }
+
+  .ss-quiz-box {
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+
+  .offcanvas {
+    padding-bottom: var(--kf-safe-bottom);
+  }
 }
 
 @media (max-width: 576px) {
   .kf-brand-text { font-size: 1rem; }
-  .kf-stage-wrap { min-height: 220px; }
+  .kf-main-row { padding: 6px; }
+  .kf-mobile-tabs { padding: 6px 8px; }
+  .kf-tab-btn { padding: 11px 8px; font-size: 0.88rem; }
+  .kf-stage-wrap { min-height: 180px; }
   .ss-bubble { font-size: 0.85rem; max-width: 180px; padding: 10px 14px; }
   .ss-quiz-box { padding: 18px; }
   .ss-quiz-question { font-size: 1rem; }

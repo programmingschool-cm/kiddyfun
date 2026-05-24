@@ -102,6 +102,9 @@
       if (this.vocabPanel)   this.vocabPanel.innerHTML = '';
       if (this.scoreDisplay) this.scoreDisplay.innerHTML = '🏆 Score: <span>0</span>';
       this.hideUserInput(true);
+      if (window.KiddyApp && window.KiddyApp.unlockMobileTab) {
+        window.KiddyApp.unlockMobileTab();
+      }
     },
 
     /* ── Scene ─────────────────────────────────────────────────────────── */
@@ -339,7 +342,9 @@
       this.hideUserInput(true);
       this._inputCallback = onAnswer;
 
-      if (window.KiddyApp && window.KiddyApp.setMobileTab) {
+      if (window.KiddyApp && window.KiddyApp.lockMobileTab) {
+        window.KiddyApp.lockMobileTab('output');
+      } else if (window.KiddyApp && window.KiddyApp.setMobileTab) {
         window.KiddyApp.setMobileTab('output');
       }
 
@@ -378,8 +383,8 @@
       }
 
       setTimeout(function () {
-        if (window.KiddyApp && window.KiddyApp.setMobileTab) {
-          window.KiddyApp.setMobileTab('output');
+        if (window.KiddyApp && window.KiddyApp.lockMobileTab) {
+          window.KiddyApp.lockMobileTab('output');
         }
         self.inputField.focus({ preventScroll: false });
         if (window.KiddyAudio && KiddyAudio.speak) {

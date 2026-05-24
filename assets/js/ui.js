@@ -233,8 +233,15 @@
       this.closeLeftMenu();
 
       if (window.innerWidth < 992) {
-        var tabCode = document.getElementById('tab-code-btn');
-        if (tabCode) tabCode.click();
+        if (window.KiddyApp && window.KiddyApp.unlockMobileTab) {
+          window.KiddyApp.unlockMobileTab();
+        }
+        if (window.KiddyApp && window.KiddyApp.setMobileTab) {
+          window.KiddyApp.setMobileTab('code');
+        } else {
+          var tabCode = document.getElementById('tab-code-btn');
+          if (tabCode) tabCode.click();
+        }
       }
     },
 
@@ -417,6 +424,9 @@
     _closeDialog: function (result) {
       var overlay = document.getElementById('kf-dialog-overlay');
       if (overlay) overlay.classList.add('d-none');
+      if (window.KiddyApp && window.KiddyApp.unlockMobileTab) {
+        window.KiddyApp.unlockMobileTab();
+      }
       if (this._dialogResolve) {
         var r = this._dialogResolve;
         this._dialogResolve = null;
@@ -480,6 +490,10 @@
         }
 
         overlay.classList.remove('d-none');
+
+        if (window.KiddyApp && window.KiddyApp.lockMobileTab && window.innerWidth < 992) {
+          window.KiddyApp.lockMobileTab('output');
+        }
 
         setTimeout(function () {
           if (isPrompt && inputEl) {
