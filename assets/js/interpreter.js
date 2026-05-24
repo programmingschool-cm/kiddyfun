@@ -87,15 +87,10 @@
         });
       });
     }
-    var fallback = '';
-    if (typeof window !== 'undefined' && typeof window.prompt === 'function') {
-      var raw = window.prompt(question);
-      fallback = raw === null ? '' : String(raw);
-    }
     if (this.runtime && this.runtime.logMessage) {
-      this.runtime.logMessage('⌨️ You typed: ' + (fallback || '(empty)'));
+      this.runtime.logMessage('⌨️ Input unavailable — empty answer used');
     }
-    return Promise.resolve(E.kfVal('string', fallback));
+    return Promise.resolve(E.kfVal('string', ''));
   };
 
   Interpreter.prototype._eval = function (expr, env, line) {

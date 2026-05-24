@@ -213,6 +213,17 @@
     </div>
   </main>
 
+  <!-- App dialogs (alert / confirm / prompt) -->
+  <div class="kf-dialog-overlay d-none" id="kf-dialog-overlay" role="dialog" aria-modal="true" aria-labelledby="kf-dialog-title">
+    <div class="kf-dialog-card">
+      <div class="kf-dialog-icon" id="kf-dialog-icon" aria-hidden="true">ℹ️</div>
+      <h2 class="kf-dialog-title" id="kf-dialog-title"></h2>
+      <p class="kf-dialog-message" id="kf-dialog-message"></p>
+      <input type="text" class="kf-dialog-input d-none" id="kf-dialog-input" autocomplete="off" />
+      <div class="kf-dialog-actions" id="kf-dialog-actions"></div>
+    </div>
+  </div>
+
   <!-- Badge overlay -->
   <div class="ss-badge-overlay d-none" id="ss-badge-overlay" role="dialog" aria-modal="true">
     <div class="ss-badge-popup ss-anim-jump">

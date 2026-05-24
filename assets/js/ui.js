@@ -5,6 +5,11 @@
   'use strict';
 
   var GUIDE_SECTIONS = [
+    { icon:'💡', title:'Comments & blocks',
+      items:[
+        {desc:'Notes for yourself (# — computer ignores)',code:'# This is a comment\nscene "school"\nRafi says "Hi"'},
+        {desc:'Indent inside blocks + always close with end',code:'repeat 2 times\n    Rafi waves\nend'},
+      ]},
     { icon:'🎬', title:'Scene',
       items:[
         {desc:'Set the story background',code:'scene "school"'},
@@ -39,16 +44,13 @@
       items:[
         {desc:'Ask a question with clickable choices',
          code:'ask "What colour is the sky?"\nchoice "Blue" correct\nchoice "Red" wrong\nchoice "Green" wrong'},
+        {desc:'React after quiz (answer is correct or wrong)',
+         code:'if answer is correct\n    narrator says "Yes!"\nelse\n    narrator says "Try again"\nend'},
       ]},
     { icon:'🔁', title:'Repeat (Loop)',
       items:[
         {desc:'Repeat a block N times',
          code:'repeat 3 times\n    Bird flies\n    Bird says "Tweet!"\nend'},
-      ]},
-    { icon:'🔀', title:'If / Else',
-      items:[
-        {desc:'React to quiz answers',
-         code:'if answer is correct\n    narrator says "Well done!"\nelse\n    narrator says "Try again!"\nend'},
       ]},
     { icon:'🏆', title:'Score & Sound',
       items:[
@@ -58,11 +60,13 @@
       items:[
         {desc:'Store text, numbers, and true/false',code:'set name to "Rafi"\nset age to 10\nset ready to true'},
         {desc:'See type and value (number, text, list…)',code:'show type of age\nshow value of name'},
-        {desc:'Update with math or joined text',code:'set score to score plus 10\nset msg to "Hi" joined with " there"'},
+        {desc:'Math: plus, minus, times, divided by',code:'set a to 10 plus 5\nset b to 10 minus 3\nset c to 4 times 2\nset d to 8 divided by 2'},
+        {desc:'Join text',code:'set msg to "Hi" joined with " there"'},
+        {desc:'Update a variable',code:'set score to score plus 10'},
       ]},
     { icon:'📋', title:'Lists (Strings of items)',
       items:[
-        {desc:'Create a list',code:'set colors to list "red" and "blue" and "green"'},
+        {desc:'Create a list (text or numbers)',code:'set colors to list "red" and "blue" and "green"\nset nums to list 1 and 2 and 3'},
         {desc:'Get item by position (starts at 1)',code:'set first to item 1 in colors\nshow value of first'},
         {desc:'Length of text or list',code:'set n to length of colors'},
         {desc:'Add or remove items',code:'add "yellow" to colors\nremove item 2 from colors'},
@@ -76,14 +80,16 @@
     { icon:'⚙️', title:'Functions',
       items:[
         {desc:'Define steps once, call many times',code:'define waveHello\n    Rafi waves\n    Rafi says "Hello!"\nend\n\ncall waveHello'},
-        {desc:'Functions with inputs',code:'define greet with name\n    narrator says name\nend\n\ncall greet with "Mina"'},
-        {desc:'Return a value',code:'define double with n\n    return n times 2\nend'},
+        {desc:'Functions with one input',code:'define greet with name\n    narrator says name\nend\n\ncall greet with "Mina"'},
+        {desc:'Several inputs (use and)',code:'define addNumbers with a and b\n    return a plus b\nend\n\ncall addNumbers with 3 and 7'},
+        {desc:'Return a value from a function',code:'define double with n\n    return n times 2\nend\nset x to call double with 5'},
       ]},
     { icon:'🧠', title:'Conditions & Loops',
       items:[
         {desc:'If / else with comparisons',code:'if score is greater than 10\n    narrator says "High score!"\nelse\n    narrator says "Keep trying!"\nend'},
-        {desc:'Greater-or-equal / less-or-equal',code:'if level is greater than or equal to 5\n    narrator says "Pro level!"\nend'},
-        {desc:'Equals text',code:'if name equals "Rafi"\n    Rafi smiles\nend'},
+        {desc:'Equals / not equal',code:'if name equals "Rafi"\n    Rafi smiles\nend\nif age is not equal to 5\n    narrator says "Not five"\nend'},
+        {desc:'Greater, less, or equal',code:'if level is greater than or equal to 5\n    narrator says "Level 5+"\nend\nif lives is less than or equal to 0\n    narrator says "Game over"\nend'},
+        {desc:'And / or / not',code:'if age is greater than 5 and happy equals true\n    narrator says "Ready!"\nend\nif tired equals true or hungry equals true\n    narrator says "Rest"\nend\nif not ready equals true\n    narrator says "Wait"\nend'},
         {desc:'Repeat while condition',code:'set i to 1\nrepeat while i is less than 4\n    set i to i plus 1\nend'},
       ]},
     { icon:'💬', title:'Speak from variables',
@@ -108,9 +114,10 @@
       items:[
         {desc:'Stop loop early or skip one turn',code:'repeat while n is less than 10\n    if n equals 5\n        continue\n    end\n    if n is greater than 8\n        break\n    end\nend'},
       ]},
-    { icon:'↩️', title:'Function return value',
+    { icon:'➗', title:'Score vs list add',
       items:[
-        {desc:'Use result in set or say',code:'define addTen with x\n    return x plus 10\nend\nset total to call addTen with 5'},
+        {desc:'Game score (points)',code:'score starts at 0\nadd 10 points'},
+        {desc:'Add to a list (different!)',code:'set items to list "a" and "b"\nadd "c" to items'},
       ]},
   ];
 
@@ -246,25 +253,46 @@
         html += '</div>';
         html += '<p class="ss-mission-goal">' + escHtml(m.goal) + '</p>';
         html += '<div class="ss-mission-syntax">' + m.requiredSyntax.map(function(s){return '<code>'+escHtml(s)+'</code>';}).join('') + '</div>';
-        html += '<button class="ss-mission-load-btn" onclick="window.UI.loadMissionCode(\'' + m.id + '\')">🚀 Load Starter Code</button>';
+        html += '<button type="button" class="ss-mission-load-btn" data-mission-id="' + escHtml(m.id) + '">🚀 Load Starter Code</button>';
         html += '</div>';
       });
       el.innerHTML = html;
+      if (!el._kfMissionBound) {
+        el._kfMissionBound = true;
+        el.addEventListener('click', function (e) {
+          var btn = e.target.closest('[data-mission-id]');
+          if (!btn) return;
+          UI.loadMissionCode(btn.getAttribute('data-mission-id'));
+        });
+      }
     },
 
     loadMissionCode: function(missionId) {
+      var self = this;
       var mission = null;
       window.SpeakMissions.forEach(function(m) { if (m.id === missionId) mission = m; });
       if (!mission) return;
       var editor = document.getElementById('ss-editor');
       if (!editor) return;
-      if (editor.value.trim() && !confirm('Replace current code with mission starter code?')) return;
-      editor.value = mission.starterCode;
-      window.SpeakStorage.saveLastCode(editor.value);
-      this.syncLineNumbers();
-      this.showPanel('guide');
-      editor.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      editor.focus();
+
+      function apply() {
+        editor.value = mission.starterCode;
+        window.SpeakStorage.saveLastCode(editor.value);
+        self.syncLineNumbers();
+        self.showPanel('guide');
+        self.closeLeftMenu();
+        editor.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        editor.focus();
+      }
+
+      if (editor.value.trim()) {
+        self.showConfirm('Replace current code with mission starter code?', {
+          title: 'Load mission code?',
+          okLabel: 'Replace',
+        }).then(function (ok) { if (ok) apply(); });
+      } else {
+        apply();
+      }
     },
 
     /* ── Saved programs panel ────────────────────────────────────────── */
@@ -283,11 +311,23 @@
         html += '<div class="ss-saved-card">';
         html += '<span class="ss-saved-name">📄 ' + escHtml(name) + '</span>';
         html += '<div class="ss-saved-actions">';
-        html += '<button class="ss-btn-mini ss-btn-load" onclick="window.UI.loadSavedProgram(' + JSON.stringify(name) + ')">Load</button>';
-        html += '<button class="ss-btn-mini ss-btn-del"  onclick="window.UI.deleteSavedProgram(' + JSON.stringify(name) + ')">🗑</button>';
+        html += '<button type="button" class="ss-btn-mini ss-btn-load" data-saved-name="' + escHtml(name) + '">Load</button>';
+        html += '<button type="button" class="ss-btn-mini ss-btn-del" data-saved-delete="' + escHtml(name) + '">🗑</button>';
         html += '</div></div>';
       });
       el.innerHTML = html;
+      if (!el._kfSavedBound) {
+        el._kfSavedBound = true;
+        el.addEventListener('click', function (e) {
+          var loadBtn = e.target.closest('[data-saved-name]');
+          if (loadBtn) {
+            UI.loadSavedProgram(loadBtn.getAttribute('data-saved-name'));
+            return;
+          }
+          var delBtn = e.target.closest('[data-saved-delete]');
+          if (delBtn) UI.deleteSavedProgram(delBtn.getAttribute('data-saved-delete'));
+        });
+      }
     },
 
     loadSavedProgram: function(name) {
@@ -298,27 +338,48 @@
     },
 
     deleteSavedProgram: function(name) {
-      if (!confirm('Delete "' + name + '"?')) return;
-      window.SpeakStorage.deleteProgram(name);
-      this.buildSavedPanel();
+      var self = this;
+      self.showConfirm('Delete "' + name + '"?', {
+        title: 'Delete program?',
+        okLabel: 'Delete',
+        danger: true,
+      }).then(function (ok) {
+        if (!ok) return;
+        window.SpeakStorage.deleteProgram(name);
+        self.buildSavedPanel();
+        self.showToast('🗑 Program deleted');
+      });
     },
 
     /* ── Save dialog ─────────────────────────────────────────────────── */
     promptSaveProgram: function() {
+      var self = this;
       var editor = document.getElementById('ss-editor');
-      if (!editor || !editor.value.trim()) { alert('Write some code first!'); return; }
-      var name = prompt('Enter a name for your program:', 'My Story');
-      if (!name || !name.trim()) return;
-      window.SpeakStorage.saveProgram(name.trim(), editor.value);
-      this.buildSavedPanel();
-      this.showPanel('saved');
-      this.showToast('💾 Program saved!');
+      if (!editor || !editor.value.trim()) {
+        self.showAlert('Write some code first!', { title: 'Nothing to save', icon: '✏️' });
+        return;
+      }
+      self.showPrompt('Choose a name for your program:', 'My Story', {
+        title: 'Save program',
+        icon: '💾',
+        okLabel: 'Save',
+      }).then(function (name) {
+        if (!name || !name.trim()) return;
+        window.SpeakStorage.saveProgram(name.trim(), editor.value);
+        self.buildSavedPanel();
+        self.showPanel('saved');
+        self.closeLeftMenu();
+        self.showToast('💾 Program saved!');
+      });
     },
 
     /* ── Download ────────────────────────────────────────────────────── */
     downloadProgram: function() {
       var editor = document.getElementById('ss-editor');
-      if (!editor || !editor.value.trim()) { alert('Nothing to download!'); return; }
+      if (!editor || !editor.value.trim()) {
+        this.showAlert('Nothing to download!', { title: 'Empty editor', icon: '📥' });
+        return;
+      }
       var blob = new Blob([editor.value], { type: 'text/plain' });
       var url  = URL.createObjectURL(blob);
       var a    = document.createElement('a');
@@ -348,6 +409,144 @@
       el.textContent = text;
       overlay.classList.remove('d-none');
       setTimeout(function() { overlay.classList.add('d-none'); }, 4000);
+    },
+
+    /* ── Dialogs (replaces alert / confirm / prompt) ─────────────────── */
+    _dialogResolve: null,
+
+    _closeDialog: function (result) {
+      var overlay = document.getElementById('kf-dialog-overlay');
+      if (overlay) overlay.classList.add('d-none');
+      if (this._dialogResolve) {
+        var r = this._dialogResolve;
+        this._dialogResolve = null;
+        r(result);
+      }
+    },
+
+    _openDialog: function (config) {
+      var self = this;
+      var overlay = document.getElementById('kf-dialog-overlay');
+      var iconEl = document.getElementById('kf-dialog-icon');
+      var titleEl = document.getElementById('kf-dialog-title');
+      var msgEl = document.getElementById('kf-dialog-message');
+      var inputEl = document.getElementById('kf-dialog-input');
+      var actionsEl = document.getElementById('kf-dialog-actions');
+      if (!overlay || !actionsEl) return Promise.resolve(config.type === 'confirm' ? false : null);
+
+      return new Promise(function (resolve) {
+        self._dialogResolve = resolve;
+
+        if (iconEl) iconEl.textContent = config.icon || 'ℹ️';
+        if (titleEl) titleEl.textContent = config.title || '';
+        if (msgEl) msgEl.textContent = config.message || '';
+
+        var isPrompt = config.type === 'prompt';
+        if (inputEl) {
+          if (isPrompt) {
+            inputEl.classList.remove('d-none');
+            inputEl.value = config.defaultValue || '';
+          } else {
+            inputEl.classList.add('d-none');
+            inputEl.value = '';
+          }
+        }
+
+        actionsEl.innerHTML = '';
+
+        function addBtn(label, cls, value) {
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'kf-dialog-btn ' + cls;
+          btn.textContent = label;
+          btn.addEventListener('click', function () {
+            if (isPrompt && value !== null) {
+              self._closeDialog(inputEl ? inputEl.value : '');
+            } else {
+              self._closeDialog(value);
+            }
+          });
+          actionsEl.appendChild(btn);
+        }
+
+        if (config.type === 'alert') {
+          addBtn(config.okLabel || 'OK', 'kf-dialog-btn-primary', true);
+        } else if (config.type === 'confirm') {
+          addBtn(config.cancelLabel || 'Cancel', 'kf-dialog-btn-secondary', false);
+          addBtn(config.okLabel || 'OK', config.danger ? 'kf-dialog-btn-danger' : 'kf-dialog-btn-primary', true);
+        } else if (config.type === 'prompt') {
+          addBtn(config.cancelLabel || 'Cancel', 'kf-dialog-btn-secondary', null);
+          addBtn(config.okLabel || 'Save', 'kf-dialog-btn-primary', true);
+        }
+
+        overlay.classList.remove('d-none');
+
+        setTimeout(function () {
+          if (isPrompt && inputEl) {
+            inputEl.focus();
+            inputEl.select();
+          } else {
+            var primary = actionsEl.querySelector('.kf-dialog-btn-primary, .kf-dialog-btn-danger');
+            if (primary) primary.focus();
+          }
+        }, 50);
+
+        function onKey(e) {
+          if (e.key === 'Escape') {
+            document.removeEventListener('keydown', onKey);
+            self._closeDialog(config.type === 'alert' ? true : (config.type === 'prompt' ? null : false));
+          }
+          if (e.key === 'Enter' && isPrompt && inputEl && document.activeElement === inputEl) {
+            e.preventDefault();
+            document.removeEventListener('keydown', onKey);
+            self._closeDialog(inputEl.value);
+          }
+        }
+        document.addEventListener('keydown', onKey);
+
+        var oldResolve = self._dialogResolve;
+        self._dialogResolve = function (v) {
+          document.removeEventListener('keydown', onKey);
+          oldResolve(v);
+        };
+      });
+    },
+
+    showAlert: function (message, options) {
+      options = options || {};
+      return this._openDialog({
+        type: 'alert',
+        title: options.title || 'Notice',
+        message: message,
+        icon: options.icon || 'ℹ️',
+        okLabel: options.okLabel || 'OK',
+      });
+    },
+
+    showConfirm: function (message, options) {
+      options = options || {};
+      return this._openDialog({
+        type: 'confirm',
+        title: options.title || 'Are you sure?',
+        message: message,
+        icon: options.icon || '❓',
+        okLabel: options.okLabel || 'Yes',
+        cancelLabel: options.cancelLabel || 'Cancel',
+        danger: !!options.danger,
+      });
+    },
+
+    showPrompt: function (message, defaultValue, options) {
+      options = options || {};
+      return this._openDialog({
+        type: 'prompt',
+        title: options.title || 'Enter a name',
+        message: message,
+        defaultValue: defaultValue || '',
+        icon: options.icon || '💾',
+        okLabel: options.okLabel || 'Save',
+        cancelLabel: options.cancelLabel || 'Cancel',
+      });
     },
 
     /* ── Toast ───────────────────────────────────────────────────────── */

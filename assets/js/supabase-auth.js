@@ -161,7 +161,7 @@
 
   function toast(msg) {
     if (window.UI && window.UI.showToast) window.UI.showToast(msg);
-    else alert(msg);
+    else if (window.UI && window.UI.showAlert) window.UI.showAlert(msg);
   }
 
   async function signInAnonymous(displayName) {

@@ -266,15 +266,32 @@
     }
 
     function clearEditor() {
-      if (!confirm('Clear all code?')) return;
-      editorEl.value = '';
-      Storage.saveLastCode('');
-      UI.syncLineNumbers();
-      editorEl.focus();
+      UI.showConfirm('Clear all code?', {
+        title: 'Clear editor?',
+        okLabel: 'Clear',
+        danger: true,
+      }).then(function (ok) {
+        if (!ok) return;
+        editorEl.value = '';
+        Storage.saveLastCode('');
+        UI.syncLineNumbers();
+        editorEl.focus();
+        UI.showToast('🗑 Editor cleared');
+      });
     }
 
     function resetProgress() {
-      if (!confirm('Reset ALL progress and saved programs?')) return;
+      UI.showConfirm('Reset ALL progress and saved programs? This cannot be undone.', {
+        title: 'Reset everything?',
+        okLabel: 'Reset all',
+        danger: true,
+      }).then(function (ok) {
+        if (!ok) return;
+        resetProgressApply();
+      });
+    }
+
+    function resetProgressApply() {
       Storage.resetAll();
       UI.buildMissionsPanel();
       UI.buildSavedPanel();
