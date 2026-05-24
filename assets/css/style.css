@@ -213,7 +213,7 @@ body.kf-mobile-mode.kf-tab-output-active .kf-tab-btn#tab-output-btn {
 }
 
 .kf-line-numbers {
-  width: 52px;
+  width: 62px;
   padding: 14px 2px 14px 0;
   font-family: var(--kf-code);
   font-size: 0.8rem;
@@ -258,7 +258,47 @@ body.kf-mobile-mode.kf-tab-output-active .kf-tab-btn#tab-output-btn {
 }
 .kf-ln-drag:hover { color: #f59e0b; }
 .kf-ln-drag:active { cursor: grabbing; }
-.kf-ln-drag-placeholder { width: 12px; flex-shrink: 0; }
+.kf-ln-drag-placeholder { width: 10px; flex-shrink: 0; }
+.kf-ln-fold-placeholder { width: 10px; flex-shrink: 0; }
+
+.kf-ln-fold,
+.kf-ln-unfold {
+  cursor: pointer;
+  font-size: 0.55rem;
+  color: #6e7681;
+  padding: 0 1px;
+  line-height: 1;
+  flex-shrink: 0;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.kf-ln-fold:hover { color: #a371f7; }
+.kf-ln-unfold { color: #f59e0b; }
+.kf-ln-unfold:hover { color: #fbbf24; }
+.kf-ln-row.kf-ln-folded-line {
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.hl-fold {
+  color: #f59e0b;
+  font-style: italic;
+  font-weight: 500;
+}
+
+.kf-touch-drag-ghost {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  background: #1f6feb;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  font-family: var(--kf-font);
+  white-space: nowrap;
+}
 
 .kf-ln-num {
   min-width: 1.2em;

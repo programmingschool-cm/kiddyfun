@@ -80,7 +80,104 @@
     drag: null,
     dropLine: null,
     gutterBound: false,
+    foldedStore: {},
+    touchDrag: null,
+    touchGhost: null,
   };
+
+  var FOLD_STORAGE_PREFIX = 'kf-fold-';
+
+  function foldStoreGet(id) {
+    if (state.foldedStore[id]) return state.foldedStore[id];
+    try {
+      var raw = sessionStorage.getItem(FOLD_STORAGE_PREFIX + id);
+      if (raw) return JSON.parse(raw);
+    } catch (e) { /* ignore */ }
+    return null;
+  }
+
+  function foldStoreSet(id, lines) {
+    state.foldedStore[id] = lines;
+    try {
+      sessionStorage.setItem(FOLD_STORAGE_PREFIX + id, JSON.stringify(lines));
+    } catch (e) { /* ignore */ }
+  }
+
+  function foldStoreDel(id) {
+    delete state.foldedStore[id];
+    try { sessionStorage.removeItem(FOLD_STORAGE_PREFIX + id); } catch (e) { /* ignore */ }
+  }
+
+  function restoreFoldsFromCode(code) {
+    var lines = code.split('\n');
+    lines.forEach(function (line) {
+      var m = window.KiddyEditorBlocks && KiddyEditorBlocks.parseFoldMarker(line);
+      if (m && !state.foldedStore[m.id]) {
+        var stored = foldStoreGet(m.id);
+        if (stored) state.foldedStore[m.id] = stored;
+      }
+    });
+  }
+
+  function expandForRun(code) {
+    if (!window.KiddyEditorBlocks) return code;
+    var lines = code.split('\n');
+    var out = [];
+    for (var i = 0; i < lines.length; i++) {
+      var m = KiddyEditorBlocks.parseFoldMarker(lines[i]);
+      if (m) {
+        var hidden = foldStoreGet(m.id);
+        if (hidden && hidden.length) out = out.concat(hidden);
+      } else {
+        out.push(lines[i]);
+      }
+    }
+    return out.join('\n');
+  }
+
+  function foldBlockAt(startLine) {
+    var ed = state.editor;
+    if (!ed || !window.KiddyEditorBlocks) return;
+    var lines = ed.value.split('\n');
+    var regions = KiddyEditorBlocks.parseBlockRegions(lines);
+    var reg = KiddyEditorBlocks.findRegionAtStart(regions, startLine);
+    if (!reg || reg.end <= reg.start) return;
+
+    var hidden = lines.slice(reg.start + 1, reg.end);
+    if (!hidden.length) return;
+
+    var id = 'b' + reg.start + 'n' + hidden.length;
+    var headIndent = (lines[reg.start].match(/^(\s*)/) || ['', ''])[1];
+    var marker = KiddyEditorBlocks.makeFoldMarker(id, hidden.length, headIndent);
+    foldStoreSet(id, hidden);
+
+    var newLines = lines.slice(0, reg.start + 1).concat([marker], lines.slice(reg.end));
+    ed.value = newLines.join('\n');
+    notifyChange();
+    if (window.UI && UI.showToast) UI.showToast('▼ Block folded');
+    if (window.KiddyAudio && KiddyAudio.playSound) KiddyAudio.playSound('pop');
+  }
+
+  function unfoldBlockAt(lineIndex) {
+    var ed = state.editor;
+    if (!ed || !window.KiddyEditorBlocks) return;
+    var lines = ed.value.split('\n');
+    var m = KiddyEditorBlocks.parseFoldMarker(lines[lineIndex]);
+    if (!m) return;
+
+    var hidden = foldStoreGet(m.id);
+    if (!hidden) {
+      if (window.UI && UI.showToast) UI.showToast('⚠️ Fold data missing — edit manually');
+      return;
+    }
+
+    foldStoreDel(m.id);
+    var newLines = lines.slice(0, lineIndex).concat(hidden, lines.slice(lineIndex + 1));
+    ed.value = newLines.join('\n');
+    notifyChange();
+    if (window.UI && UI.showToast) UI.showToast('▶ Block expanded');
+    if (window.KiddyAudio && KiddyAudio.playSound) KiddyAudio.playSound('pop');
+  }
 
   function esc(s) {
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -405,18 +502,33 @@
     if (!ed || !lineNos || !window.KiddyEditorBlocks) return;
 
     var lines = ed.value.split('\n');
+    var regions = KiddyEditorBlocks.parseBlockRegions(lines);
     var html = '';
     for (var i = 0; i < lines.length; i++) {
       var info = KiddyEditorBlocks.lineBlockInfo(lines, i);
       var range = KiddyEditorBlocks.getMovableRange(lines, i);
-      var canDrag = range && range.start === i && lines[i].trim() !== '';
+      var isFoldLine = KiddyEditorBlocks.isFoldMarker(lines[i]);
+      var canDrag = range && range.start === i && lines[i].trim() !== '' && !isFoldLine;
       var roleCls = info.role === 'start' ? ' kf-ln-block-start' :
         info.role === 'end' ? ' kf-ln-block-end' :
         info.role === 'inner' ? ' kf-ln-block-inner' : '';
+      if (isFoldLine) roleCls += ' kf-ln-folded-line';
+
+      var reg = info.role === 'start' ? KiddyEditorBlocks.findRegionAtStart(regions, i) : null;
+      var nextIsFold = reg && lines[i + 1] && KiddyEditorBlocks.isFoldMarker(lines[i + 1]);
+      var canFold = reg && reg.end > reg.start && !nextIsFold;
+
       html += '<div class="kf-ln-row' + roleCls + '" data-line="' + i + '">';
       html += canDrag
-        ? '<span class="kf-ln-drag" draggable="true" title="Drag to move block" aria-label="Drag line">⠿</span>'
+        ? '<span class="kf-ln-drag" draggable="true" title="Drag to move" aria-label="Drag">⠿</span>'
         : '<span class="kf-ln-drag-placeholder" aria-hidden="true"></span>';
+      if (canFold) {
+        html += '<span class="kf-ln-fold" data-fold="' + i + '" title="Fold block" aria-label="Fold">▼</span>';
+      } else if (isFoldLine) {
+        html += '<span class="kf-ln-unfold" data-unfold="' + i + '" title="Expand block" aria-label="Expand">▶</span>';
+      } else {
+        html += '<span class="kf-ln-fold-placeholder" aria-hidden="true"></span>';
+      }
       html += '<span class="kf-ln-num">' + (i + 1) + '</span></div>';
     }
     lineNos.innerHTML = html;
@@ -490,9 +602,30 @@
     });
 
     lineNos.addEventListener('click', function (e) {
+      var foldBtn = e.target.closest('.kf-ln-fold');
+      if (foldBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        foldBlockAt(parseInt(foldBtn.getAttribute('data-fold'), 10));
+        return;
+      }
+      var unfoldBtn = e.target.closest('.kf-ln-unfold');
+      if (unfoldBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        unfoldBlockAt(parseInt(unfoldBtn.getAttribute('data-unfold'), 10));
+        return;
+      }
+      var dragHandle = e.target.closest('.kf-ln-drag');
+      if (dragHandle) return;
+
       var row = e.target.closest('.kf-ln-row');
       if (!row || !state.editor) return;
       var line = parseInt(row.getAttribute('data-line'), 10);
+      if (window.KiddyEditorBlocks.isFoldMarker(state.editor.value.split('\n')[line])) {
+        unfoldBlockAt(line);
+        return;
+      }
       var lines = state.editor.value.split('\n');
       var pos = 0;
       for (var i = 0; i < line && i < lines.length; i++) pos += lines[i].length + 1;
@@ -500,6 +633,91 @@
       state.editor.selectionStart = state.editor.selectionEnd = pos;
       updateCurrentLine();
     });
+
+    bindTouchDrag(lineNos);
+  }
+
+  function bindTouchDrag(lineNos) {
+    function clearTouchUI() {
+      if (state.touchGhost && state.touchGhost.parentNode) state.touchGhost.remove();
+      state.touchGhost = null;
+      state.touchDrag = null;
+      lineNos.querySelectorAll('.kf-ln-dragging, .kf-ln-drop-target').forEach(function (el) {
+        el.classList.remove('kf-ln-dragging', 'kf-ln-drop-target');
+      });
+    }
+
+    function rowAtTouch(touch) {
+      var el = document.elementFromPoint(touch.clientX, touch.clientY);
+      return el && el.closest('.kf-ln-row');
+    }
+
+    lineNos.addEventListener('touchstart', function (e) {
+      var handle = e.target.closest('.kf-ln-drag');
+      if (!handle || !state.editor) return;
+      var row = handle.closest('.kf-ln-row');
+      if (!row) return;
+      var line = parseInt(row.getAttribute('data-line'), 10);
+      var lines = state.editor.value.split('\n');
+      var range = KiddyEditorBlocks.getMovableRange(lines, line);
+      if (!range) return;
+
+      state.touchDrag = { fromStart: range.start, fromEnd: range.end };
+      row.classList.add('kf-ln-dragging');
+
+      state.touchGhost = document.createElement('div');
+      state.touchGhost.className = 'kf-touch-drag-ghost';
+      state.touchGhost.textContent = '↕ Moving ' + (range.end - range.start + 1) + ' lines';
+      document.body.appendChild(state.touchGhost);
+
+      var t = e.touches[0];
+      state.touchGhost.style.left = (t.clientX + 12) + 'px';
+      state.touchGhost.style.top = (t.clientY - 20) + 'px';
+
+      if (window.KiddyAudio && KiddyAudio.playSound) KiddyAudio.playSound('pop');
+    }, { passive: true });
+
+    lineNos.addEventListener('touchmove', function (e) {
+      if (!state.touchDrag) return;
+      e.preventDefault();
+      var t = e.touches[0];
+      if (state.touchGhost) {
+        state.touchGhost.style.left = (t.clientX + 12) + 'px';
+        state.touchGhost.style.top = (t.clientY - 20) + 'px';
+      }
+      lineNos.querySelectorAll('.kf-ln-drop-target').forEach(function (el) {
+        el.classList.remove('kf-ln-drop-target');
+      });
+      var row = rowAtTouch(t);
+      if (row) {
+        row.classList.add('kf-ln-drop-target');
+        state.dropLine = parseInt(row.getAttribute('data-line'), 10);
+      }
+    }, { passive: false });
+
+    lineNos.addEventListener('touchend', function (e) {
+      if (!state.touchDrag || !state.editor) {
+        clearTouchUI();
+        return;
+      }
+      var t = e.changedTouches[0];
+      var row = rowAtTouch(t);
+      var toLine = row ? parseInt(row.getAttribute('data-line'), 10) : state.dropLine;
+      if (toLine != null && !(toLine >= state.touchDrag.fromStart && toLine <= state.touchDrag.fromEnd)) {
+        var lines = state.editor.value.split('\n');
+        var moved = KiddyEditorBlocks.moveRange(
+          lines, state.touchDrag.fromStart, state.touchDrag.fromEnd, toLine
+        );
+        state.editor.value = moved.join('\n');
+        flashMagic();
+        notifyChange();
+        if (window.UI && UI.showToast) UI.showToast('↕️ Block moved!');
+      }
+      clearTouchUI();
+      state.dropLine = null;
+    });
+
+    lineNos.addEventListener('touchcancel', clearTouchUI);
   }
 
   function bindChips() {
@@ -817,6 +1035,28 @@
     if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
       e.preventDefault();
       duplicateLine();
+      return;
+    }
+
+    if ((e.ctrlKey || e.metaKey) && (e.key === '[' || e.key === 'ArrowLeft')) {
+      e.preventDefault();
+      var ln = state.editor.value.slice(0, state.editor.selectionStart).split('\n').length - 1;
+      foldBlockAt(ln);
+      return;
+    }
+
+    if ((e.ctrlKey || e.metaKey) && (e.key === ']' || e.key === 'ArrowRight')) {
+      e.preventDefault();
+      var ln2 = state.editor.value.slice(0, state.editor.selectionStart).split('\n').length - 1;
+      var lns = state.editor.value.split('\n');
+      if (window.KiddyEditorBlocks.isFoldMarker(lns[ln2])) unfoldBlockAt(ln2);
+      else {
+        var regions = window.KiddyEditorBlocks.parseBlockRegions(lns);
+        var reg = window.KiddyEditorBlocks.findRegionAtStart(regions, ln2);
+        if (reg && lns[reg.start + 1] && window.KiddyEditorBlocks.isFoldMarker(lns[reg.start + 1])) {
+          unfoldBlockAt(reg.start + 1);
+        }
+      }
     }
   }
 
@@ -938,6 +1178,7 @@
       }, 180);
     });
 
+    restoreFoldsFromCode(editor.value);
     syncHighlight();
     updateGutter();
     refresh();
@@ -960,5 +1201,8 @@
     notifyExternalChange: notifyChange,
     syncHighlight: syncHighlight,
     updateGutter: updateGutter,
+    expandForRun: expandForRun,
+    foldBlockAt: foldBlockAt,
+    unfoldBlockAt: unfoldBlockAt,
   };
 })();

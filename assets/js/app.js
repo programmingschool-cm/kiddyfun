@@ -299,6 +299,9 @@
 
     function runProgram() {
       var code = editorEl.value.trim();
+      if (window.KiddySmartEditor && window.KiddySmartEditor.expandForRun) {
+        code = KiddySmartEditor.expandForRun(code).trim();
+      }
       if (!code) { UI.showToast('✏️ Write some code first!'); return; }
       UI.clearErrors();
       UI.setRunning(true);

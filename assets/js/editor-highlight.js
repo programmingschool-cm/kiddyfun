@@ -105,6 +105,9 @@
   }
 
   function highlightLine(line) {
+    if (/^\s*# @fold:/.test(line)) {
+      return '<span class="hl-fold">' + esc(line) + '</span>';
+    }
     var ci = findCommentIndex(line);
     var code = ci >= 0 ? line.slice(0, ci) : line;
     var comment = ci >= 0 ? line.slice(ci) : '';

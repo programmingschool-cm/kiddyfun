@@ -7,6 +7,21 @@
   var INDENT_SIZE = 4;
   var BLOCK_START = /^(repeat\s+\d+\s+times|repeat\s+while\b|if\b|else\b|define\b|for\s+each\b)/i;
   var BLOCK_END = /^end\b/i;
+  var FOLD_MARKER = /^(\s*)# @fold:([\w-]+):(\d+)/;
+
+  function isFoldMarker(line) {
+    return FOLD_MARKER.test(line);
+  }
+
+  function parseFoldMarker(line) {
+    var m = line.match(FOLD_MARKER);
+    if (!m) return null;
+    return { indent: m[1], id: m[2], count: parseInt(m[3], 10) };
+  }
+
+  function makeFoldMarker(id, count, indent) {
+    return indent + '# @fold:' + id + ':' + count + ' lines hidden ▶ tap to expand';
+  }
 
   function getIndent(line) {
     var m = line.match(/^(\s*)/);
@@ -84,12 +99,24 @@
     return { role: 'plain', region: null };
   }
 
+  function findRegionAtStart(regions, startLine) {
+    for (var i = 0; i < regions.length; i++) {
+      if (regions[i].start === startLine) return regions[i];
+    }
+    return null;
+  }
+
   window.KiddyEditorBlocks = {
     getIndent: getIndent,
     getMovableRange: getMovableRange,
     parseBlockRegions: parseBlockRegions,
     moveRange: moveRange,
     lineBlockInfo: lineBlockInfo,
+    findRegionAtStart: findRegionAtStart,
+    isFoldMarker: isFoldMarker,
+    parseFoldMarker: parseFoldMarker,
+    makeFoldMarker: makeFoldMarker,
+    FOLD_MARKER: FOLD_MARKER,
     INDENT_SIZE: INDENT_SIZE,
   };
 })();
