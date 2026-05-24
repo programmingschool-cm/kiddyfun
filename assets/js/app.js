@@ -66,20 +66,21 @@
     initAudioToggles();
 
     var editorEl = $id('ss-editor');
-    editorEl.addEventListener('input', function () {
-      Storage.saveLastCode(editorEl.value);
-      UI.syncLineNumbers();
-    });
-    editorEl.addEventListener('scroll', function () { UI.syncLineNumbers(); });
-    editorEl.addEventListener('keydown', function (e) {
-      if (e.key === 'Tab') {
-        e.preventDefault();
-        var s = editorEl.selectionStart, en = editorEl.selectionEnd;
-        editorEl.value = editorEl.value.slice(0, s) + '    ' + editorEl.value.slice(en);
-        editorEl.selectionStart = editorEl.selectionEnd = s + 4;
+    if (window.KiddySmartEditor && window.KiddySmartEditor.init) {
+      KiddySmartEditor.init(editorEl, {
+        onChange: function () {
+          Storage.saveLastCode(editorEl.value);
+          UI.syncLineNumbers();
+        },
+        onScroll: function () { UI.syncLineNumbers(); },
+      });
+    } else {
+      editorEl.addEventListener('input', function () {
+        Storage.saveLastCode(editorEl.value);
         UI.syncLineNumbers();
-      }
-    });
+      });
+      editorEl.addEventListener('scroll', function () { UI.syncLineNumbers(); });
+    }
     UI.syncLineNumbers();
 
     document.querySelectorAll('.ss-nav-btn').forEach(function (btn) {
@@ -351,6 +352,9 @@
         editorEl.value = '';
         Storage.saveLastCode('');
         UI.syncLineNumbers();
+        if (window.KiddySmartEditor && window.KiddySmartEditor.notifyExternalChange) {
+          KiddySmartEditor.notifyExternalChange();
+        }
         editorEl.focus();
         UI.showToast('🗑 Editor cleared');
       });

@@ -222,13 +222,18 @@
     insertCode: function(snippet) {
       var editor = document.getElementById('ss-editor');
       if (!editor) return;
-      var pos = editor.selectionStart || editor.value.length;
-      var prefix = editor.value.length > 0 && pos > 0 ? '\n' : '';
-      var suffix = editor.value.length > 0 ? '\n' : '';
-      editor.value = editor.value.slice(0, pos) + prefix + snippet + suffix + editor.value.slice(pos);
+      if (window.KiddySmartEditor && window.KiddySmartEditor.insertAtCursor) {
+        KiddySmartEditor.insertAtCursor(snippet);
+      } else {
+        var pos = editor.selectionStart || editor.value.length;
+        var prefix = editor.value.length > 0 && pos > 0 ? '\n' : '';
+        var suffix = editor.value.length > 0 ? '\n' : '';
+        editor.value = editor.value.slice(0, pos) + prefix + snippet + suffix + editor.value.slice(pos);
+      }
       editor.focus();
       if (window.SpeakStorage) window.SpeakStorage.saveLastCode(editor.value);
       this.syncLineNumbers();
+      if (window.KiddySmartEditor && window.KiddySmartEditor.refresh) KiddySmartEditor.refresh();
       this.showToast('📋 Code added to editor');
       this.closeLeftMenu();
 
@@ -286,6 +291,9 @@
         editor.value = mission.starterCode;
         window.SpeakStorage.saveLastCode(editor.value);
         self.syncLineNumbers();
+        if (window.KiddySmartEditor && window.KiddySmartEditor.notifyExternalChange) {
+          KiddySmartEditor.notifyExternalChange();
+        }
         self.showPanel('guide');
         self.closeLeftMenu();
         editor.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -341,7 +349,15 @@
       var prog = window.SpeakStorage.loadAllPrograms()[name];
       if (!prog) return;
       var editor = document.getElementById('ss-editor');
-      if (editor) { editor.value = prog.code; window.SpeakStorage.saveLastCode(prog.code); this.syncLineNumbers(); editor.focus(); }
+      if (editor) {
+        editor.value = prog.code;
+        window.SpeakStorage.saveLastCode(prog.code);
+        this.syncLineNumbers();
+        if (window.KiddySmartEditor && window.KiddySmartEditor.notifyExternalChange) {
+          KiddySmartEditor.notifyExternalChange();
+        }
+        editor.focus();
+      }
     },
 
     deleteSavedProgram: function(name) {
@@ -404,6 +420,9 @@
       editor.value = ex.code;
       window.SpeakStorage.saveLastCode(ex.code);
       this.syncLineNumbers();
+      if (window.KiddySmartEditor && window.KiddySmartEditor.notifyExternalChange) {
+        KiddySmartEditor.notifyExternalChange();
+      }
       editor.focus();
       this.showToast('✅ Loaded: ' + ex.title);
     },
@@ -601,6 +620,11 @@
 
     /* ── Line numbers ────────────────────────────────────────────────── */
     syncLineNumbers: function() {
+      if (window.KiddySmartEditor && window.KiddySmartEditor.updateGutter) {
+        KiddySmartEditor.updateGutter();
+        if (window.KiddySmartEditor.syncHighlight) KiddySmartEditor.syncHighlight();
+        return;
+      }
       var editor  = document.getElementById('ss-editor');
       var lineNos = document.getElementById('ss-line-numbers');
       if (!editor || !lineNos) return;
