@@ -105,6 +105,8 @@
     bind('tab-output-btn', function () { setMobileTab('output'); });
     bind('ss-badge-overlay', function () { $id('ss-badge-overlay').classList.add('d-none'); });
 
+    var currentMobileTab = 'code';
+
     initMobileLayout();
     window.addEventListener('resize', function () { initMobileLayout(); });
 
@@ -113,7 +115,10 @@
         $id('code-col').classList.remove('mobile-hidden');
         $id('output-col').classList.remove('mobile-hidden');
       } else {
-        setMobileTab('code');
+        /* Do not reset to Code on resize — mobile keyboard triggers resize and hid the input panel */
+        var waitingInput = document.querySelector('.kf-waiting-input');
+        if (waitingInput) setMobileTab('output');
+        else setMobileTab(currentMobileTab);
       }
     }
 
@@ -212,6 +217,8 @@
         }
       }, { once: true });
     }
+
+    window.KiddyApp = { setMobileTab: setMobileTab };
 
     console.log('✅ KiddyFun Code v1.0 ready');
 

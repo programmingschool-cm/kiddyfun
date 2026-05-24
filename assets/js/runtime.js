@@ -339,6 +339,10 @@
       this.hideUserInput(true);
       this._inputCallback = onAnswer;
 
+      if (window.KiddyApp && window.KiddyApp.setMobileTab) {
+        window.KiddyApp.setMobileTab('output');
+      }
+
       this.inputQuestion.textContent = question;
       this.inputField.value = '';
       this.inputDock.classList.remove('d-none');
@@ -374,11 +378,14 @@
       }
 
       setTimeout(function () {
-        self.inputField.focus();
+        if (window.KiddyApp && window.KiddyApp.setMobileTab) {
+          window.KiddyApp.setMobileTab('output');
+        }
+        self.inputField.focus({ preventScroll: false });
         if (window.KiddyAudio && KiddyAudio.speak) {
           KiddyAudio.speak(question, 'narrator');
         }
-      }, 80);
+      }, 120);
     },
 
     hideUserInput: function (silent) {
