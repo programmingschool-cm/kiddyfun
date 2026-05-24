@@ -1,6 +1,6 @@
 /**
- * SpeakScript Interpreter v0.1
- * Walks the AST and executes commands through the Runtime with async timing.
+ * KiddyFun Interpreter v1.0
+ * Walks the AST with async timing, TTS-aware speech delays.
  */
 (function () {
   'use strict';
@@ -26,6 +26,7 @@
 
   Interpreter.prototype.stop = function () {
     this._stopped = true;
+    if (window.KiddyAudio) KiddyAudio.cancelAll();
     if (this._resolve) { this._resolve('wrong'); this._resolve = null; }
   };
 
@@ -50,33 +51,36 @@
     switch (node.type) {
       case 'scene':
         R.setScene(node.value);
-        return this._delay(300);
+        return this._delay(400);
 
       case 'character_appears':
         R.characterAppears(node.actor);
-        return this._delay(400);
+        return this._delay(500);
 
       case 'say':
-        return this._delay(200).then(function () {
-          R.showSpeech(node.actor, node.text);
-          return self._delay(1800);
+        return this._delay(150).then(function () {
+          var speechPromise = R.showSpeech(node.actor, node.text);
+          if (speechPromise && typeof speechPromise.then === 'function') {
+            return speechPromise.then(function () { return self._delay(300); });
+          }
+          return self._delay(2000);
         });
 
       case 'action':
         R.applyAction(node.actor, node.action);
-        return this._delay(900);
+        return this._delay(950);
 
       case 'vocab':
         R.showVocab(node.word, node.meaning);
-        return this._delay(600);
+        return this._delay(700);
 
       case 'wait':
-        return this._delay(Math.min(node.seconds * 1000, 5000));
+        return this._delay(Math.min(node.seconds * 1000, 8000));
 
       case 'quiz':
         return this._runQuiz(node).then(function (result) {
           R.quizResult = result;
-          return self._delay(800);
+          return self._delay(900);
         });
 
       case 'repeat': {
@@ -87,7 +91,7 @@
           if (self._stopped || i >= count) return Promise.resolve();
           i++;
           return self._execNodes(body).then(function () {
-            return self._delay(200);
+            return self._delay(250);
           }).then(loop);
         }
         return loop();
@@ -105,15 +109,16 @@
 
       case 'score_add':
         R.addScore(node.value);
-        return Promise.resolve();
+        if (window.KiddyAudio) KiddyAudio.playSound('success');
+        return this._delay(200);
 
       case 'score_show':
         R.showScore();
-        return this._delay(1000);
+        return this._delay(1200);
 
       case 'play_sound':
         R.playSound(node.name);
-        return this._delay(500);
+        return this._delay(600);
 
       default:
         throw new InterpretError('Unknown node type: ' + node.type, node.line);
@@ -136,5 +141,5 @@
   };
 
   window.SpeakInterpreter = { Interpreter: Interpreter, InterpretError: InterpretError };
-  console.log('[SpeakScript] Interpreter ready');
+  console.log('[KiddyFun] Interpreter ready');
 })();

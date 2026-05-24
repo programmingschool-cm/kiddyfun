@@ -1,8 +1,5 @@
 /**
- * SpeakScript Main App v0.1
- * Bootstraps all modules and wires the UI together.
- * All window.SpeakXxx refs are resolved inside DOMContentLoaded,
- * guaranteeing every other script has already run.
+ * KiddyFun Main App v1.0
  */
 (function () {
   'use strict';
@@ -11,52 +8,43 @@
 
   document.addEventListener('DOMContentLoaded', function () {
 
-    /* ── Grab module refs (all scripts already executed by now) ── */
     var Parser      = window.SpeakParser;
     var Errors      = window.SpeakErrors;
     var Runtime     = window.SpeakRuntime;
     var Storage     = window.SpeakStorage;
     var Interpreter = window.SpeakInterpreter && window.SpeakInterpreter.Interpreter;
 
-    /* ── Sanity check ─────────────────────────────────────────── */
     if (!Parser || !Errors || !Runtime || !Storage || !Interpreter) {
       document.body.innerHTML =
-        '<div style="padding:40px;font-family:sans-serif;color:red;">' +
+        '<div style="padding:40px;font-family:sans-serif;color:#dc2626;max-width:600px;margin:40px auto;">' +
         '<h2>⚠️ KiddyFun Code failed to load</h2>' +
-        '<p>One or more script files could not be loaded. Please check:<br>' +
-        '• All files in <code>assets/js/</code> exist<br>' +
-        '• You opened <code>index.html</code> directly in a browser<br>' +
-        '• Check the browser console (F12) for details</p>' +
-        '<pre>' +
-          'Parser:      ' + (Parser      ? '✅' : '❌ MISSING') + '\n' +
-          'Errors:      ' + (Errors      ? '✅' : '❌ MISSING') + '\n' +
-          'Runtime:     ' + (Runtime     ? '✅' : '❌ MISSING') + '\n' +
-          'Storage:     ' + (Storage     ? '✅' : '❌ MISSING') + '\n' +
-          'Interpreter: ' + (Interpreter ? '✅' : '❌ MISSING') +
+        '<p>Please check that all files in <code>assets/js/</code> exist and open <code>index.html</code> in a browser.</p>' +
+        '<pre style="background:#f1f5f9;padding:16px;border-radius:8px;">' +
+          'Parser:      ' + (Parser      ? '✅' : '❌') + '\n' +
+          'Errors:      ' + (Errors      ? '✅' : '❌') + '\n' +
+          'Runtime:     ' + (Runtime     ? '✅' : '❌') + '\n' +
+          'Storage:     ' + (Storage     ? '✅' : '❌') + '\n' +
+          'Interpreter: ' + (Interpreter ? '✅' : '❌') +
         '</pre></div>';
       return;
     }
 
-    /* ── DOM helpers ──────────────────────────────────────────── */
     function $id(id) { return document.getElementById(id); }
 
-    /* ── Init Runtime ─────────────────────────────────────────── */
     Runtime.init($id('ss-stage'), $id('ss-log'), $id('ss-vocab'), $id('ss-score'));
 
-    /* ── Restore last code ────────────────────────────────────── */
     var last = Storage.loadLastCode();
     if (last) $id('ss-editor').value = last;
 
-    /* ── Build panels ─────────────────────────────────────────── */
     UI.buildGuidePanel();
     UI.buildMissionsPanel();
     UI.buildSavedPanel();
+    UI.updateProgress();
     UI.showPanel('guide');
 
-    /* ── Build example dropdown ───────────────────────────────── */
     buildExampleDropdown();
+    initAudioToggles();
 
-    /* ── Editor events ────────────────────────────────────────── */
     var editorEl = $id('ss-editor');
     editorEl.addEventListener('input', function () {
       Storage.saveLastCode(editorEl.value);
@@ -74,47 +62,53 @@
     });
     UI.syncLineNumbers();
 
-    /* ── Nav buttons ──────────────────────────────────────────── */
     document.querySelectorAll('.ss-nav-btn').forEach(function (btn) {
       btn.addEventListener('click', function () { UI.showPanel(btn.dataset.panel); });
     });
 
-    /* ── Toolbar buttons ──────────────────────────────────────── */
-    bind('btn-run',      runProgram);
-    bind('btn-stop',     stopProgram);
-    bind('btn-reset',    resetStage);
-    bind('btn-clear',    clearEditor);
-    bind('btn-save',     function () { UI.promptSaveProgram(); });
+    bind('btn-run', runProgram);
+    bind('btn-stop', stopProgram);
+    bind('btn-reset', resetStage);
+    bind('btn-clear', clearEditor);
+    bind('btn-save', function () { UI.promptSaveProgram(); });
     bind('btn-download', function () { UI.downloadProgram(); });
     bind('btn-reset-progress', resetProgress);
+    bind('btn-reset-progress-mobile', resetProgress);
     bind('btn-toggle-code', toggleDesktopCodePanel);
-    bind('tab-code-btn', function() { setMobileTab('code'); });
-    bind('tab-output-btn', function() { setMobileTab('output'); });
-    bind('hero-start-btn', function () {
-      var ws = $id('workspace');
-      if (ws) ws.scrollIntoView({ behavior: 'smooth' });
-    });
+    bind('tab-code-btn', function () { setMobileTab('code'); });
+    bind('tab-output-btn', function () { setMobileTab('output'); });
     bind('ss-badge-overlay', function () { $id('ss-badge-overlay').classList.add('d-none'); });
 
+    initMobileLayout();
+    window.addEventListener('resize', function () { initMobileLayout(); });
+
+    function initMobileLayout() {
+      if (window.innerWidth >= 992) {
+        $id('code-col').classList.remove('mobile-hidden');
+        $id('output-col').classList.remove('mobile-hidden');
+      } else {
+        setMobileTab('code');
+      }
+    }
+
     var desktopCodeVisible = true;
+
     function toggleDesktopCodePanel() {
       if (window.innerWidth < 992) return;
       var codeCol = $id('code-col');
       var outCol  = $id('output-col');
       var toggleBtn = $id('btn-toggle-code');
       if (desktopCodeVisible) {
-        codeCol.classList.remove('d-lg-flex');
-        codeCol.classList.add('d-lg-none');
-        outCol.classList.replace('col-lg-7', 'col-lg-12');
-        outCol.classList.replace('col-xl-6', 'col-xl-12');
-        toggleBtn.innerHTML = '✏️ Edit Code';
+        codeCol.classList.add('d-none');
+        outCol.classList.remove('kf-col-output');
+        outCol.classList.add('kf-col-full');
+        toggleBtn.textContent = '✏️ Edit Code';
         desktopCodeVisible = false;
       } else {
-        codeCol.classList.remove('d-lg-none');
-        codeCol.classList.add('d-lg-flex');
-        outCol.classList.replace('col-lg-12', 'col-lg-7');
-        outCol.classList.replace('col-xl-12', 'col-xl-6');
-        toggleBtn.innerHTML = '🔲 Full Screen';
+        codeCol.classList.remove('d-none');
+        outCol.classList.remove('kf-col-full');
+        outCol.classList.add('kf-col-output');
+        toggleBtn.textContent = '🔲 Full Screen';
         desktopCodeVisible = true;
       }
     }
@@ -125,36 +119,83 @@
       var outCol  = $id('output-col');
       var tabCode = $id('tab-code-btn');
       var tabOut  = $id('tab-output-btn');
-      
+
       if (tab === 'code') {
         codeCol.classList.remove('mobile-hidden');
         outCol.classList.add('mobile-hidden');
-        
-        tabCode.className = 'btn btn-dark flex-fill me-1 fw-bold';
-        tabOut.className  = 'btn btn-outline-dark flex-fill ms-1 fw-bold';
+        tabCode.classList.add('active');
+        tabOut.classList.remove('active');
       } else {
         codeCol.classList.add('mobile-hidden');
         outCol.classList.remove('mobile-hidden');
-        
-        tabCode.className = 'btn btn-outline-dark flex-fill me-1 fw-bold';
-        tabOut.className  = 'btn btn-dark flex-fill ms-1 fw-bold';
+        tabCode.classList.remove('active');
+        tabOut.classList.add('active');
+        requestAnimationFrame(function () {
+          var stage = $id('ss-stage');
+          if (stage) void stage.offsetHeight;
+        });
       }
     }
 
-    console.log('✅ KiddyFun Code v0.1 ready');
+    function initAudioToggles() {
+      if (!window.KiddyAudio) return;
 
-    /* ── Run ──────────────────────────────────────────────────── */
+      var voiceBtn = $id('btn-toggle-voice');
+      var soundBtn = $id('btn-toggle-sound');
+
+      function syncToggle(btn, enabled, onLabel, offLabel) {
+        if (!btn) return;
+        btn.classList.toggle('active', enabled);
+        btn.title = enabled ? onLabel : offLabel;
+      }
+
+      syncToggle(voiceBtn, KiddyAudio.isVoiceEnabled(), 'Voice ON — click to mute', 'Voice OFF — click to enable English speech');
+      syncToggle(soundBtn, KiddyAudio.isSoundEnabled(), 'Sound ON — click to mute', 'Sound OFF — click to enable effects');
+
+      var voiceMobile = $id('btn-toggle-voice-mobile');
+      var soundMobile = $id('btn-toggle-sound-mobile');
+      syncToggle(voiceMobile, KiddyAudio.isVoiceEnabled(), 'Voice ON', 'Voice OFF');
+      syncToggle(soundMobile, KiddyAudio.isSoundEnabled(), 'Sound ON', 'Sound OFF');
+
+      if (voiceMobile) voiceMobile.addEventListener('click', function () { toggleVoice(); });
+      if (soundMobile) soundMobile.addEventListener('click', function () { toggleSound(); });
+
+      function toggleVoice() {
+        var next = !KiddyAudio.isVoiceEnabled();
+        KiddyAudio.setVoiceEnabled(next);
+        syncToggle(voiceBtn, next, 'Voice ON', 'Voice OFF');
+        syncToggle(voiceMobile, next, 'Voice ON', 'Voice OFF');
+        UI.showToast(next ? '🔊 English voice ON' : '🔇 Voice muted');
+      }
+
+      function toggleSound() {
+        var next = !KiddyAudio.isSoundEnabled();
+        KiddyAudio.setSoundEnabled(next);
+        syncToggle(soundBtn, next, 'Sound ON', 'Sound OFF');
+        syncToggle(soundMobile, next, 'Sound ON', 'Sound OFF');
+        if (next) KiddyAudio.playSound('pop');
+        UI.showToast(next ? '🎵 Sound effects ON' : '🔇 Sound muted');
+      }
+
+      if (voiceBtn) voiceBtn.addEventListener('click', toggleVoice);
+      if (soundBtn) soundBtn.addEventListener('click', toggleSound);
+
+      document.addEventListener('click', function resumeAudio() {
+        if (window.KiddyAudio && KiddyAudio.sounds._ensureCtx) {
+          KiddyAudio.sounds._ensureCtx();
+        }
+      }, { once: true });
+    }
+
+    console.log('✅ KiddyFun Code v1.0 ready');
+
     function runProgram() {
       var code = editorEl.value.trim();
       if (!code) { UI.showToast('✏️ Write some code first!'); return; }
       UI.clearErrors();
       UI.setRunning(true);
 
-      if (window.innerWidth < 992) {
-        setMobileTab('output');
-      } else if (desktopCodeVisible) {
-        // Desktop handles it with desktopCodeVisible if needed
-      }
+      if (window.innerWidth < 992) setMobileTab('output');
 
       var ast;
       try {
@@ -162,6 +203,7 @@
       } catch (err) {
         UI.showErrors(Errors.renderError(Errors.friendlyError(err)));
         UI.setRunning(false);
+        if (window.KiddyAudio) KiddyAudio.playSound('wrong');
         return;
       }
 
@@ -203,31 +245,37 @@
       Storage.resetAll();
       UI.buildMissionsPanel();
       UI.buildSavedPanel();
+      UI.updateProgress();
       UI.showToast('🔄 Progress reset!');
     }
 
-    /* ── Mission validation ───────────────────────────────────── */
     function checkMissions(code) {
       var completed = Storage.loadCompletedMissions();
+      var newComplete = false;
       window.SpeakMissions.forEach(function (m) {
         if (completed.indexOf(m.id) === -1 && m.validate(code)) {
           Storage.completeMission(m.id);
           Storage.awardBadge(m.badge);
           UI.showBadge('🎉 Mission Complete!\n' + m.title + '\n' + m.badge);
-          UI.buildMissionsPanel();
+          newComplete = true;
         }
       });
+      if (newComplete) {
+        UI.buildMissionsPanel();
+        UI.updateProgress();
+        if (window.KiddyAudio) KiddyAudio.playSound('cheer');
+      }
     }
 
-    /* ── Example dropdown ─────────────────────────────────────── */
     function buildExampleDropdown() {
       var menu = $id('example-dropdown-menu');
       if (!menu) return;
       window.SpeakExamples.forEach(function (ex) {
         var li = document.createElement('li');
         li.innerHTML =
-          '<a class="dropdown-item" href="#" data-ex="' + ex.id + '">' +
-          ex.title + '<br><small class="text-muted">' + escHtml(ex.desc) + '</small></a>';
+          '<a class="dropdown-item py-2" href="#" data-ex="' + ex.id + '">' +
+          '<strong>' + ex.title + '</strong><br>' +
+          '<small class="text-muted">' + escHtml(ex.desc) + '</small></a>';
         li.querySelector('a').addEventListener('click', function (e) {
           e.preventDefault();
           UI.loadExample(ex.id);
@@ -236,7 +284,6 @@
       });
     }
 
-    /* ── Helpers ──────────────────────────────────────────────── */
     function bind(id, fn) {
       var el = $id(id);
       if (el) el.addEventListener('click', fn);
@@ -246,5 +293,4 @@
       return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     }
   });
-
 })();

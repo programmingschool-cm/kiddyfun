@@ -1,5 +1,5 @@
 /**
- * SpeakScript UI Controller v0.1
+ * KiddyFun UI Controller v1.0
  */
 (function () {
   'use strict';
@@ -8,31 +8,28 @@
     { icon:'🎬', title:'Scene',
       items:[
         {desc:'Set the story background',code:'scene "school"'},
-        {desc:'Available: school, classroom, jungle, restaurant, home, playground, space',code:'scene "jungle"'},
+        {desc:'Try: school, classroom, jungle, restaurant, home, playground, space',code:'scene "jungle"'},
       ]},
     { icon:'🧑', title:'Characters',
       items:[
         {desc:'Make a character appear on stage',code:'Rafi appears'},
-        {desc:'Any name works — Rafi, Mina, Lion, Bird, Robot…',code:'Lion appears'},
+        {desc:'Any name works — Lion, Bird, Robot, Mostak…',code:'Lion appears'},
       ]},
-    { icon:'💬', title:'Speaking',
+    { icon:'💬', title:'Speaking & English',
       items:[
-        {desc:'Make a character say something',code:'Rafi says "Hello!"'},
-        {desc:'Narrator speaks without a character',code:'narrator says "Once upon a time..."'},
+        {desc:'Characters speak English aloud (turn on 🔊 Voice)',code:'Rafi says "Hello! How are you?"'},
+        {desc:'Narrator tells the story',code:'narrator says "Once upon a time..."'},
       ]},
     { icon:'🎭', title:'Actions',
       items:[
-        {desc:'Wave',  code:'Rafi waves'},
-        {desc:'Smile', code:'Mina smiles'},
-        {desc:'Jump',  code:'Monkey jumps'},
-        {desc:'Fly',   code:'Bird flies'},
-        {desc:'Move right / left', code:'Robot moves right\nRobot moves left'},
-        {desc:'Hide and show',     code:'Cat hides\nCat shows'},
+        {desc:'Wave, run, jump and more',code:'Rafi waves\nMina smiles\nMonkey jumps\nBird flies'},
+        {desc:'Move left or right',code:'Robot moves right\nRobot moves left'},
+        {desc:'Hide and show',code:'Cat hides\nCat shows'},
       ]},
     { icon:'📚', title:'Vocabulary',
       items:[
-        {desc:'Show a vocabulary card',code:'show word "brave" means "সাহসী"'},
-        {desc:'Any language meaning works',code:'show word "river" means "নদী"'},
+        {desc:'Learn English words with meanings',code:'show word "brave" means "সাহসী"'},
+        {desc:'Build your English vocabulary',code:'show word "friend" means "বন্ধু"'},
       ]},
     { icon:'⏸️', title:'Wait / Pause',
       items:[
@@ -40,23 +37,22 @@
       ]},
     { icon:'❓', title:'Quiz',
       items:[
-        {desc:'Ask a question with choices',
+        {desc:'Ask a question with clickable choices',
          code:'ask "What colour is the sky?"\nchoice "Blue" correct\nchoice "Red" wrong\nchoice "Green" wrong'},
       ]},
-    { icon:'🔁', title:'Repeat',
+    { icon:'🔁', title:'Repeat (Loop)',
       items:[
         {desc:'Repeat a block N times',
          code:'repeat 3 times\n    Bird flies\n    Bird says "Tweet!"\nend'},
       ]},
     { icon:'🔀', title:'If / Else',
       items:[
-        {desc:'React to a quiz answer',
+        {desc:'React to quiz answers',
          code:'if answer is correct\n    narrator says "Well done!"\nelse\n    narrator says "Try again!"\nend'},
       ]},
-    { icon:'🏆', title:'Score',
+    { icon:'🏆', title:'Score & Sound',
       items:[
-        {desc:'Start, add, and display the score',
-         code:'score starts at 0\nadd 10 points\nshow score'},
+        {desc:'Track points and play sounds',code:'score starts at 0\nadd 10 points\nshow score\nplay sound "success"'},
       ]},
   ];
 
@@ -65,7 +61,17 @@
   }
 
   var UI = {
-    /* ── Panel switching ─────────────────────────────────────────────── */
+    updateProgress: function() {
+      var total = window.SpeakMissions ? window.SpeakMissions.length : 0;
+      var completed = window.SpeakStorage.loadCompletedMissions();
+      var done = completed.length;
+      var pct = total ? Math.round((done / total) * 100) : 0;
+      var fill = document.getElementById('kf-progress-fill');
+      var text = document.getElementById('kf-progress-text');
+      if (fill) fill.style.width = pct + '%';
+      if (text) text.textContent = done + ' / ' + total;
+    },
+
     showPanel: function(name) {
       ['guide','missions','saved'].forEach(function(p) {
         var el = document.getElementById('panel-' + p);
@@ -199,7 +205,7 @@
       var blob = new Blob([editor.value], { type: 'text/plain' });
       var url  = URL.createObjectURL(blob);
       var a    = document.createElement('a');
-      a.href = url; a.download = 'my-speakscript.txt'; a.click();
+      a.href = url; a.download = 'my-kiddyfun-code.txt'; a.click();
       URL.revokeObjectURL(url);
     },
 
@@ -277,5 +283,5 @@
   };
 
   window.UI = UI;
-  console.log('[SpeakScript] UI ready');
+  console.log('[KiddyFun] UI ready');
 })();
