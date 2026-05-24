@@ -17,62 +17,45 @@
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
   }
 
-  var POSES = {
-    idle: { legL: 0, legR: 0, armL: 8, armR: -8, bodyY: 0, torso: 0 },
-    walk: [
-      { legL: 28, legR: -22, armL: -28, armR: 28, bodyY: -4, torso: -2 },
-      { legL: 8, legR: -8, armL: -8, armR: 8, bodyY: -7, torso: 0 },
-      { legL: -22, legR: 28, armL: 28, armR: -28, bodyY: -4, torso: 2 },
-      { legL: -8, legR: 8, armL: 8, armR: -8, bodyY: -7, torso: 0 },
-    ],
-    run: [
-      { legL: 42, legR: -35, armL: -45, armR: 45, bodyY: -8, torso: -6 },
-      { legL: 15, legR: -12, armL: -20, armR: 20, bodyY: -12, torso: -3 },
-      { legL: -35, legR: 42, armL: 45, armR: -45, bodyY: -8, torso: 6 },
-      { legL: -12, legR: 15, armL: 20, armR: -20, bodyY: -12, torso: 3 },
-    ],
-    wave: { legL: 0, legR: 0, armL: 8, armR: -55, bodyY: 0, torso: 0 },
-    jump: { legL: -15, legR: 15, armL: -40, armR: 40, bodyY: -18, torso: 0 },
-  };
+  /* 8-frame walk/run cycles — segmented thighs, shins, arms */
+  var WALK_CYCLE = [
+    { thighL: 22, shinL: 8, thighR: -18, shinR: 5, armUL: -32, armLL: -12, armUR: 28, armLR: 8, head: 1, torso: -1, bodyY: -3, lean: -1 },
+    { thighL: 8, shinL: 15, thighR: -8, shinR: -5, armUL: -12, armLL: 0, armUR: 12, armLR: -5, head: 0, torso: 0, bodyY: -6, lean: 0 },
+    { thighL: -5, shinL: 10, thighR: 18, shinR: 12, armUL: 8, armLL: 5, armUR: -25, armLR: -10, head: -1, torso: 1, bodyY: -4, lean: 1 },
+    { thighL: -18, shinL: 5, thighR: 22, shinR: 8, armUL: 28, armLL: 10, armUR: -32, armLR: -12, head: 1, torso: 2, bodyY: -3, lean: 2 },
+    { thighL: -8, shinL: -5, thighR: 8, shinR: 15, armUL: 12, armLL: -5, armUR: -12, armLR: 0, head: 0, torso: 0, bodyY: -6, lean: 0 },
+    { thighL: 18, shinL: 12, thighR: -5, shinR: 10, armUL: -25, armLL: -10, armUR: 8, armLR: 5, head: -1, torso: -1, bodyY: -4, lean: -1 },
+    { thighL: 22, shinL: 8, thighR: -18, shinR: 5, armUL: -28, armLL: -8, armUR: 32, armLR: 12, head: 1, torso: 1, bodyY: -3, lean: 1 },
+    { thighL: 5, shinL: -2, thighR: -8, shinR: 0, armUL: -8, armLL: 0, armUR: 8, armLR: 0, head: 0, torso: 0, bodyY: -5, lean: 0 },
+  ];
 
-  var poseTimers = {};
+  var RUN_CYCLE = [
+    { thighL: 45, shinL: 25, thighR: -30, shinR: 10, armUL: -55, armLL: -25, armUR: 50, armLR: 20, head: 3, torso: -8, bodyY: -10, lean: -8 },
+    { thighL: 20, shinL: 35, thighR: -15, shinR: -10, armUL: -25, armLL: -15, armUR: 25, armLR: -10, head: 0, torso: -4, bodyY: -14, lean: -5 },
+    { thighL: -10, shinL: 20, thighR: 40, shinR: 30, armUL: 15, armLL: 10, armUR: -45, armLR: -20, head: -2, torso: 5, bodyY: -8, lean: 6 },
+    { thighL: -35, shinL: 10, thighR: 48, shinR: 28, armUL: 50, armLL: 22, armUR: -55, armLR: -25, head: 4, torso: 8, bodyY: -10, lean: 10 },
+    { thighL: -15, shinR: 35, thighR: 15, shinL: -8, armUL: 30, armLL: 5, armUR: -30, armLR: -8, head: 0, torso: 2, bodyY: -14, lean: 4 },
+    { thighL: 38, shinL: 28, thighR: -8, shinR: 18, armUL: -48, armLL: -18, armUR: 20, armLR: 12, head: -2, torso: -6, bodyY: -8, lean: -6 },
+    { thighL: 48, shinL: 22, thighR: -28, shinR: 8, armUL: -52, armLL: -22, armUR: 48, armLR: 18, head: 3, torso: -7, bodyY: -10, lean: -9 },
+    { thighL: 10, shinL: 5, thighR: -5, shinR: 0, armUL: -15, armLL: -5, armUR: 15, armLR: 0, head: 0, torso: 0, bodyY: -12, lean: -3 },
+  ];
 
-  function applyPose(wrap, pose) {
-    if (!wrap || !pose) return;
-    var root = wrap.querySelector('.kf-char-root');
-    if (!root) return;
-    function rot(sel, deg, ox, oy) {
-      var g = wrap.querySelector(sel);
-      if (g) g.setAttribute('transform', 'rotate(' + (deg || 0) + ' ' + ox + ' ' + oy + ')');
-    }
-    rot('.kf-leg-l', pose.legL, 58, 108);
-    rot('.kf-leg-r', pose.legR, 62, 108);
-    rot('.kf-arm-l', pose.armL, 42, 78);
-    rot('.kf-arm-r', pose.armR, 78, 78);
-    rot('.kf-torso', pose.torso || 0, 60, 85);
-    root.style.transform = 'translateY(' + (pose.bodyY || 0) + 'px)';
-  }
+  var POSE_WAVE = { thighL: 0, shinL: 0, thighR: 0, shinR: 0, armUL: 5, armLL: 0, armUR: -62, armLR: -15, head: 4, torso: 2, bodyY: 0, lean: 0 };
+  var POSE_JUMP = [
+    { thighL: -8, shinL: 20, thighR: 8, shinR: 20, armUL: -25, armLL: -10, armUR: 25, armLR: 10, head: -5, torso: 5, bodyY: 0, lean: 0 },
+    { thighL: -20, shinL: 35, thighR: 20, shinR: 35, armUL: -55, armLL: -20, armUR: 55, armLR: 20, head: -8, torso: -5, bodyY: -38, lean: -3 },
+    { thighL: 5, shinL: 5, thighR: -5, shinR: 5, armUL: -15, armLL: 0, armUR: 15, armLR: 0, head: 2, torso: 8, bodyY: -5, lean: 5 },
+    { thighL: 0, shinL: 0, thighR: 0, shinR: 0, armUL: 6, armLL: 0, armUR: -6, armLR: 0, head: 0, torso: 0, bodyY: 0, lean: 0 },
+  ];
 
   function stopPoseLoop(el) {
-    var key = el && el.dataset && el.dataset.key;
-    if (key && poseTimers[key]) {
-      clearInterval(poseTimers[key]);
-      delete poseTimers[key];
-    }
+    if (window.StageAnimator) StageAnimator.stop(el);
   }
 
-  function startPoseLoop(el, seq, speedMs) {
+  function startPoseLoop(el, seq, cycleMs) {
     var wrap = getBodyWrap(el);
-    if (!wrap || !seq || !seq.length) return;
-    stopPoseLoop(el);
-    var key = el.dataset.key || String(Math.random());
-    el.dataset.key = key;
-    var i = 0;
-    applyPose(wrap, seq[0]);
-    poseTimers[key] = setInterval(function () {
-      i = (i + 1) % seq.length;
-      applyPose(wrap, seq[i]);
-    }, speedMs || 130);
+    if (!wrap || !window.StageAnimator) return;
+    StageAnimator.start(el, wrap, seq, cycleMs);
   }
 
   function humanSvg(opts) {
@@ -91,44 +74,67 @@
         '</linearGradient>' +
       '</defs>' +
       '<g class="kf-char-root">' +
+        '<ellipse class="kf-neck" cx="60" cy="68" rx="10" ry="6" fill="url(#kg-skin-' + opts.id + ')"/>' +
         '<g class="kf-legs">' +
-          '<g class="kf-leg kf-leg-l" transform-origin="58 108">' +
-            '<rect x="46" y="98" width="14" height="36" rx="6" fill="' + pants + '"/>' +
-            '<ellipse cx="53" cy="136" rx="12" ry="5" fill="#1e293b"/>' +
+          '<g class="kf-leg-l">' +
+            '<g class="kf-thigh-l" transform-origin="53 98">' +
+              '<path d="M46 98 L58 98 L56 118 L48 118 Z" fill="' + pants + '" rx="2"/>' +
+              '<g class="kf-shin-l" transform-origin="53 118">' +
+                '<path d="M48 118 L58 118 L56 132 L50 132 Z" fill="' + shade(pants, -15) + '"/>' +
+                '<ellipse class="kf-foot-l" cx="53" cy="136" rx="11" ry="4" fill="#334155"/>' +
+                '<rect x="48" y="133" width="10" height="3" rx="1" fill="#1e293b"/>' +
+              '</g>' +
+            '</g>' +
           '</g>' +
-          '<g class="kf-leg kf-leg-r" transform-origin="62 108">' +
-            '<rect x="60" y="98" width="14" height="36" rx="6" fill="' + shade(pants, -12) + '"/>' +
-            '<ellipse cx="67" cy="136" rx="12" ry="5" fill="#1e293b"/>' +
+          '<g class="kf-leg-r">' +
+            '<g class="kf-thigh-r" transform-origin="67 98">' +
+              '<path d="M62 98 L74 98 L72 118 L64 118 Z" fill="' + shade(pants, -8) + '"/>' +
+              '<g class="kf-shin-r" transform-origin="67 118">' +
+                '<path d="M64 118 L74 118 L72 132 L66 132 Z" fill="' + shade(pants, -18) + '"/>' +
+                '<ellipse class="kf-foot-r" cx="67" cy="136" rx="11" ry="4" fill="#334155"/>' +
+                '<rect x="62" y="133" width="10" height="3" rx="1" fill="#1e293b"/>' +
+              '</g>' +
+            '</g>' +
           '</g>' +
         '</g>' +
         '<g class="kf-torso">' +
-          '<path d="M38 72 Q60 64 82 72 L86 98 Q60 104 34 98 Z" fill="url(#kg-shirt-' + opts.id + ')"/>' +
-          '<path d="M42 98 Q60 102 78 98" stroke="' + shade(shirt, -30) + '" stroke-width="2" fill="none"/>' +
+          '<path d="M36 70 Q60 60 84 70 L88 98 Q60 106 32 98 Z" fill="url(#kg-shirt-' + opts.id + ')"/>' +
+          '<path d="M40 76 L80 76" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>' +
         '</g>' +
         '<g class="kf-arms">' +
-          '<g class="kf-arm kf-arm-l" transform-origin="42 78">' +
-            '<path d="M38 76 Q28 88 24 102" stroke="url(#kg-skin-' + opts.id + ')" stroke-width="10" stroke-linecap="round" fill="none"/>' +
-            '<circle cx="24" cy="104" r="6" fill="url(#kg-skin-' + opts.id + ')"/>' +
+          '<g class="kf-arm-l">' +
+            '<g class="kf-arm-ul" transform-origin="42 78">' +
+              '<path d="M38 76 L28 92" stroke="url(#kg-skin-' + opts.id + ')" stroke-width="9" stroke-linecap="round"/>' +
+              '<g class="kf-arm-ll" transform-origin="28 95">' +
+                '<path d="M28 92 L22 108" stroke="url(#kg-skin-' + opts.id + ')" stroke-width="8" stroke-linecap="round"/>' +
+                '<circle cx="22" cy="110" r="5.5" fill="url(#kg-skin-' + opts.id + ')"/>' +
+              '</g>' +
+            '</g>' +
           '</g>' +
-          '<g class="kf-arm kf-arm-r" transform-origin="78 78">' +
-            '<path d="M82 76 Q92 88 96 102" stroke="url(#kg-skin-' + opts.id + ')" stroke-width="10" stroke-linecap="round" fill="none"/>' +
-            '<circle cx="96" cy="104" r="6" fill="url(#kg-skin-' + opts.id + ')"/>' +
+          '<g class="kf-arm-r">' +
+            '<g class="kf-arm-ur" transform-origin="78 78">' +
+              '<path d="M82 76 L92 92" stroke="url(#kg-skin-' + opts.id + ')" stroke-width="9" stroke-linecap="round"/>' +
+              '<g class="kf-arm-lr" transform-origin="92 95">' +
+                '<path d="M92 92 L98 108" stroke="url(#kg-skin-' + opts.id + ')" stroke-width="8" stroke-linecap="round"/>' +
+                '<circle cx="98" cy="110" r="5.5" fill="url(#kg-skin-' + opts.id + ')"/>' +
+              '</g>' +
+            '</g>' +
           '</g>' +
         '</g>' +
         '<g class="kf-head" transform-origin="60 52">' +
-          '<ellipse cx="60" cy="48" rx="28" ry="30" fill="url(#kg-skin-' + opts.id + ')"/>' +
-          '<path d="M34 38 Q60 18 86 38 Q88 28 60 22 Q32 28 34 38" fill="' + hair + '"/>' +
+          '<ellipse cx="60" cy="48" rx="27" ry="29" fill="url(#kg-skin-' + opts.id + ')"/>' +
+          '<path d="M33 36 Q60 14 87 36 Q90 24 60 18 Q30 24 33 36" fill="' + hair + '"/>' +
           '<g class="kf-eyes">' +
-            '<ellipse class="kf-eye kf-eye-l" cx="50" cy="46" rx="5" ry="6" fill="#fff"/>' +
-            '<circle class="kf-pupil" cx="51" cy="47" r="2.5" fill="#1e293b"/>' +
-            '<ellipse class="kf-eye kf-eye-r" cx="70" cy="46" rx="5" ry="6" fill="#fff"/>' +
-            '<circle class="kf-pupil" cx="71" cy="47" r="2.5" fill="#1e293b"/>' +
-            '<path class="kf-brow" d="M44 38 Q50 34 56 38" stroke="' + hair + '" stroke-width="2" fill="none"/>' +
-            '<path class="kf-brow" d="M64 38 Q70 34 76 38" stroke="' + hair + '" stroke-width="2" fill="none"/>' +
+            '<ellipse class="kf-eye kf-eye-l" cx="50" cy="45" rx="6" ry="7" fill="#fff"/>' +
+            '<circle class="kf-pupil kf-pupil-l" cx="51" cy="46" r="3" fill="#1e293b"/>' +
+            '<circle cx="52" cy="45" r="1" fill="#fff" opacity="0.7"/>' +
+            '<ellipse class="kf-eye kf-eye-r" cx="70" cy="45" rx="6" ry="7" fill="#fff"/>' +
+            '<circle class="kf-pupil kf-pupil-r" cx="71" cy="46" r="3" fill="#1e293b"/>' +
+            '<circle cx="72" cy="45" r="1" fill="#fff" opacity="0.7"/>' +
           '</g>' +
-          '<ellipse class="kf-mouth" cx="60" cy="58" rx="7" ry="4" fill="#c97b7b"/>' +
-          '<ellipse cx="42" cy="52" rx="5" ry="3" fill="rgba(255,120,120,0.25)"/>' +
-          '<ellipse cx="78" cy="52" rx="5" ry="3" fill="rgba(255,120,120,0.25)"/>' +
+          '<ellipse class="kf-mouth" cx="60" cy="57" rx="6" ry="3.5" fill="#d4767a"/>' +
+          '<ellipse cx="41" cy="51" rx="6" ry="3.5" fill="rgba(255,100,100,0.2)"/>' +
+          '<ellipse cx="79" cy="51" rx="6" ry="3.5" fill="rgba(255,100,100,0.2)"/>' +
         '</g>' +
       '</g></svg>'
     );
@@ -278,17 +284,25 @@
     wrap.classList.add('kf-sprite-active');
 
     var type = el.dataset.charType || 'human';
-    if (type === 'human' || type === 'robot') {
+    var anim = window.StageAnimator;
+    if (type === 'human' && anim) {
       if (motion === 'walks' || motion === 'moves_right' || motion === 'moves_left') {
-        startPoseLoop(el, POSES.walk, 140);
+        startPoseLoop(el, WALK_CYCLE, 680);
       } else if (motion === 'runs') {
-        startPoseLoop(el, POSES.run, 95);
+        startPoseLoop(el, RUN_CYCLE, 480);
       } else if (motion === 'waves') {
-        applyPose(wrap, POSES.wave);
+        anim.stop(el);
+        anim.applyPose(wrap, POSE_WAVE);
       } else if (motion === 'jumps') {
-        applyPose(wrap, POSES.jump);
+        startPoseLoop(el, POSE_JUMP, 650);
       } else if (motion === 'idle' || motion === 'shows') {
-        applyPose(wrap, POSES.idle);
+        anim.idleBreath(el, wrap);
+      }
+    } else if (type === 'robot') {
+      if (motion === 'walks' || motion === 'moves_right' || motion === 'moves_left') {
+        startPoseLoop(el, WALK_CYCLE, 680);
+      } else if (motion === 'runs') {
+        startPoseLoop(el, RUN_CYCLE, 480);
       }
     }
     el.classList.remove('ss-anim-walk', 'ss-anim-run', 'ss-anim-wave', 'ss-anim-jump');
@@ -297,8 +311,8 @@
   function setFacing(el, facing) {
     if (!el) return;
     el.dataset.facing = facing === 'left' ? 'left' : 'right';
-    var wrap = getBodyWrap(el);
-    if (wrap) wrap.style.transform = facing === 'left' ? 'scaleX(-1)' : 'scaleX(1)';
+    var svg = el.querySelector('.kf-char-svg');
+    if (svg) svg.style.transform = facing === 'left' ? 'scaleX(-1)' : '';
   }
 
   function setTalking(el, on) {
@@ -333,15 +347,21 @@
     sky.className = 'kf-stage-layer kf-layer-sky';
     var ground = document.createElement('div');
     ground.className = 'kf-stage-layer kf-layer-ground';
+    var floor = document.createElement('div');
+    floor.className = 'kf-stage-floor';
     var mid = document.createElement('div');
     mid.className = 'kf-stage-layer kf-layer-mid';
     var vignette = document.createElement('div');
     vignette.className = 'kf-stage-vignette';
+    var light = document.createElement('div');
+    light.className = 'kf-stage-light';
     stage.insertBefore(sky, stage.firstChild);
     stage.insertBefore(ground, sky.nextSibling);
-    stage.insertBefore(mid, ground.nextSibling);
+    stage.insertBefore(floor, ground.nextSibling);
+    stage.insertBefore(mid, floor.nextSibling);
+    stage.appendChild(light);
     stage.appendChild(vignette);
-    return { sky: sky, ground: ground, mid: mid };
+    return { sky: sky, ground: ground, floor: floor, mid: mid };
   }
 
   function applySceneTheme(stage, sceneKey) {
@@ -388,6 +408,5 @@
     transitionScene: transitionScene,
     getBodyWrap: getBodyWrap,
     stopPoseLoop: stopPoseLoop,
-    applyPose: applyPose,
   };
 })();

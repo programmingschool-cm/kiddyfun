@@ -230,6 +230,13 @@
       if (window.StageActions) {
         StageActions.playAction(this.stage, name, 'appears', el);
       }
+      var self = this;
+      setTimeout(function () {
+        if (!self.characters[key] || !window.StageAnimator || !window.StageGraphics) return;
+        var wrap = StageGraphics.getBodyWrap(el);
+        var t = el.dataset.charType;
+        if (wrap && (t === 'human' || t === 'robot')) StageAnimator.idleBreath(el, wrap);
+      }, 750);
       this._addLog('✅ ' + name + ' appears');
     },
 
@@ -302,8 +309,8 @@
       el.classList.add('kf-moving');
       el.classList.toggle('kf-moving-run', mode === 'run');
       this.charPositions[key] = (this.charPositions[key] || 0) + deltaPx;
-      var dur = mode === 'run' ? 0.48 : 0.72;
-      el.style.transition = 'transform ' + dur + 's cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+      var dur = mode === 'run' ? 0.52 : 0.78;
+      el.style.transition = 'transform ' + dur + 's cubic-bezier(0.22, 1, 0.36, 1)';
       el.style.transform = 'translateX(' + this.charPositions[key] + 'px)';
 
       if (window.StageGraphics && this.stage) {
