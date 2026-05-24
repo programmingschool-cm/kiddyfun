@@ -1,0 +1,8 @@
+/**
+ * Copy to supabase-config.local.js (gitignored) for local credentials.
+ * Load before supabase-config.js in index.html if you use this file.
+ */
+window.KiddySupabaseConfigLocal = {
+  url: 'https://YOUR_PROJECT.supabase.co',
+  anonKey: 'YOUR_ANON_PUBLIC_KEY',
+};

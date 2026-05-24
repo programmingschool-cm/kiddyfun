@@ -1,0 +1,7 @@
+# Local Supabase credentials (optional override)
+assets/js/supabase-config.local.js
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp

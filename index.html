@@ -73,16 +73,19 @@
       </div>
       <div class="kf-progress-bar"><div class="kf-progress-fill" id="kf-progress-fill" style="width: 0%"></div></div>
     </div>
+    <p class="kf-cloud-status small text-muted px-3 py-2 mb-0 border-bottom" id="kf-cloud-status">☁️ Cloud sync</p>
     <div class="offcanvas-body p-0 d-flex flex-column">
       <div class="ss-nav-panel">
         <button class="ss-nav-btn active" data-panel="guide">📖 Guide</button>
         <button class="ss-nav-btn" data-panel="missions">🎯 Missions</button>
         <button class="ss-nav-btn" data-panel="saved">💾 Saved</button>
+        <button class="ss-nav-btn" data-panel="sync">☁️ Sync</button>
       </div>
       <div class="ss-side-panel flex-grow-1">
         <div id="panel-guide"></div>
         <div id="panel-missions" class="d-none"></div>
         <div id="panel-saved" class="d-none"></div>
+        <div id="panel-sync" class="d-none p-3"></div>
       </div>
       <div class="p-3 border-top d-flex gap-2 d-md-none">
         <button class="btn btn-outline-danger btn-sm flex-fill" id="btn-reset-progress-mobile">🔄 Reset Progress</button>
@@ -176,11 +179,17 @@
   <div id="ss-toast" class="ss-toast d-none" role="status" aria-live="polite">Saved!</div>
 
   <script src="assets/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Optional: <script src="assets/js/supabase-config.local.js"></script> -->
+  <script src="assets/js/supabase-config.js"></script>
+  <script src="assets/js/supabase-client.js"></script>
+  <script src="assets/js/supabase-sync.js"></script>
   <script src="assets/js/audio.js"></script>
   <script src="assets/js/lexer.js"></script>
   <script src="assets/js/parser.js"></script>
   <script src="assets/js/errors.js"></script>
   <script src="assets/js/storage.js"></script>
+  <script src="assets/js/supabase-auth.js"></script>
   <script src="assets/js/examples.js"></script>
   <script src="assets/js/missions.js"></script>
   <script src="assets/js/runtime.js"></script>

@@ -754,7 +754,8 @@ html, body {
 }
 
 /* ── Side Menu / Guide ───────────────────────────────────────────────── */
-.ss-nav-panel { display: flex; gap: 4px; padding: 8px; background: white; border-bottom: 1px solid var(--kf-border); }
+.ss-nav-panel { display: flex; flex-wrap: wrap; gap: 4px; padding: 8px; background: white; border-bottom: 1px solid var(--kf-border); }
+.kf-cloud-status { line-height: 1.35; background: #f8fafc; }
 .ss-nav-btn {
   flex: 1;
   border: none;

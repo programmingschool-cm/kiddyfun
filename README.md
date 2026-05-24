@@ -16,16 +16,18 @@ It aims to teach basic logic, sequencing, commands, and loops while building con
 - **Visual Engine**: Characters animate, scenes change, and speech bubbles appear dynamically.
 - **English voice (TTS)** and synthesized sound effects (no audio files to import)
 - **Built-in Missions & Examples**: Ready-to-load exercises to guide learning.
-- **State Persistence**: Uses `localStorage` to save user programs and mission progress.
+- **State Persistence**: Offline-first `localStorage`; optional **Supabase** cloud sync (programs, missions, badges) — see [`docs/SUPABASE_GUIDE.md`](docs/SUPABASE_GUIDE.md) (full setup) or [`docs/BACKEND.md`](docs/BACKEND.md) (quick reference).
 
 ## How to Run
 
-Simply double click or open the `index.html` file in any modern web browser.
+**Production (recommended):** host on **GitHub Pages** + optional **Supabase** cloud sync — no server code. See [`docs/GITHUB_PAGES.md`](docs/GITHUB_PAGES.md).
+
+**Local quick try:** open `index.html` in a browser (offline mode). For Supabase sync testing, use a simple static server, e.g. `python -m http.server 5500`.
 
 ```bash
-# Example if using command line:
-open index.html  # on macOS
-xdg-open index.html # on Linux
+# Local static server (optional, for cloud sync dev)
+python -m http.server 5500
+# then open http://localhost:5500/index.html
 ```
 
 ## Folder Structure
@@ -46,7 +48,11 @@ SmartScript/
         ├── runtime.js     # DOM Manipulation / Visual Stage
         ├── interpreter.js # Walks AST, sequences runtime with async timing
         ├── errors.js      # Kid-friendly error handling
-        ├── storage.js     # localStorage interactions
+        ├── storage.js          # localStorage + cloud sync hooks
+        ├── supabase-config.js  # Supabase URL + anon key
+        ├── supabase-client.js  # Supabase client wrapper
+        ├── supabase-sync.js    # Push/pull merge with cloud
+        ├── supabase-auth.js    # Sign-in UI (anonymous + parent email)
         ├── examples.js    # Built-in example snippets
         ├── missions.js    # Learning validation missions
         └── ui.js          # DOM Panels and dynamic UI logic

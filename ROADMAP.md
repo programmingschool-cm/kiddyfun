@@ -2,7 +2,7 @@
 
 > **Vision:** Scratch-style visual coding + Duolingo-style English speaking + KiddyFun's own English-like language — in one browser platform for kids.
 
-**Last updated:** 2026-05-24  
+**Last updated:** 2026-05-24 (Supabase cloud sync)  
 **Current version:** v1.0 (compiler, TTS, missions, mobile UI)
 
 ---
@@ -141,9 +141,9 @@ School-ready and growth features.
 
 ### C2. Accounts & backend (optional)
 
-- [ ] Choose backend: Firebase / Supabase / custom API
-- [ ] Child-safe auth (minimal PII, parent consent flow)
-- [ ] Cloud save programs + sync progress across devices
+- [x] Choose backend: **Supabase** (see [`docs/BACKEND.md`](docs/BACKEND.md); Firebase deferred)
+- [x] Child-safe auth (minimal PII, parent consent flow) — anonymous sign-in + optional parent email magic link ([`assets/js/supabase-auth.js`](assets/js/supabase-auth.js))
+- [x] Cloud save programs + sync progress across devices — offline-first [`storage.js`](assets/js/storage.js) + [`supabase-sync.js`](assets/js/supabase-sync.js); SQL schema in [`supabase/migrations/001_initial_schema.sql`](supabase/migrations/001_initial_schema.sql)
 - [ ] Moderated project gallery (share story URL)
 
 ### C3. Grow to Python
@@ -234,6 +234,10 @@ assets/data/curriculum.json    # Phase B2
 docs/LANGUAGE.md               # Phase D3
 manifest.json                  # Phase A4
 sw.js                          # Phase A4 service worker
+docs/BACKEND.md                # Phase C2 — Supabase quick reference
+docs/SUPABASE_GUIDE.md         # Phase C2 — full Supabase guideline (BN)
+supabase/migrations/001_initial_schema.sql
+assets/js/supabase-*.js        # Phase C2 — config, client, sync, auth
 ```
 
 ---
@@ -244,6 +248,7 @@ Record completed steps here. Newest first.
 
 | Date | Item | Notes |
 |------|------|-------|
+| 2026-05-24 | Phase C2 (partial) | Supabase schema, auth, offline-first cloud sync — see `docs/BACKEND.md` |
 | 2026-05-24 | Roadmap created | Initial plan from product review |
 | 2026-05-24 | Phase 0 baseline | v1.0: TTS, audio, UI upgrade, mobile stage fix |
 

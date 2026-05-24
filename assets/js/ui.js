@@ -73,13 +73,16 @@
     },
 
     showPanel: function(name) {
-      ['guide','missions','saved'].forEach(function(p) {
+      ['guide','missions','saved','sync'].forEach(function(p) {
         var el = document.getElementById('panel-' + p);
         if (el) el.classList.toggle('d-none', p !== name);
       });
       document.querySelectorAll('.ss-nav-btn').forEach(function(btn) {
         btn.classList.toggle('active', btn.dataset.panel === name);
       });
+      if (name === 'sync' && window.KiddyAuth && window.KiddyAuth.buildSyncPanel) {
+        window.KiddyAuth.buildSyncPanel();
+      }
     },
 
     /* ── Guide panel ─────────────────────────────────────────────────── */
