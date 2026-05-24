@@ -1,10 +1,12 @@
-# SpeakScript v0.1
+# KiddyFun Code v1.0
 
 **A magically easy programming language for kids!**
 
-SpeakScript allows kids to write simple, English-like code to create animated stories, conversations, quizzes, and vocabulary learning games right in the browser. 
+KiddyFun Code allows kids to write simple, English-like code to create animated stories, conversations, quizzes, and vocabulary learning games right in the browser.
 
-It aims to teach basic logic, sequencing, commands, and loops while building confidence in reading and typing English.
+It aims to teach basic logic, sequencing, commands, and loops while building confidence in reading, typing, and **speaking English**.
+
+> **Product roadmap:** see [ROADMAP.md](./ROADMAP.md) for the step-by-step plan to grow this into a full kids coding + English speaking platform. Check off items there as you ship.
 
 ## Features
 - **No Backend, No Node.js, No Build step**: Pure HTML, CSS, Vanilla JS.
@@ -12,6 +14,7 @@ It aims to teach basic logic, sequencing, commands, and loops while building con
 - **Kid-friendly Parser**: Recognizes simple sentences like `Rafi says "Hello!"`
 - **Helpful Errors**: Friendly, action-oriented error messages instead of technical jargon.
 - **Visual Engine**: Characters animate, scenes change, and speech bubbles appear dynamically.
+- **English voice (TTS)** and synthesized sound effects (no audio files to import)
 - **Built-in Missions & Examples**: Ready-to-load exercises to guide learning.
 - **State Persistence**: Uses `localStorage` to save user programs and mission progress.
 
