@@ -358,6 +358,16 @@
         }
         editor.focus();
       }
+      this.showToast('✅ Loaded: ' + name);
+      this.closeLeftMenu();
+      if (window.innerWidth < 992) {
+        if (window.KiddyApp && window.KiddyApp.unlockMobileTab) {
+          window.KiddyApp.unlockMobileTab();
+        }
+        if (window.KiddyApp && window.KiddyApp.setMobileTab) {
+          window.KiddyApp.setMobileTab('code');
+        }
+      }
     },
 
     deleteSavedProgram: function(name) {
