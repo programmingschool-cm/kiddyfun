@@ -65,19 +65,37 @@
     this._stopped = true;
     if (window.KiddyAudio) KiddyAudio.cancelAll();
     if (this._resolve) { this._resolve('wrong'); this._resolve = null; }
+    if (this._inputResolve) {
+      var E = Expr();
+      if (this.runtime && this.runtime.hideUserInput) this.runtime.hideUserInput(true);
+      this._inputResolve(E ? E.kfVal('string', '') : { type: 'string', value: '' });
+      this._inputResolve = null;
+    }
   };
 
   Interpreter.prototype.promptUser = function (question, line) {
+    var self = this;
     var E = Expr();
-    var text = '';
+    if (this.runtime && this.runtime.showUserInput) {
+      return new Promise(function (resolve) {
+        self._inputResolve = resolve;
+        self.runtime.showUserInput(question, function (text) {
+          if (self._inputResolve) {
+            self._inputResolve = null;
+            resolve(E.kfVal('string', String(text)));
+          }
+        });
+      });
+    }
+    var fallback = '';
     if (typeof window !== 'undefined' && typeof window.prompt === 'function') {
       var raw = window.prompt(question);
-      text = raw === null ? '' : String(raw);
+      fallback = raw === null ? '' : String(raw);
     }
     if (this.runtime && this.runtime.logMessage) {
-      this.runtime.logMessage('⌨️ You typed: ' + (text || '(empty)'));
+      this.runtime.logMessage('⌨️ You typed: ' + (fallback || '(empty)'));
     }
-    return E.kfVal('string', text);
+    return Promise.resolve(E.kfVal('string', fallback));
   };
 
   Interpreter.prototype._eval = function (expr, env, line) {
@@ -98,7 +116,7 @@
       return this.callFunctionValue(expr.name, expr.args, env, line);
     }
     if (expr.type === 'ask_user') {
-      return Promise.resolve(this.promptUser(expr.question, line));
+      return this.promptUser(expr.question, line);
     }
     return Promise.resolve(this._eval(expr, env, line));
   };
@@ -424,5 +442,5 @@
   };
 
   window.SpeakInterpreter = { Interpreter: Interpreter, InterpretError: InterpretError };
-  console.log('[KiddyFun] Interpreter v2.1 ready');
+  console.log('[KiddyFun] Interpreter v2.2 ready');
 })();

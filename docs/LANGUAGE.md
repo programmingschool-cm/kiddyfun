@@ -112,6 +112,8 @@ call greet with "Teacher"
 
 ## Keyboard input
 
+A friendly input box appears in the **Output** panel (below the stage). Type your answer and press **OK** or Enter.
+
 ```
 ask user "What is your name?" as playerName
 narrator says playerName

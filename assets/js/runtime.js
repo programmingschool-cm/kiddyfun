@@ -43,6 +43,11 @@
     logPanel     : null,
     vocabPanel   : null,
     scoreDisplay : null,
+    inputDock    : null,
+    inputQuestion: null,
+    inputField   : null,
+    inputForm    : null,
+    _inputCallback: null,
     characters   : {},
     score        : 0,
     quizResult   : null,
@@ -58,6 +63,10 @@
       this.logPanel      = logEl;
       this.vocabPanel    = vocabEl;
       this.scoreDisplay  = scoreEl;
+      this.inputDock     = document.getElementById('kf-input-dock');
+      this.inputQuestion = document.getElementById('kf-input-question');
+      this.inputField    = document.getElementById('kf-input-field');
+      this.inputForm     = document.getElementById('kf-input-form');
       this.reset();
       this._startAmbientParticles();
     },
@@ -92,6 +101,7 @@
       if (this.logPanel)     this.logPanel.innerHTML = '';
       if (this.vocabPanel)   this.vocabPanel.innerHTML = '';
       if (this.scoreDisplay) this.scoreDisplay.innerHTML = '🏆 Score: <span>0</span>';
+      this.hideUserInput(true);
     },
 
     /* ── Scene ─────────────────────────────────────────────────────────── */
@@ -316,6 +326,84 @@
       this.vocabPanel.insertBefore(card, this.vocabPanel.firstChild);
       if (window.KiddyAudio) KiddyAudio.playSound('pop');
       this._addLog('📚 Vocab: ' + word + ' → ' + meaning);
+    },
+
+    /* ── Keyboard input (ask user) ─────────────────────────────────────── */
+    showUserInput: function (question, onAnswer) {
+      var self = this;
+      if (!this.inputDock || !this.inputField) {
+        if (onAnswer) onAnswer('');
+        return;
+      }
+
+      this.hideUserInput(true);
+      this._inputCallback = onAnswer;
+
+      this.inputQuestion.textContent = question;
+      this.inputField.value = '';
+      this.inputDock.classList.remove('d-none');
+      this.inputDock.classList.add('kf-input-visible');
+
+      var panelBody = this.inputDock.closest('.kf-panel-body');
+      if (panelBody) panelBody.classList.add('kf-waiting-input');
+
+      this._addLog('⌨️ ' + question);
+
+      var stageHint = document.createElement('div');
+      stageHint.className = 'kf-input-stage-hint';
+      stageHint.textContent = '⌨️ Type your answer below';
+      this.stage.appendChild(stageHint);
+      this._inputStageHint = stageHint;
+
+      function finish() {
+        var text = self.inputField.value;
+        var cb = self._inputCallback;
+        self._inputCallback = null;
+        self.hideUserInput(true);
+        self._addLog('✅ You typed: ' + (text.trim() ? text : '(empty)'));
+        if (cb) cb(text);
+      }
+
+      this._inputFinish = finish;
+
+      if (this.inputForm) {
+        this.inputForm.onsubmit = function (e) {
+          e.preventDefault();
+          finish();
+        };
+      }
+
+      setTimeout(function () {
+        self.inputField.focus();
+        if (window.KiddyAudio && KiddyAudio.speak) {
+          KiddyAudio.speak(question, 'narrator');
+        }
+      }, 80);
+    },
+
+    hideUserInput: function (silent) {
+      if (this.inputDock) {
+        this.inputDock.classList.add('d-none');
+        this.inputDock.classList.remove('kf-input-visible');
+      }
+      var panelBody = this.inputDock && this.inputDock.closest('.kf-panel-body');
+      if (panelBody) panelBody.classList.remove('kf-waiting-input');
+
+      if (this._inputStageHint && this._inputStageHint.parentNode) {
+        this._inputStageHint.remove();
+      }
+      this._inputStageHint = null;
+
+      if (this.inputForm) this.inputForm.onsubmit = null;
+      this._inputFinish = null;
+
+      if (!silent && this._inputCallback) {
+        var cb = this._inputCallback;
+        this._inputCallback = null;
+        cb('');
+      } else if (silent) {
+        this._inputCallback = null;
+      }
     },
 
     /* ── Quiz ─────────────────────────────────────────────────────────────── */

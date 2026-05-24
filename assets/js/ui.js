@@ -92,7 +92,7 @@
       ]},
     { icon:'⌨️', title:'Keyboard input',
       items:[
-        {desc:'Ask the user (browser prompt)',code:'ask user "What is your name?" as playerName\nnarrator says playerName'},
+        {desc:'Ask the user (type in Output panel)',code:'ask user "What is your name?" as playerName\nnarrator says playerName'},
         {desc:'Or use built-in answer',code:'ask user "Favourite colour?"\nset colour to answer'},
         {desc:'In an expression',code:'set name to ask user "Your name?"'},
       ]},

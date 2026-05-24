@@ -638,6 +638,128 @@ html, body {
   100% { transform: translateY(120px) rotate(720deg); opacity: 0; }
 }
 
+/* Keyboard input (ask user) — output panel */
+.kf-input-dock {
+  flex: 0 0 auto;
+  margin-top: 8px;
+  animation: kf-input-slide 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes kf-input-slide {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.kf-user-input-card {
+  background: linear-gradient(135deg, #eff6ff 0%, #fdf4ff 100%);
+  border: 2px solid var(--kf-dark);
+  border-radius: 16px;
+  padding: 12px 14px;
+  box-shadow: var(--kf-shadow-md);
+}
+
+.kf-user-input-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.kf-user-input-icon {
+  font-size: 1.75rem;
+  line-height: 1;
+  flex-shrink: 0;
+  animation: kf-bounce-icon 1.2s ease infinite;
+}
+
+.kf-user-input-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--kf-info);
+  margin-bottom: 2px;
+}
+
+.kf-user-input-question {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--kf-dark);
+  line-height: 1.35;
+}
+
+.kf-user-input-form {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.kf-user-input-field {
+  flex: 1;
+  min-width: 0;
+  border: 2px solid var(--kf-border);
+  border-radius: var(--kf-radius-sm);
+  padding: 10px 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: var(--kf-font);
+  background: white;
+  transition: var(--kf-transition);
+}
+
+.kf-user-input-field:focus {
+  outline: none;
+  border-color: var(--kf-info);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+}
+
+.kf-user-input-submit {
+  flex-shrink: 0;
+  border: none;
+  border-radius: var(--kf-radius-sm);
+  padding: 10px 18px;
+  font-weight: 800;
+  font-size: 0.95rem;
+  cursor: pointer;
+  color: white;
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  box-shadow: var(--kf-shadow-sm);
+  transition: var(--kf-transition);
+}
+
+.kf-user-input-submit:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--kf-shadow-md);
+}
+
+.kf-user-input-submit:active {
+  transform: translateY(0);
+}
+
+.kf-input-stage-hint {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid var(--kf-info);
+  color: var(--kf-dark);
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 8px 16px;
+  border-radius: 999px;
+  z-index: 25;
+  box-shadow: var(--kf-shadow-md);
+  animation: kf-input-slide 0.4s ease, kf-bounce-icon 1.5s ease infinite;
+  pointer-events: none;
+}
+
+.kf-panel-body.kf-waiting-input .kf-input-dock.kf-input-visible {
+  border-color: var(--kf-info);
+}
+
 /* Bottom panels — fixed height so stage keeps space */
 .kf-bottom-grid {
   display: grid;
@@ -1120,5 +1242,8 @@ html, body {
   .ss-bubble { font-size: 0.85rem; max-width: 180px; padding: 10px 14px; }
   .ss-quiz-box { padding: 18px; }
   .ss-quiz-question { font-size: 1rem; }
+  .kf-user-input-form { flex-direction: column; }
+  .kf-user-input-submit { width: 100%; padding: 12px; }
+  .kf-user-input-question { font-size: 0.95rem; }
   .kf-navbar .kf-pill-btn { padding: 5px 10px; font-size: 0.78rem; }
 }
