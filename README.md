@@ -36,6 +36,9 @@ python -m http.server 5500
 SmartScript/
 ├── index.html          # Main UI layout
 ├── README.md           # This documentation
+├── docs/
+│   ├── TUTORIAL.md     # Complete language tutorial & reference
+│   └── LANGUAGE.md     # Quick syntax summary
 └── assets/
     ├── css/
     │   ├── bootstrap.min.css  # Layout framework
@@ -125,7 +128,7 @@ show score
 
 ### 8. Programming concepts (v2 — industry-grade, kid-easy)
 
-Full reference: [`docs/LANGUAGE.md`](docs/LANGUAGE.md)
+**Language docs:** [Complete tutorial](docs/TUTORIAL.md) · [Quick reference](docs/LANGUAGE.md)
 
 ```
 set name to "Rafi"

@@ -42,6 +42,10 @@
     UI.updateProgress();
     UI.showPanel('guide');
 
+    if (window.KiddyTutorial && window.KiddyTutorial.load) {
+      window.KiddyTutorial.load(false);
+    }
+
     if (window.KiddyAuth) {
       if (window.KiddyAuth.buildSyncPanel) window.KiddyAuth.buildSyncPanel();
       var btnSync = $id('btn-open-sync');
@@ -90,6 +94,12 @@
     bind('btn-download', function () { UI.downloadProgram(); });
     bind('btn-reset-progress', resetProgress);
     bind('btn-reset-progress-mobile', resetProgress);
+    bind('btn-open-tutorial', function () {
+      if (window.KiddyTutorial && window.KiddyTutorial.openInMenu) window.KiddyTutorial.openInMenu();
+    });
+    bind('btn-open-tutorial-mobile', function () {
+      if (window.KiddyTutorial && window.KiddyTutorial.openInMenu) window.KiddyTutorial.openInMenu();
+    });
     bind('btn-toggle-code', toggleDesktopCodePanel);
     bind('tab-code-btn', function () { setMobileTab('code'); });
     bind('tab-output-btn', function () { setMobileTab('output'); });

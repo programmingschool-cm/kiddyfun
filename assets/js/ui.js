@@ -118,6 +118,9 @@
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
+  /** Snippets for Guide “Use this” buttons (indexed by data-guide-idx) */
+  var GUIDE_SNIPPETS = [];
+
   var UI = {
     updateProgress: function() {
       var total = window.SpeakMissions ? window.SpeakMissions.length : 0;
@@ -131,16 +134,21 @@
     },
 
     showPanel: function(name) {
-      ['guide','missions','saved','sync'].forEach(function(p) {
+      ['guide', 'tutorial', 'missions', 'saved', 'sync'].forEach(function (p) {
         var el = document.getElementById('panel-' + p);
         if (el) el.classList.toggle('d-none', p !== name);
       });
-      document.querySelectorAll('.ss-nav-btn').forEach(function(btn) {
+      document.querySelectorAll('.ss-nav-btn').forEach(function (btn) {
         btn.classList.toggle('active', btn.dataset.panel === name);
       });
       if (name === 'sync' && window.KiddyAuth && window.KiddyAuth.buildSyncPanel) {
         window.KiddyAuth.buildSyncPanel();
       }
+      if (name === 'tutorial' && window.KiddyTutorial && window.KiddyTutorial.buildPanel) {
+        window.KiddyTutorial.buildPanel();
+      }
+      var sidePanel = document.querySelector('.ss-side-panel');
+      if (sidePanel) sidePanel.classList.toggle('ss-side-tutorial', name === 'tutorial');
     },
 
     /* ── Guide panel ─────────────────────────────────────────────────── */
@@ -148,31 +156,79 @@
       var el = document.getElementById('panel-guide');
       if (!el) return;
       var html = '<h6 class="ss-panel-title">📖 Language Guide</h6>';
+      html += '';
+      GUIDE_SNIPPETS = [];
       GUIDE_SECTIONS.forEach(function(s) {
         html += '<div class="ss-guide-section">';
-        html += '<div class="ss-guide-header" onclick="this.parentElement.classList.toggle(\'open\')">';
+        html += '<div class="ss-guide-header" role="button" tabindex="0">';
         html += '<span>' + s.icon + ' ' + escHtml(s.title) + '</span><span class="ss-guide-arrow">›</span></div>';
         html += '<div class="ss-guide-body">';
         s.items.forEach(function(item) {
+          var idx = GUIDE_SNIPPETS.length;
+          GUIDE_SNIPPETS.push(item.code);
           html += '<div class="ss-guide-item">';
           html += '<div class="ss-guide-desc">' + escHtml(item.desc) + '</div>';
           html += '<pre class="ss-guide-code">' + escHtml(item.code) + '</pre>';
-          html += '<button class="ss-copy-btn" onclick="window.UI.insertCode(' + JSON.stringify(item.code) + ')">📋 Use this</button>';
+          html += '<button type="button" class="ss-copy-btn" data-guide-idx="' + idx + '">📋 Use this</button>';
           html += '</div>';
         });
         html += '</div></div>';
       });
       el.innerHTML = html;
+
+      el.querySelectorAll('.ss-guide-header').forEach(function (hdr) {
+        hdr.addEventListener('click', function () {
+          hdr.parentElement.classList.toggle('open');
+        });
+      });
+
+      el.addEventListener('click', function (e) {
+        var btn = e.target.closest('.ss-copy-btn');
+        if (!btn) return;
+        e.preventDefault();
+        e.stopPropagation();
+        var i = parseInt(btn.getAttribute('data-guide-idx'), 10);
+        if (!isNaN(i) && GUIDE_SNIPPETS[i] !== undefined) {
+          UI.insertCode(GUIDE_SNIPPETS[i]);
+        }
+      });
+
+      var tutBtn = document.getElementById('btn-guide-open-tutorial');
+      if (tutBtn) {
+        tutBtn.addEventListener('click', function (e) {
+          e.preventDefault();
+          if (window.KiddyTutorial && window.KiddyTutorial.openInMenu) {
+            window.KiddyTutorial.openInMenu();
+          }
+        });
+      }
+    },
+
+    closeLeftMenu: function () {
+      var menu = document.getElementById('leftMenu');
+      if (!menu || !window.bootstrap) return;
+      var oc = window.bootstrap.Offcanvas.getInstance(menu);
+      if (!oc) oc = window.bootstrap.Offcanvas.getOrCreateInstance(menu);
+      if (oc) oc.hide();
     },
 
     insertCode: function(snippet) {
       var editor = document.getElementById('ss-editor');
       if (!editor) return;
       var pos = editor.selectionStart || editor.value.length;
-      editor.value = editor.value.slice(0, pos) + (pos > 0 ? '\n' : '') + snippet + '\n' + editor.value.slice(pos);
+      var prefix = editor.value.length > 0 && pos > 0 ? '\n' : '';
+      var suffix = editor.value.length > 0 ? '\n' : '';
+      editor.value = editor.value.slice(0, pos) + prefix + snippet + suffix + editor.value.slice(pos);
       editor.focus();
-      window.SpeakStorage.saveLastCode(editor.value);
+      if (window.SpeakStorage) window.SpeakStorage.saveLastCode(editor.value);
       this.syncLineNumbers();
+      this.showToast('📋 Code added to editor');
+      this.closeLeftMenu();
+
+      if (window.innerWidth < 992) {
+        var tabCode = document.getElementById('tab-code-btn');
+        if (tabCode) tabCode.click();
+      }
     },
 
     /* ── Missions panel ──────────────────────────────────────────────── */

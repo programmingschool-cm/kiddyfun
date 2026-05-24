@@ -52,6 +52,9 @@
         <button class="btn btn-light kf-pill-btn border shadow-sm d-none d-md-inline-flex align-items-center gap-1" type="button" id="btn-open-sync" title="Cloud sync and sign in">
           ☁️ <span class="d-none d-lg-inline">Sync</span>
         </button>
+        <!-- <button class="btn btn-light kf-pill-btn border shadow-sm d-none d-md-inline-flex align-items-center gap-1" type="button" id="btn-open-tutorial" title="Full language tutorial">
+          📘 Tutorial
+        </button> -->
         <div class="dropdown">
           <button class="btn btn-light kf-pill-btn dropdown-toggle border shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
             📚 Examples
@@ -80,12 +83,14 @@
     <div class="offcanvas-body p-0 d-flex flex-column">
       <div class="ss-nav-panel">
         <button class="ss-nav-btn active" data-panel="guide">📖 Guide</button>
+        <!-- <button class="ss-nav-btn" data-panel="tutorial">📘 Tutorial</button> -->
         <button class="ss-nav-btn" data-panel="missions">🎯 Missions</button>
         <button class="ss-nav-btn" data-panel="saved">💾 Saved</button>
         <button class="ss-nav-btn" data-panel="sync">☁️ Sync</button>
       </div>
       <div class="ss-side-panel flex-grow-1">
         <div id="panel-guide"></div>
+        <div id="panel-tutorial" class="d-none ss-tutorial-panel"></div>
         <div id="panel-missions" class="d-none"></div>
         <div id="panel-saved" class="d-none"></div>
         <div id="panel-sync" class="d-none p-3">
@@ -94,6 +99,7 @@
         </div>
       </div>
       <div class="p-3 border-top d-flex flex-column gap-2 d-md-none">
+        <button class="btn btn-primary btn-sm w-100" type="button" id="btn-open-tutorial-mobile">📘 Language Tutorial</button>
         <button class="btn btn-success btn-sm w-100" type="button" id="btn-open-sync-mobile">☁️ Sign in / Cloud Sync</button>
         <button class="btn btn-outline-danger btn-sm w-100" id="btn-reset-progress-mobile">🔄 Reset Progress</button>
       </div>
@@ -232,6 +238,8 @@
   <script src="assets/js/supabase-auth.js"></script>
   <script src="assets/js/examples.js"></script>
   <script src="assets/js/missions.js"></script>
+  <script src="assets/js/tutorial-content.js"></script>
+  <script src="assets/js/tutorial.js"></script>
   <script src="assets/js/runtime.js"></script>
   <script src="assets/js/interpreter.js"></script>
   <script src="assets/js/ui.js"></script>
