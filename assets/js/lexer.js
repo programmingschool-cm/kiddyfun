@@ -9,9 +9,16 @@
     'scene','appears','says','waves','smiles','jumps','flies','moves',
     'right','left','hides','shows','show','word','means','narrator',
     'wait','second','seconds','ask','choice','correct','wrong',
-    'repeat','times','if','answer','is','else','end','score','starts',
+    'repeat','times','while','if','answer','is','else','end','score','starts',
     'at','add','points','play','sound','flaps','clap','success','dances','bows','runs',
-    'walks','handshakes','nods','cheers'
+    'walks','handshakes','nods','cheers',
+    /* v2 — programming concepts (English-like) */
+    'set','to','true','false','define','call','return','with',
+    'and','or','not','plus','minus','times','divided','by','joined',
+    'greater','than','less','equal','equals','length','of','list',
+    'item','in','type','value','empty',
+    'const','for','each','break','continue','user','as',
+    'random','from','remainder','remove','number'
   ]);
 
   const TOKEN_TYPES = {
@@ -160,6 +167,6 @@
 
   /* ── Export ───────────────────────────────────────────────────────── */
   window.SpeakLexer = { tokenize: tokenize, TOKEN_TYPES: TOKEN_TYPES, LexerError: LexerError };
-  console.log('[SpeakScript] Lexer ready');
+  console.log('[KiddyFun] Lexer v2 ready');
 
 })();

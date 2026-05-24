@@ -41,6 +41,21 @@
     { pattern: /Lexer not loaded/i,
       title: '⚙️ Script loading error',
       tip: 'Try refreshing the page (F5). If the problem persists, check the browser console.' },
+    { pattern: /Unknown variable/i,
+      title: '📦 Variable not found!',
+      tip: 'Create it first with "set".\n✅ Try:\nset name to "Rafi"\nnarrator says name' },
+    { pattern: /Expected "to" after variable/i,
+      title: '📦 Use "set … to …"',
+      tip: '✅ Try: set score to 10\n✅ Try: set name to "Rafi"' },
+    { pattern: /Unknown function/i,
+      title: '⚙️ Function not defined!',
+      tip: 'Write "define" before "call".\n✅ Try:\ndefine cheer\n    narrator says "Yay!"\nend\n\ncall cheer' },
+    { pattern: /"define" block needs an "end"/i,
+      title: '⚙️ Missing "end" for function!',
+      tip: 'Close every define block with "end".' },
+    { pattern: /Expression engine/i,
+      title: '⚙️ Language module missing',
+      tip: 'Refresh the page. Make sure expr.js loads before parser.js.' },
   ];
 
   function friendlyError(err) {

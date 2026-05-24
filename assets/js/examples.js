@@ -265,6 +265,165 @@ Sagor says "Me too! We will open it next month."
 narrator says "And so, the journey of kiddyFun begins!"
 `,
   },
+  {
+    id   : 'programming101',
+    title: '💻 Programming 101',
+    desc : 'Variables, text, numbers, lists, functions, and conditions — industry concepts, super easy words.',
+    code : `# Programming 101 — KiddyFun Language v2
+scene "classroom"
+
+Teacher appears
+Teacher says "Today we learn real programming ideas!"
+
+# Variables (store data)
+set name to "Rafi"
+set age to 10
+set happy to true
+set greeting to "Hello" joined with " friend"
+
+show type of name
+show type of age
+show value of greeting
+
+# Use variables when speaking
+Teacher says greeting
+Rafi appears
+Rafi says name
+
+# Math with numbers
+set points to 0
+set points to points plus 25
+show value of points
+
+# Lists (many items)
+set fruits to list "apple" and "banana" and "mango"
+set firstFruit to item 1 in fruits
+show value of firstFruit
+
+# Conditions
+if age is greater than 5
+    Teacher says "You are ready for coding!"
+else
+    Teacher says "Keep learning every day!"
+end
+
+# Functions (reusable steps)
+define celebrate
+    play sound "cheer"
+    narrator says "Great job!"
+end
+
+call celebrate
+
+# Loop while a condition is true
+set count to 1
+repeat while count is less than 4
+    Rafi waves
+    set count to count plus 1
+end
+
+narrator says "You used variables, types, lists, if, functions, and loops!"
+`,
+  },
+  {
+    id   : 'programming102',
+    title: '⌨️ Input, for-each, const',
+    desc : 'Keyboard input, loops over lists, break/continue, const, and function results.',
+    code : `# Programming 102 — more basics
+scene "classroom"
+
+Teacher appears
+
+# Keyboard input (also saved in "answer")
+ask user "What is your name?" as playerName
+Teacher says playerName
+
+# const — cannot change later
+const maxLives to 3
+show type of maxLives
+
+# Function that returns a value
+define double with n
+    return n times 2
+end
+
+set score to 10
+set score to call double with score
+show value of score
+
+# for each item in a list
+set fruits to list "Apple" and "Banana" and "Mango"
+for each fruit in fruits
+    narrator says fruit
+end
+
+# break and continue
+set n to 0
+repeat while n is less than 10
+    set n to n plus 1
+    if n equals 5
+        continue
+    end
+    if n is greater than 7
+        break
+    end
+    show value of n
+end
+
+narrator says "You learned input, for each, const, break, continue, and return values!"
+`,
+  },
+  {
+    id   : 'programming103',
+    title: '🎲 Lists, random, and more',
+    desc : 'Random numbers, remainder, empty/in checks, add/remove list items, >= comparisons.',
+    code : `# Programming 103 — extra basics
+scene "classroom"
+
+Teacher appears
+Teacher says "More real programming tools!"
+
+set fruits to list "apple" and "banana"
+
+# Add and remove list items
+add "mango" to fruits
+show value of fruits
+remove item 2 from fruits
+show value of fruits
+
+# Check list
+if fruits is empty
+    narrator says "No fruit!"
+else
+    narrator says "We have fruit!"
+end
+
+if "apple" is in fruits
+    narrator says "Apple is on the list!"
+end
+
+# Random dice (1 to 6)
+set roll to random number from 1 to 6
+narrator says roll
+
+# Remainder (even or odd trick)
+set n to 11
+set leftover to n remainder 2
+if leftover equals 0
+    narrator says "n is even"
+else
+    narrator says "n is odd"
+end
+
+# Greater-or-equal
+set level to 3
+if level is greater than or equal to 3
+    Teacher says "Level 3 unlocked!"
+end
+
+narrator says "You used random, remainder, list add/remove, empty, and is in!"
+`,
+  },
 ];
 
 window.SpeakExamples = EXAMPLES;

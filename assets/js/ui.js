@@ -54,6 +54,64 @@
       items:[
         {desc:'Track points and play sounds',code:'score starts at 0\nadd 10 points\nshow score\nplay sound "success"'},
       ]},
+    { icon:'📦', title:'Variables & Data Types',
+      items:[
+        {desc:'Store text, numbers, and true/false',code:'set name to "Rafi"\nset age to 10\nset ready to true'},
+        {desc:'See type and value (number, text, list…)',code:'show type of age\nshow value of name'},
+        {desc:'Update with math or joined text',code:'set score to score plus 10\nset msg to "Hi" joined with " there"'},
+      ]},
+    { icon:'📋', title:'Lists (Strings of items)',
+      items:[
+        {desc:'Create a list',code:'set colors to list "red" and "blue" and "green"'},
+        {desc:'Get item by position (starts at 1)',code:'set first to item 1 in colors\nshow value of first'},
+        {desc:'Length of text or list',code:'set n to length of colors'},
+        {desc:'Add or remove items',code:'add "yellow" to colors\nremove item 2 from colors'},
+        {desc:'Empty or contains?',code:'if colors is empty\n    narrator says "None"\nend\nif "red" is in colors\n    narrator says "Found red"\nend'},
+      ]},
+    { icon:'🎲', title:'Random & remainder',
+      items:[
+        {desc:'Random number in a range',code:'set dice to random number from 1 to 6\nnarrator says dice'},
+        {desc:'Remainder (even/odd)',code:'set check to 7 remainder 2\nif check equals 0\n    narrator says "even"\nend'},
+      ]},
+    { icon:'⚙️', title:'Functions',
+      items:[
+        {desc:'Define steps once, call many times',code:'define waveHello\n    Rafi waves\n    Rafi says "Hello!"\nend\n\ncall waveHello'},
+        {desc:'Functions with inputs',code:'define greet with name\n    narrator says name\nend\n\ncall greet with "Mina"'},
+        {desc:'Return a value',code:'define double with n\n    return n times 2\nend'},
+      ]},
+    { icon:'🧠', title:'Conditions & Loops',
+      items:[
+        {desc:'If / else with comparisons',code:'if score is greater than 10\n    narrator says "High score!"\nelse\n    narrator says "Keep trying!"\nend'},
+        {desc:'Greater-or-equal / less-or-equal',code:'if level is greater than or equal to 5\n    narrator says "Pro level!"\nend'},
+        {desc:'Equals text',code:'if name equals "Rafi"\n    Rafi smiles\nend'},
+        {desc:'Repeat while condition',code:'set i to 1\nrepeat while i is less than 4\n    set i to i plus 1\nend'},
+      ]},
+    { icon:'💬', title:'Speak from variables',
+      items:[
+        {desc:'Say a variable (not only quoted text)',code:'set line to "Welcome!"\nnarrator says line'},
+      ]},
+    { icon:'⌨️', title:'Keyboard input',
+      items:[
+        {desc:'Ask the user (browser prompt)',code:'ask user "What is your name?" as playerName\nnarrator says playerName'},
+        {desc:'Or use built-in answer',code:'ask user "Favourite colour?"\nset colour to answer'},
+        {desc:'In an expression',code:'set name to ask user "Your name?"'},
+      ]},
+    { icon:'🔒', title:'const (cannot change)',
+      items:[
+        {desc:'Fixed value for the whole program',code:'const maxScore to 100\n# set maxScore to 200  ← error'},
+      ]},
+    { icon:'🔁', title:'for each in list',
+      items:[
+        {desc:'Loop over every list item',code:'set colours to list "red" and "blue"\nfor each colour in colours\n    narrator says colour\nend'},
+      ]},
+    { icon:'⏭️', title:'break / continue',
+      items:[
+        {desc:'Stop loop early or skip one turn',code:'repeat while n is less than 10\n    if n equals 5\n        continue\n    end\n    if n is greater than 8\n        break\n    end\nend'},
+      ]},
+    { icon:'↩️', title:'Function return value',
+      items:[
+        {desc:'Use result in set or say',code:'define addTen with x\n    return x plus 10\nend\nset total to call addTen with 5'},
+      ]},
   ];
 
   function escHtml(s) {

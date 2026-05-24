@@ -444,6 +444,10 @@
     },
 
     /* ── Log ──────────────────────────────────────────────────────────────── */
+    logMessage: function (msg) {
+      this._addLog(msg);
+    },
+
     _addLog: function (msg) {
       if (!this.logPanel) return;
       var item = document.createElement('div');

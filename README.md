@@ -44,6 +44,7 @@ SmartScript/
         ├── bootstrap.bundle.min.js
         ├── app.js         # Bootstrap and UI event binding
         ├── lexer.js       # Converts text string to token array
+        ├── expr.js        # English-like expressions (math, logic, variables)
         ├── parser.js      # Converts tokens to AST commands
         ├── runtime.js     # DOM Manipulation / Visual Stage
         ├── interpreter.js # Walks AST, sequences runtime with async timing
@@ -121,6 +122,45 @@ score starts at 0
 add 10 points
 show score
 ```
+
+### 8. Programming concepts (v2 — industry-grade, kid-easy)
+
+Full reference: [`docs/LANGUAGE.md`](docs/LANGUAGE.md)
+
+```
+set name to "Rafi"
+set age to 10
+set ready to true
+show type of age
+show value of name
+
+set fruits to list "apple" and "banana"
+set first to item 1 in fruits
+
+if age is greater than 5
+    narrator says "Great!"
+else
+    narrator says "Keep going!"
+end
+
+define cheer
+    play sound "cheer"
+end
+call cheer
+
+repeat while count is less than 4
+    set count to count plus 1
+end
+
+ask user "What is your name?" as playerName
+const maxLives to 3
+for each fruit in fruits
+    narrator says fruit
+end
+set total to call addTen with 5
+```
+
+Load **💻 Programming 101**, **⌨️ Input, for-each, const**, and **🎲 Lists, random, and more** from the Examples menu.
 
 ## Architecture
 
