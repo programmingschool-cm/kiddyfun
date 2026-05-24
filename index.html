@@ -49,6 +49,9 @@
         <button class="kf-btn-icon d-none d-sm-flex" id="btn-toggle-sound" title="Sound Effects" aria-label="Toggle sound">
           🎵
         </button>
+        <button class="btn btn-light kf-pill-btn border shadow-sm d-none d-md-inline-flex align-items-center gap-1" type="button" id="btn-open-sync" title="Cloud sync and sign in">
+          ☁️ <span class="d-none d-lg-inline">Sync</span>
+        </button>
         <div class="dropdown">
           <button class="btn btn-light kf-pill-btn dropdown-toggle border shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
             📚 Examples
@@ -85,10 +88,14 @@
         <div id="panel-guide"></div>
         <div id="panel-missions" class="d-none"></div>
         <div id="panel-saved" class="d-none"></div>
-        <div id="panel-sync" class="d-none p-3"></div>
+        <div id="panel-sync" class="d-none p-3">
+          <h6 class="ss-panel-title">☁️ Cloud Sync</h6>
+          <p class="ss-empty-msg small text-muted">Loading sign-in…</p>
+        </div>
       </div>
-      <div class="p-3 border-top d-flex gap-2 d-md-none">
-        <button class="btn btn-outline-danger btn-sm flex-fill" id="btn-reset-progress-mobile">🔄 Reset Progress</button>
+      <div class="p-3 border-top d-flex flex-column gap-2 d-md-none">
+        <button class="btn btn-success btn-sm w-100" type="button" id="btn-open-sync-mobile">☁️ Sign in / Cloud Sync</button>
+        <button class="btn btn-outline-danger btn-sm w-100" id="btn-reset-progress-mobile">🔄 Reset Progress</button>
       </div>
     </div>
   </div>
@@ -179,7 +186,7 @@
   <div id="ss-toast" class="ss-toast d-none" role="status" aria-live="polite">Saved!</div>
 
   <script src="assets/js/bootstrap.bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8/dist/umd/supabase.min.js"></script>
   <!-- Optional: <script src="assets/js/supabase-config.local.js"></script> -->
   <script src="assets/js/supabase-config.js"></script>
   <script src="assets/js/supabase-client.js"></script>

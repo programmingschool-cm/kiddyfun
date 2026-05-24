@@ -42,6 +42,22 @@
     UI.updateProgress();
     UI.showPanel('guide');
 
+    if (window.KiddyAuth) {
+      if (window.KiddyAuth.buildSyncPanel) window.KiddyAuth.buildSyncPanel();
+      var btnSync = $id('btn-open-sync');
+      if (btnSync) {
+        btnSync.addEventListener('click', function () {
+          if (window.KiddyAuth.openSyncPanel) window.KiddyAuth.openSyncPanel();
+        });
+      }
+      var btnSyncMobile = $id('btn-open-sync-mobile');
+      if (btnSyncMobile) {
+        btnSyncMobile.addEventListener('click', function () {
+          if (window.KiddyAuth.openSyncPanel) window.KiddyAuth.openSyncPanel();
+        });
+      }
+    }
+
     buildExampleDropdown();
     initAudioToggles();
 

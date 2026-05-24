@@ -65,6 +65,12 @@
       return;
     }
 
+    if (window.KiddyCloud && !window.KiddyCloud.isLibraryLoaded()) {
+      statusEl.textContent = '☁️ Cloud library blocked — refresh or check connection';
+      if (panel) buildSyncPanel();
+      return;
+    }
+
     if (state.signedIn) {
       statusEl.textContent = '☁️ Synced as ' + state.displayName +
         (state.isAnonymous ? ' (guest)' : '');
@@ -83,6 +89,14 @@
         '<h6 class="ss-panel-title">☁️ Cloud Sync</h6>' +
         '<p class="ss-empty-msg small">Supabase is not configured. The app works offline with saved programs on this device.</p>' +
         '<p class="small text-muted">See <code>docs/BACKEND.md</code> for setup.</p>';
+      return;
+    }
+
+    if (window.KiddyCloud && !window.KiddyCloud.isLibraryLoaded()) {
+      el.innerHTML =
+        '<h6 class="ss-panel-title">☁️ Cloud Sync</h6>' +
+        '<p class="ss-empty-msg small">The Supabase library did not load (CDN blocked or offline).</p>' +
+        '<p class="small text-muted">Refresh the page or try another network. Coding still works offline on this device.</p>';
       return;
     }
 
@@ -253,35 +267,55 @@
     }
   }
 
+  function openSyncPanel() {
+    if (window.UI && window.UI.showPanel) {
+      window.UI.showPanel('sync');
+    }
+    var menu = document.getElementById('leftMenu');
+    if (menu && window.bootstrap && bootstrap.Offcanvas) {
+      bootstrap.Offcanvas.getOrCreateInstance(menu).show();
+    }
+    buildSyncPanel();
+  }
+
   async function init() {
-    if (!cloudEnabled()) {
-      refreshSyncStatus();
-      return;
-    }
-    await window.KiddyCloud.init();
-    var client = sb();
-    if (!client) return;
+    try {
+      if (!cloudEnabled()) {
+        refreshSyncStatus();
+        return;
+      }
+      await window.KiddyCloud.init();
+      var client = sb();
+      if (!client) {
+        refreshSyncStatus();
+        return;
+      }
 
-    var sessionRes = await client.auth.getSession();
-    if (sessionRes.data.session) {
-      await afterSignIn(sessionRes.data.session);
-    } else {
-      applyState(null, null);
-    }
-
-    client.auth.onAuthStateChange(async function (event, session) {
-      if (event === 'SIGNED_IN' && session) {
-        await afterSignIn(session);
-      } else if (event === 'SIGNED_OUT') {
+      var sessionRes = await client.auth.getSession();
+      if (sessionRes.data.session) {
+        await afterSignIn(sessionRes.data.session);
+      } else {
         applyState(null, null);
       }
-    });
+
+      client.auth.onAuthStateChange(async function (event, session) {
+        if (event === 'SIGNED_IN' && session) {
+          await afterSignIn(session);
+        } else if (event === 'SIGNED_OUT') {
+          applyState(null, null);
+        }
+      });
+    } catch (e) {
+      console.warn('[KiddyAuth] init failed', e);
+      refreshSyncStatus();
+    }
   }
 
   window.KiddyAuth = {
     init: init,
     refreshSyncStatus: refreshSyncStatus,
     buildSyncPanel: buildSyncPanel,
+    openSyncPanel: openSyncPanel,
     isSignedIn: function () { return state.signedIn; },
     cloudEnabled: cloudEnabled,
   };

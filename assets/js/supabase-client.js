@@ -16,15 +16,28 @@
     return !!(c.url && c.anonKey);
   }
 
+  function getSupabaseGlobal() {
+    if (typeof supabase !== 'undefined' && supabase.createClient) return supabase;
+    if (typeof window !== 'undefined' && window.supabase && window.supabase.createClient) {
+      return window.supabase;
+    }
+    return null;
+  }
+
   function getClient() {
     if (!isConfigured()) return null;
     if (client) return client;
-    if (typeof supabase === 'undefined' || !supabase.createClient) {
-      console.warn('[KiddyCloud] Supabase JS library not loaded');
+    var lib = getSupabaseGlobal();
+    if (!lib) {
+      console.warn('[KiddyCloud] Supabase JS not loaded — check index.html UMD script');
       return null;
     }
-    client = supabase.createClient(cfg().url, cfg().anonKey);
+    client = lib.createClient(cfg().url, cfg().anonKey);
     return client;
+  }
+
+  function isLibraryLoaded() {
+    return !!getSupabaseGlobal();
   }
 
   function init() {
@@ -38,6 +51,7 @@
 
   window.KiddyCloud = {
     isConfigured: isConfigured,
+    isLibraryLoaded: isLibraryLoaded,
     getClient: getClient,
     init: init,
   };
