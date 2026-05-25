@@ -168,7 +168,10 @@
     this._ready = false;
     this._current = null;
     this._voiceCache = {};
+    this._unlocked = false;
+    this._keepAliveTimer = null;
     this._loadVoices();
+    this._installUnlock();
   }
 
   TTSEngine.prototype._loadVoices = function () {
@@ -176,10 +179,75 @@
     function load() {
       self._voices = speechSynthesis.getVoices() || [];
       self._ready = self._voices.length > 0;
+      /* Voice list changed — clear per-name cache so we re-pick */
+      if (self._ready) self._voiceCache = {};
     }
     load();
     if ('onvoiceschanged' in speechSynthesis) {
       speechSynthesis.onvoiceschanged = load;
+    }
+    /* Some mobile browsers populate voices lazily — retry briefly */
+    var tries = 0;
+    var retry = setInterval(function () {
+      if (self._ready || ++tries > 10) { clearInterval(retry); return; }
+      load();
+    }, 350);
+  };
+
+  /* Unlock speechSynthesis on the first user gesture. On iOS Safari and
+   * some Android browsers, the first speak() must be inside a real user
+   * interaction or it will be silently dropped. We fire an empty utter-
+   * ance once on the first touch/click anywhere to prime the engine.   */
+  TTSEngine.prototype._installUnlock = function () {
+    if (!window.speechSynthesis) return;
+    var self = this;
+    function unlock() {
+      if (self._unlocked) { detach(); return; }
+      try {
+        var u = new SpeechSynthesisUtterance(' ');
+        u.volume = 0;
+        u.rate = 1;
+        u.onend = function () { self._unlocked = true; };
+        u.onerror = function () { self._unlocked = true; };
+        speechSynthesis.cancel();
+        speechSynthesis.speak(u);
+        self._unlocked = true; /* assume unlocked, fix later if it fails */
+      } catch (e) { /* ignore */ }
+      detach();
+    }
+    function detach() {
+      document.removeEventListener('pointerdown', unlock, true);
+      document.removeEventListener('touchstart', unlock, true);
+      document.removeEventListener('click', unlock, true);
+      document.removeEventListener('keydown', unlock, true);
+    }
+    document.addEventListener('pointerdown', unlock, true);
+    document.addEventListener('touchstart', unlock, true);
+    document.addEventListener('click', unlock, true);
+    document.addEventListener('keydown', unlock, true);
+  };
+
+  /* Chrome on Android pauses speechSynthesis after ~15s. Toggling
+   * pause/resume on a timer keeps it alive for longer texts.           */
+  TTSEngine.prototype._startKeepAlive = function () {
+    var self = this;
+    if (self._keepAliveTimer) return;
+    self._keepAliveTimer = setInterval(function () {
+      if (window.speechSynthesis && speechSynthesis.speaking) {
+        try {
+          speechSynthesis.pause();
+          speechSynthesis.resume();
+        } catch (e) { /* ignore */ }
+      } else {
+        self._stopKeepAlive();
+      }
+    }, 9000);
+  };
+
+  TTSEngine.prototype._stopKeepAlive = function () {
+    if (this._keepAliveTimer) {
+      clearInterval(this._keepAliveTimer);
+      this._keepAliveTimer = null;
     }
   };
 
@@ -249,7 +317,10 @@
   };
 
   TTSEngine.prototype.cancel = function () {
-    if (window.speechSynthesis) speechSynthesis.cancel();
+    if (window.speechSynthesis) {
+      try { speechSynthesis.cancel(); } catch (e) { /* ignore */ }
+    }
+    this._stopKeepAlive();
     this._current = null;
   };
 
@@ -257,49 +328,82 @@
     var profile = this._getProfile(actor);
     var rate = profile.rate || 0.92;
     var charMs = 55 / rate;
-    return Math.min(Math.max(String(text || '').length * charMs, 800), 7000);
+    return Math.min(Math.max(String(text || '').length * charMs, 800), 8000);
   };
+
+  /* Detect platforms with stricter TTS quirks (iOS Safari, Chrome Android) */
+  function isMobileLike() {
+    var ua = navigator.userAgent || '';
+    return /Mobi|Android|iPhone|iPad|iPod|webOS/i.test(ua);
+  }
+  var MOBILE_LIKE = isMobileLike();
 
   TTSEngine.prototype.speak = function (text, actor) {
     var self = this;
+    text = String(text || '').trim();
     var fallbackMs = this.estimateDuration(text, actor);
     if (!this.enabled || !text || !window.speechSynthesis) {
       return Promise.resolve(fallbackMs);
     }
 
     return new Promise(function (resolve) {
-      self.cancel();
-      var utter = new SpeechSynthesisUtterance(text);
-      var profile = self._getProfile(actor);
-      utter.rate = profile.rate;
-      utter.pitch = profile.pitch;
-      utter.volume = 1;
-      var voice = self._pickVoiceFor(actor);
-      if (voice) {
-        utter.voice = voice;
-        utter.lang = voice.lang || 'en-US';
-      }
-
       var done = false;
       function finish(ms) {
         if (done) return;
         done = true;
+        self._stopKeepAlive();
         self._current = null;
         resolve(ms || fallbackMs);
       }
 
-      utter.onstart = function () {
-        /* nothing — speaking now */
-      };
-      utter.onend = function () { finish(fallbackMs); };
-      utter.onerror = function () { finish(Math.min(1500, fallbackMs)); };
+      function startSpeaking() {
+        try {
+          var utter = new SpeechSynthesisUtterance(text);
+          var profile = self._getProfile(actor);
+          utter.rate = profile.rate;
+          utter.pitch = profile.pitch;
+          utter.volume = 1;
+          var voice = self._pickVoiceFor(actor);
+          if (voice) {
+            utter.voice = voice;
+            utter.lang = voice.lang || 'en-US';
+          } else {
+            utter.lang = 'en-US';
+          }
+          utter.onend = function () { finish(fallbackMs); };
+          utter.onerror = function (e) {
+            /* Common harmless errors: 'interrupted', 'canceled' */
+            var safe = (e && (e.error === 'interrupted' || e.error === 'canceled'));
+            finish(safe ? Math.min(600, fallbackMs) : Math.min(1500, fallbackMs));
+          };
+          self._current = utter;
+          speechSynthesis.speak(utter);
+          self._startKeepAlive();
+        } catch (e) {
+          finish(fallbackMs);
+        }
+      }
 
-      self._current = utter;
-      speechSynthesis.speak(utter);
+      /* If something is still speaking, cancel + wait a tick. iOS
+       * Safari's cancel() is asynchronous; speaking immediately after
+       * it will silently drop the new utterance. A small delay fixes
+       * this reliably across iOS / Android Chrome.                    */
+      var needsDelay = MOBILE_LIKE && window.speechSynthesis &&
+        (speechSynthesis.speaking || speechSynthesis.pending);
+      if (speechSynthesis.speaking || speechSynthesis.pending) {
+        try { speechSynthesis.cancel(); } catch (e) { /* ignore */ }
+      }
 
-      /* Hard timeout — some browsers leave utterance hanging */
-      setTimeout(function () { finish(fallbackMs + 400); },
-        Math.min(text.length * 90 + 2200, 9000));
+      if (needsDelay) {
+        setTimeout(startSpeaking, 120);
+      } else {
+        startSpeaking();
+      }
+
+      /* Hard timeout — generous on mobile where some browsers never
+       * fire onend (especially after the keep-alive workaround).      */
+      var hardMax = Math.min(fallbackMs * 1.6 + 2500, 14000);
+      setTimeout(function () { finish(fallbackMs + 400); }, hardMax);
     });
   };
 
