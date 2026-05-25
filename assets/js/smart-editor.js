@@ -91,6 +91,10 @@
     foldedStore: {},
     touchDrag: null,
     touchGhost: null,
+    diagnostics: [],
+    lintDebounce: null,
+    statusEls: null,
+    suggestBtn: null,
   };
 
   var FOLD_STORAGE_PREFIX = 'kf-fold-';
@@ -227,9 +231,18 @@
 
   function wordBefore(text, pos) {
     var slice = text.slice(0, pos);
-    var m = slice.match(/([A-Za-z#][\w\s]*)$/);
+    var m = slice.match(/(#?[A-Za-z][\w]*)$/);
     if (!m) return { word: '', start: pos };
     return { word: m[1], start: pos - m[1].length };
+  }
+
+  function phraseBefore(text, pos) {
+    var slice = text.slice(0, pos);
+    var lineStart = slice.lastIndexOf('\n') + 1;
+    var lineText = slice.slice(lineStart);
+    var m = lineText.match(/([A-Za-z][\w]*(?:\s+[A-Za-z][\w]*)*)$/);
+    if (!m) return { phrase: '', start: pos };
+    return { phrase: m[1], start: pos - m[1].length };
   }
 
   function fuzzyScore(query, target) {
@@ -271,14 +284,19 @@
       });
     }
 
-    /* Character at line start */
-    if (/^\s*[A-Za-z][\w]*\s*$/i.test(info.line.slice(0, info.col)) && word.length >= 1) {
+    /* Character + space → suggest actions */
+    var charSpaceMatch = info.line.slice(0, info.col).match(/^\s*([A-Z][\w]*)\s+$/);
+    if (charSpaceMatch) {
+      var charNm = charSpaceMatch[1];
       ACTIONS.forEach(function (a) {
-        var charMatch = trimmed.match(/^([A-Za-z][\w]*)\s*$/i);
-        if (charMatch) {
-          add({ label: charMatch[1] + ' ' + a, insert: ' ' + a, detail: '🎭 Action', score: 90,
-            replaceStart: pos, replaceEnd: pos });
-        }
+        add({
+          label: charNm + ' ' + a,
+          insert: a,
+          detail: '🎭 Action',
+          score: 95,
+          replaceStart: pos,
+          replaceEnd: pos,
+        });
       });
     }
 
@@ -335,9 +353,14 @@
       }
     }
 
-    /* Snippets */
+    /* Snippets — also match multi-word keys against the phrase */
+    var phrase = phraseBefore(text, pos).phrase.toLowerCase();
     SNIPPETS.forEach(function (sn) {
       var fs = fuzzyScore(word, sn.k);
+      if (sn.k.indexOf(' ') >= 0 && phrase) {
+        var pf = fuzzyScore(phrase, sn.k);
+        if (pf > fs) fs = pf;
+      }
       if (fs > 0 || fuzzyScore(word, sn.label) > 0) {
         add({
           label: sn.label,
@@ -452,8 +475,114 @@
     syncHighlight();
     updateGutter();
     updateCurrentLine();
+    scheduleLint();
+    updateStatusBar();
     if (state.onChange) state.onChange();
     refresh();
+  }
+
+  function scheduleLint() {
+    clearTimeout(state.lintDebounce);
+    state.lintDebounce = setTimeout(function () {
+      runLint();
+    }, 300);
+  }
+
+  function runLint() {
+    if (!window.KiddyEditorLinter || !state.editor) {
+      state.diagnostics = [];
+      return;
+    }
+    state.diagnostics = KiddyEditorLinter.lintCode(state.editor.value);
+    decorateGutterDiagnostics();
+    updateStatusBar();
+  }
+
+  function decorateGutterDiagnostics() {
+    var lineNos = state.lineNosEl;
+    if (!lineNos) return;
+    var byLine = {};
+    state.diagnostics.forEach(function (d) {
+      if (!byLine[d.line] || severityWeight(d.severity) > severityWeight(byLine[d.line].severity)) {
+        byLine[d.line] = d;
+      }
+    });
+    var rows = lineNos.querySelectorAll('.kf-ln-row');
+    rows.forEach(function (row) {
+      row.classList.remove('kf-ln-error', 'kf-ln-warn', 'kf-ln-info');
+      row.removeAttribute('data-lint');
+      var line = parseInt(row.getAttribute('data-line'), 10);
+      var d = byLine[line];
+      if (!d) return;
+      var cls = d.severity === 'error' ? 'kf-ln-error'
+        : d.severity === 'warning' ? 'kf-ln-warn' : 'kf-ln-info';
+      row.classList.add(cls);
+      row.setAttribute('data-lint', d.title + ' — ' + (d.fix || ''));
+      row.setAttribute('title', d.title + '\n' + d.message + '\n💡 ' + (d.fix || ''));
+    });
+  }
+
+  function severityWeight(s) {
+    return s === 'error' ? 3 : s === 'warning' ? 2 : 1;
+  }
+
+  function updateStatusBar() {
+    if (!state.statusEls || !state.editor) return;
+    var ed = state.editor;
+    var pos = ed.selectionStart;
+    var before = ed.value.slice(0, pos);
+    var lineNo = before.split('\n').length;
+    var col = pos - (before.lastIndexOf('\n') + 1) + 1;
+
+    if (state.statusEls.pos) {
+      state.statusEls.pos.textContent = 'Ln ' + lineNo + ', Col ' + col;
+    }
+
+    if (state.statusEls.block) {
+      var depth = blockDepthAt(ed.value, lineNo - 1);
+      var ctx = currentBlockContext(ed.value, lineNo - 1);
+      state.statusEls.block.textContent = ctx || (depth > 0 ? 'In block' : 'Top level');
+    }
+
+    if (state.statusEls.health && window.KiddyEditorLinter) {
+      var sum = KiddyEditorLinter.summarize(state.diagnostics);
+      var el = state.statusEls.health;
+      el.classList.remove('kf-status-health-ok', 'kf-status-health-warn', 'kf-status-health-err');
+      if (sum.errors > 0) {
+        el.classList.add('kf-status-health-err');
+        el.textContent = '⚠ ' + sum.errors + ' problem' + (sum.errors > 1 ? 's' : '');
+        el.title = 'Click a red dot in the gutter for details';
+      } else if (sum.warnings > 0) {
+        el.classList.add('kf-status-health-warn');
+        el.textContent = '! ' + sum.warnings + ' tip' + (sum.warnings > 1 ? 's' : '');
+        el.title = 'Hover the yellow dot for a hint';
+      } else {
+        el.classList.add('kf-status-health-ok');
+        el.textContent = '✓ Clean';
+        el.title = 'No problems';
+      }
+    }
+  }
+
+  function currentBlockContext(code, lineNo) {
+    var lines = code.split('\n');
+    var stack = [];
+    for (var i = 0; i <= lineNo && i < lines.length; i++) {
+      var t = lines[i].replace(/^\s+/, '').replace(/#.*$/, '').trim();
+      if (!t) continue;
+      if (/^end\b/i.test(t)) stack.pop();
+      else if (/^repeat\s+(\d+)\s+times/i.test(t)) {
+        var n = (t.match(/repeat\s+(\d+)/i) || [, ''])[1];
+        stack.push('🔁 repeat ' + n + '×');
+      } else if (/^repeat\s+while/i.test(t)) stack.push('🔁 while');
+      else if (/^if\b/i.test(t)) stack.push('🧠 if');
+      else if (/^else\b/i.test(t)) { stack.pop(); stack.push('🧠 else'); }
+      else if (/^define\s+([A-Za-z][\w]*)/i.test(t)) {
+        var name = t.match(/define\s+([A-Za-z][\w]*)/i)[1];
+        stack.push('⚙️ ' + name);
+      } else if (/^for\s+each\b/i.test(t)) stack.push('📋 for each');
+    }
+    return stack.length ? stack.join(' › ') : '';
   }
 
   function syncHighlight() {
@@ -522,6 +651,7 @@
       }
       lineNos.innerHTML = simple;
       lineNos.scrollTop = ed.scrollTop;
+      decorateGutterDiagnostics();
       return;
     }
 
@@ -564,6 +694,7 @@
     }
     lineNos.innerHTML = html;
     lineNos.scrollTop = ed.scrollTop;
+    decorateGutterDiagnostics();
   }
 
   function bindGutterDrag() {
@@ -981,7 +1112,7 @@
       var wordLen = wb.word.trim().length;
       state.items = getCompletions(ed.value, pos);
 
-      var minWord = state.beginner ? 2 : 1;
+      var minWord = 1;
       if (state.items.length && wordLen >= minWord) {
         state.selected = 0;
         state.replaceStart = state.items[0].replaceStart != null ? state.items[0].replaceStart : wb.start;
@@ -1022,6 +1153,22 @@
       e.preventDefault();
       applyCompletion(state.items[state.selected]);
       return true;
+    }
+
+    var atLineEnd = start === info.lineEnd;
+    if (atLineEnd && window.KiddyEditorLinter && KiddyEditorLinter.autoCorrectOnEnter) {
+      var corrected = KiddyEditorLinter.autoCorrectOnEnter(line);
+      if (corrected && corrected !== line) {
+        v = v.slice(0, info.lineStart) + corrected + v.slice(info.lineEnd);
+        start = info.lineStart + corrected.length;
+        end = start;
+        ed.value = v;
+        ed.selectionStart = ed.selectionEnd = start;
+        line = corrected;
+        trimmed = line.replace(/^\s+/, '');
+        indent = line.match(/^(\s*)/)[1];
+        flashMagic();
+      }
     }
 
     if (BLOCK_END.test(trimmed) && blockDepthAt(v, info.lineNo) === 0) {
@@ -1298,6 +1445,23 @@
     state.highlightEl = document.getElementById('kf-editor-highlight');
     state.guidesEl = document.getElementById('kf-editor-guides');
 
+    state.statusEls = {
+      pos: document.getElementById('kf-status-pos'),
+      block: document.getElementById('kf-status-block'),
+      health: document.getElementById('kf-status-health'),
+    };
+    state.suggestBtn = document.getElementById('btn-suggest');
+    if (state.suggestBtn) {
+      state.suggestBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        editor.focus();
+        unlockAutocomplete();
+        state.items = getCompletions(editor.value, editor.selectionStart);
+        state.selected = 0;
+        renderAutocomplete();
+      });
+    }
+
     var layer = document.getElementById('kf-editor-layer');
     if (!state.highlightEl && layer) {
       state.guidesEl = document.createElement('div');
@@ -1335,9 +1499,13 @@
       if (state.open) positionAutocomplete();
     });
     editor.addEventListener('keydown', onKeyDown);
-    editor.addEventListener('keyup', updateCurrentLine);
+    editor.addEventListener('keyup', function () {
+      updateCurrentLine();
+      updateStatusBar();
+    });
     editor.addEventListener('click', function () {
       updateCurrentLine();
+      updateStatusBar();
       if (!state.acLocked) refresh();
     });
     editor.addEventListener('select', updateCurrentLine);
@@ -1350,6 +1518,8 @@
     restoreFoldsFromCode(editor.value);
     syncHighlight();
     updateGutter();
+    runLint();
+    updateStatusBar();
     refresh();
   }
 

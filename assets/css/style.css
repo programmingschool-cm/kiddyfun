@@ -210,6 +210,11 @@ body.kf-mobile-mode.kf-tab-output-active .kf-tab-btn#tab-output-btn {
   border-top: none;
   border-radius: 0 0 var(--kf-radius-sm) var(--kf-radius-sm);
   overflow: hidden;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.kf-editor-wrap:focus-within {
+  border-color: rgba(56, 139, 253, 0.55);
+  box-shadow: 0 0 0 3px rgba(56, 139, 253, 0.12);
 }
 
 /* ── Editor metrics (shared by textarea, highlight & line numbers) ── */
@@ -423,7 +428,9 @@ body.kf-mobile-mode.kf-tab-output-active .kf-tab-btn#tab-output-btn {
 }
 .kf-editor::placeholder {
   color: #6e7681;
-  opacity: 1;
+  opacity: 0.75;
+  font-style: italic;
+  line-height: var(--kf-editor-line-height);
 }
 
 .kf-ac-hint {
@@ -452,6 +459,7 @@ body.kf-mobile-mode.kf-tab-output-active .kf-tab-btn#tab-output-btn {
   min-height: 0;
   overflow: hidden;
   flex: 1 1 auto;
+  position: relative;
 }
 
 .kf-editor-input-area .kf-editor-layer {
@@ -574,6 +582,100 @@ body.kf-mobile-mode.kf-tab-output-active .kf-tab-btn#tab-output-btn {
   color: #8b949e;
   white-space: nowrap;
   flex-shrink: 0;
+}
+
+/* ── Status bar (Ln, block, problems) ─────────────────────────────── */
+.kf-status-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 6px 10px;
+  margin-top: 4px;
+  font-size: 0.72rem;
+  font-family: var(--kf-font);
+  color: #8b949e;
+  background: rgba(13, 17, 23, 0.7);
+  border: 1px solid #21262d;
+  border-radius: 6px;
+  user-select: none;
+}
+.kf-status-pos {
+  color: #c9d1d9;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+.kf-status-block {
+  color: #a5d6ff;
+  font-weight: 500;
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.kf-status-divider { color: #484f58; }
+.kf-status-health {
+  margin-left: auto;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.kf-status-health-ok {
+  background: rgba(16, 185, 129, 0.15);
+  color: #6ee7b7;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+.kf-status-health-warn {
+  background: rgba(245, 158, 11, 0.18);
+  color: #fcd34d;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+.kf-status-health-err {
+  background: rgba(239, 68, 68, 0.18);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  animation: kf-pulse-err 1.6s ease-in-out infinite;
+}
+@keyframes kf-pulse-err {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.35); }
+  50% { box-shadow: 0 0 0 4px rgba(239, 68, 68, 0); }
+}
+.kf-status-suggest {
+  border: none;
+  background: linear-gradient(135deg, #a371f7, #58a6ff);
+  color: #fff;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(88, 166, 255, 0.4);
+  transition: transform 0.15s ease;
+}
+.kf-status-suggest:hover { transform: scale(1.08); }
+.kf-status-suggest:active { transform: scale(0.95); }
+
+/* ── Gutter lint markers ──────────────────────────────────────────── */
+.kf-ln-row.kf-ln-error {
+  background: rgba(239, 68, 68, 0.12);
+  box-shadow: inset 3px 0 0 #f85149;
+}
+.kf-ln-row.kf-ln-warn {
+  background: rgba(245, 158, 11, 0.1);
+  box-shadow: inset 3px 0 0 #d29922;
+}
+.kf-ln-row.kf-ln-info {
+  background: rgba(56, 139, 253, 0.08);
+  box-shadow: inset 3px 0 0 #58a6ff;
+}
+.kf-ln-row.kf-ln-error .kf-ln-num,
+.kf-ln-row.kf-ln-warn .kf-ln-num {
+  color: #fff;
+  font-weight: 700;
 }
 
 .kf-editor-wrap.kf-editor-flash {
