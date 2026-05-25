@@ -78,6 +78,11 @@
       this.charPositions = {};
       this.charCount     = 0;
       this.currentScene  = 'default';
+      if (this._narratorHideTimer) {
+        clearTimeout(this._narratorHideTimer);
+        this._narratorHideTimer = null;
+      }
+      this._narratorTextEl = null;
       if (window.KiddyAudio) KiddyAudio.cancelAll();
       this._hideVoiceIndicator();
       if (this.stage) {
@@ -401,11 +406,30 @@
     /* ── Dialogue + TTS ──────────────────────────────────────────────────── */
     showSpeech: function (name, text) {
       var key = name.toLowerCase();
+      var self = this;
+
       if (key === 'narrator') {
         this._showNarratorBox(text);
         this._addLog('📖 Narrator: "' + text + '"');
-        return this._speakWithIndicator(text, 'narrator');
+        var narratorSpoken = this._speakWithIndicator(text, 'narrator');
+        var narratorMs = window.KiddyAudio && KiddyAudio.estimateSpeechMs
+          ? KiddyAudio.estimateSpeechMs(text, 'narrator')
+          : Math.min(Math.max(text.length * 60, 1000), 5500);
+        var narratorTyping;
+        if (window.StagePro && this._narratorTextEl) {
+          narratorTyping = StagePro.typeIntoNarrator(this._narratorTextEl, text, narratorMs);
+        } else {
+          if (this._narratorTextEl) this._narratorTextEl.textContent = text;
+          narratorTyping = Promise.resolve();
+        }
+        return Promise.all([narratorSpoken, narratorTyping]).then(function () {
+          self._hideNarratorBox();
+        });
       }
+
+      /* Make sure any leftover narrator box is gone before a character speaks */
+      this._hideNarratorBox();
+
       if (!this.characters[key]) this.characterAppears(name);
 
       var charEl = this.characters[key].el;
@@ -417,17 +441,18 @@
       }
       if (window.StageGraphics) StageGraphics.setTalking(charEl, true);
 
-      var self = this;
       var spokenMs = window.KiddyAudio && KiddyAudio.estimateSpeechMs
         ? KiddyAudio.estimateSpeechMs(text, name)
         : Math.min(Math.max(text.length * 55, 900), 4500);
 
-      /* Premium bubble (typewriter, char color, tail) — runs in parallel with TTS */
+      /* Premium bubble (typewriter, char color, tail, name chip) */
       var typingPromise;
       if (window.StagePro) {
         typingPromise = StagePro.showBubble(self.stage, charEl, text, {
           color: def.color,
           spokenMs: spokenMs,
+          speakerName: def.label || name,
+          narratorActive: !!this.stage.querySelector('.ss-narrator-box.kf-narrator-active'),
         });
       } else {
         var bubble = document.createElement('div');
@@ -453,16 +478,41 @@
     },
 
     _showNarratorBox: function (text) {
+      /* Cancel any pending hide first so we don't fight ourselves */
+      if (this._narratorHideTimer) {
+        clearTimeout(this._narratorHideTimer);
+        this._narratorHideTimer = null;
+      }
       var box = this.stage.querySelector('.ss-narrator-box');
       if (!box) {
         box = document.createElement('div');
         box.className = 'ss-narrator-box';
+        box.innerHTML =
+          '<span class="ss-narrator-icon" aria-hidden="true">📖</span>' +
+          '<span class="ss-narrator-text"></span>';
         this.stage.appendChild(box);
       }
-      box.innerHTML = '<span>📖</span> ' + escHtml(text);
-      box.classList.remove('ss-anim-slidein');
+      this._narratorTextEl = box.querySelector('.ss-narrator-text');
+      if (this._narratorTextEl) this._narratorTextEl.textContent = '';
+      this._narratorPlainText = text;
+      box.classList.remove('ss-anim-slidein', 'kf-narrator-hide');
+      box.classList.add('kf-narrator-active');
       void box.offsetWidth;
       box.classList.add('ss-anim-slidein');
+    },
+
+    _hideNarratorBox: function () {
+      var box = this.stage && this.stage.querySelector('.ss-narrator-box');
+      if (!box) return;
+      if (this._narratorHideTimer) clearTimeout(this._narratorHideTimer);
+      box.classList.remove('kf-narrator-active');
+      box.classList.add('kf-narrator-hide');
+      var self = this;
+      this._narratorHideTimer = setTimeout(function () {
+        if (box.parentNode) box.remove();
+        self._narratorTextEl = null;
+        self._narratorHideTimer = null;
+      }, 500);
     },
 
     _speakWithIndicator: function (text, actor) {

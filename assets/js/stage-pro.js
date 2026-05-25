@@ -31,6 +31,42 @@
     return '#4f8ef7';
   }
 
+  function initial(name) {
+    if (!name) return '?';
+    var s = String(name).trim();
+    return s.charAt(0).toUpperCase();
+  }
+
+  function typewrite(textEl, fullText, ms) {
+    var perChar = Math.max(20, Math.min(70, ms / Math.max(fullText.length, 1)));
+    var i = 0;
+    var done = false;
+    var timer = null;
+    return new Promise(function (resolve) {
+      function tick() {
+        if (done) return;
+        if (i >= fullText.length) {
+          done = true;
+          textEl.classList.add('kf-pro-bubble-text-done');
+          resolve();
+          return;
+        }
+        textEl.textContent = fullText.slice(0, ++i);
+        timer = setTimeout(tick, perChar);
+      }
+      tick();
+      setTimeout(function () {
+        if (!done) {
+          textEl.textContent = fullText;
+          done = true;
+          clearTimeout(timer);
+          textEl.classList.add('kf-pro-bubble-text-done');
+          resolve();
+        }
+      }, ms + 800);
+    });
+  }
+
   /**
    * Show a premium speech bubble attached to a character.
    * Returns a Promise resolving when text finishes typing.
@@ -48,6 +84,7 @@
 
     var color = options.color || getCharColor(charEl);
     var charType = charEl.dataset.charType || 'human';
+    var speakerName = options.speakerName || charEl.dataset.key || '';
 
     var bubble = document.createElement('div');
     bubble.className = 'kf-pro-bubble';
@@ -57,9 +94,21 @@
     var inner = document.createElement('div');
     inner.className = 'kf-pro-bubble-inner';
 
+    /* Name chip header — clearly shows who is speaking */
+    if (speakerName) {
+      var nameRow = document.createElement('div');
+      nameRow.className = 'kf-pro-bubble-name';
+      nameRow.innerHTML =
+        '<span class="kf-pro-bubble-avatar" style="background:' + color + '">' +
+          esc(initial(speakerName)) +
+        '</span>' +
+        '<span class="kf-pro-bubble-who">' + esc(speakerName) + '</span>';
+      inner.appendChild(nameRow);
+    }
+
     var textEl = document.createElement('span');
     textEl.className = 'kf-pro-bubble-text';
-    textEl.textContent = ''; // typewriter fills
+    textEl.textContent = '';
     inner.appendChild(textEl);
 
     var tail = document.createElement('span');
@@ -69,17 +118,29 @@
 
     charEl.appendChild(bubble);
 
-    /* Pop in + auto-flip if too high */
+    /* Pop in + smart positioning */
     requestAnimationFrame(function () {
       bubble.classList.add('kf-pro-bubble-in');
+
       var rect = bubble.getBoundingClientRect();
       var stageRect = getStageRect(stage);
-      if (rect.top < stageRect.top + 8) {
+
+      /* Check narrator box presence — protect the top zone if narrator
+       * is currently shown so character bubble doesn't slide UNDER it. */
+      var narratorBox = stage.querySelector('.ss-narrator-box.kf-narrator-active');
+      var narratorBottom = narratorBox
+        ? narratorBox.getBoundingClientRect().bottom
+        : stageRect.top;
+
+      /* If bubble top overlaps narrator OR top of stage, flip below char */
+      var safeTop = narratorBottom + 8;
+      if (rect.top < safeTop) {
         bubble.classList.add('kf-pro-bubble-below');
       }
-      // Horizontal clamping inside stage
-      var charRect = charEl.getBoundingClientRect();
-      var bubbleCx = rect.left + rect.width / 2;
+
+      /* Re-measure after potential flip, then clamp horizontally */
+      var rect2 = bubble.getBoundingClientRect();
+      var bubbleCx = rect2.left + rect2.width / 2;
       var stageLeft = stageRect.left + 12;
       var stageRight = stageRect.right - 12;
       var shift = 0;
@@ -87,43 +148,33 @@
       else if (bubbleCx > stageRight) shift = stageRight - bubbleCx;
       if (Math.abs(shift) > 1) {
         bubble.style.setProperty('--bub-shift', shift.toFixed(0) + 'px');
-        // Move the tail back to point at character center
         tail.style.setProperty('--tail-shift', (-shift).toFixed(0) + 'px');
       }
+
+      /* Avoid overlap with OTHER characters' active bubbles */
+      var others = stage.querySelectorAll('.kf-pro-bubble.kf-pro-bubble-in');
+      var r3 = bubble.getBoundingClientRect();
+      for (var i = 0; i < others.length; i++) {
+        var ob = others[i];
+        if (ob === bubble) continue;
+        var or = ob.getBoundingClientRect();
+        var overlapX = !(r3.right < or.left || r3.left > or.right);
+        var overlapY = !(r3.bottom < or.top || r3.top > or.bottom);
+        if (overlapX && overlapY) {
+          /* Push this bubble up by the overlap amount */
+          var lift = (r3.bottom - or.top) + 8;
+          bubble.style.setProperty('--bub-lift', lift.toFixed(0) + 'px');
+          bubble.classList.add('kf-pro-bubble-lifted');
+          break;
+        }
+      }
     });
 
-    /* Typewriter — synced to estimated speech duration (or default) */
     var fullText = String(text);
     var spokenMs = options.spokenMs ||
-      Math.min(Math.max(fullText.length * 50, 900), 4500);
-    var perChar = Math.max(18, Math.min(60, spokenMs / Math.max(fullText.length, 1)));
-    var i = 0;
-    var typingTimer = null;
-    var done = false;
+      Math.min(Math.max(fullText.length * 55, 900), 4500);
 
-    return new Promise(function (resolve) {
-      function tick() {
-        if (done) return;
-        if (i >= fullText.length) {
-          done = true;
-          textEl.classList.add('kf-pro-bubble-text-done');
-          resolve(bubble);
-          return;
-        }
-        textEl.textContent = fullText.slice(0, ++i);
-        typingTimer = setTimeout(tick, perChar);
-      }
-      tick();
-      // Safety stop
-      setTimeout(function () {
-        if (!done) {
-          textEl.textContent = fullText;
-          done = true;
-          clearTimeout(typingTimer);
-          resolve(bubble);
-        }
-      }, spokenMs + 800);
-    });
+    return typewrite(textEl, fullText, spokenMs);
   }
 
   function fadeBubble(charEl, delay) {
@@ -134,6 +185,15 @@
       bubble.classList.add('kf-pro-bubble-fade');
       setTimeout(function () { if (bubble.parentNode) bubble.remove(); }, 450);
     }, delay || 0);
+  }
+
+  /* Narrator typewriter — same effect as character bubbles */
+  function typeIntoNarrator(textEl, text, ms) {
+    if (!textEl) return Promise.resolve();
+    textEl.textContent = '';
+    textEl.classList.remove('kf-pro-bubble-text-done');
+    textEl.classList.add('kf-pro-bubble-text');
+    return typewrite(textEl, String(text), ms || 1500);
   }
 
   /* ------------------------------------------------------------------ */
@@ -423,6 +483,7 @@
   window.StagePro = {
     showBubble: showBubble,
     fadeBubble: fadeBubble,
+    typeIntoNarrator: typeIntoNarrator,
     applyAmbient: applyAmbient,
     clearAmbient: clearAmbient,
     placeCharacter: placeCharacter,
