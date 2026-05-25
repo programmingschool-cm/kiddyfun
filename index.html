@@ -62,6 +62,12 @@
           </button>
           <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-3 mt-2 py-2 kf-examples-menu" id="example-dropdown-menu"></ul>
         </div>
+        <div class="dropdown kf-syntax-dropdown">
+          <button class="btn btn-light kf-pill-btn dropdown-toggle border shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Cheat sheet & AI prompt">
+            🤖 <span class="d-none d-sm-inline">AI Helper</span>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-3 mt-2 py-2 kf-syntax-menu" id="syntax-dropdown-menu"></ul>
+        </div>
         <button class="btn btn-outline-danger kf-pill-btn d-none d-md-inline-block" id="btn-reset-progress" title="Reset all progress">Reset</button>
       </div>
     </div>
@@ -100,7 +106,7 @@
         </div>
       </div>
       <div class="p-3 border-top d-flex flex-column gap-2 d-md-none">
-        <button class="btn btn-primary btn-sm w-100" type="button" id="btn-open-tutorial-mobile">📘 Language Tutorial</button>
+        <!-- <button class="btn btn-primary btn-sm w-100" type="button" id="btn-open-tutorial-mobile">📘 Language Tutorial</button> -->
         <button class="btn btn-success btn-sm w-100" type="button" id="btn-open-sync-mobile">☁️ Sign in / Cloud Sync</button>
         <button class="btn btn-outline-danger btn-sm w-100" id="btn-reset-progress-mobile">🔄 Reset Progress</button>
       </div>
@@ -258,6 +264,7 @@
   <script src="assets/js/storage.js"></script>
   <script src="assets/js/supabase-auth.js"></script>
   <script src="assets/js/examples.js"></script>
+  <script src="assets/js/syntax-reference.js"></script>
   <script src="assets/js/missions.js"></script>
   <script src="assets/js/tutorial-content.js"></script>
   <script src="assets/js/tutorial.js"></script>

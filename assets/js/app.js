@@ -63,6 +63,7 @@
     }
 
     buildExampleDropdown();
+    buildSyntaxDropdown();
     initAudioToggles();
 
     var editorEl = $id('ss-editor');
@@ -456,39 +457,155 @@
         });
         menu.appendChild(li);
       });
-      setupExamplesPortal(menu);
+      setupDropdownPortal(menu, 'kf-examples-menu-portaled');
     }
 
-    /* Portal the examples menu to <body> on mobile so it escapes the
-     * navbar's backdrop-filter containing block. Without this, the menu
-     * is clipped to the navbar's ~56px height because any ancestor with
-     * backdrop-filter creates a containing block for fixed descendants. */
-    function setupExamplesPortal(menu) {
-      var dropdownEl = menu.parentElement; // .dropdown wrapper
+    function buildSyntaxDropdown() {
+      var menu = $id('syntax-dropdown-menu');
+      if (!menu || !window.KiddySyntax) return;
+      var toggleBtnRef = menu.parentElement &&
+        menu.parentElement.querySelector('[data-bs-toggle="dropdown"]');
+
+      /* Top: "Copy AI prompt" mega action */
+      var topLi = document.createElement('li');
+      topLi.className = 'kf-syntax-top';
+      topLi.innerHTML =
+        '<div class="kf-syntax-header">' +
+          '<div class="kf-syntax-header-title">🤖 AI Code Helper</div>' +
+          '<div class="kf-syntax-header-desc">' +
+            'Copy the full language reference + prompt template, paste it into ' +
+            '<b>ChatGPT, Claude, Gemini</b>, etc., add your goal, and the AI will generate ' +
+            'a complete program in this language.' +
+          '</div>' +
+          '<button type="button" class="kf-syntax-copy-prompt">' +
+            '<span class="kf-syntax-copy-prompt-icon">✨</span>' +
+            '<span class="kf-syntax-copy-prompt-text">Copy AI prompt template</span>' +
+          '</button>' +
+        '</div>';
+      menu.appendChild(topLi);
+      var promptBtn = topLi.querySelector('.kf-syntax-copy-prompt');
+      promptBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        copyToClipboard(window.KiddySyntax.aiPrompt).then(function (ok) {
+          flashCopyButton(promptBtn, ok, 'Copied! Paste into ChatGPT →', '✨ Copy AI prompt template');
+          if (ok && window.UI && UI.showToast) UI.showToast('✨ AI prompt copied — paste into ChatGPT, Claude, or Gemini.');
+        });
+      });
+
+      /* Categories + items */
+      window.KiddySyntax.groups.forEach(function (group) {
+        var hdrLi = document.createElement('li');
+        hdrLi.className = 'kf-syntax-group';
+        hdrLi.innerHTML = '<div class="kf-syntax-group-title">' + escHtml(group.group) + '</div>';
+        menu.appendChild(hdrLi);
+
+        group.items.forEach(function (item) {
+          var li = document.createElement('li');
+          li.className = 'kf-syntax-item';
+          li.innerHTML =
+            '<div class="kf-syntax-item-row">' +
+              '<div class="kf-syntax-item-text">' +
+                '<div class="kf-syntax-item-title">' + escHtml(item.title) + '</div>' +
+                '<div class="kf-syntax-item-desc">' + escHtml(item.desc) + '</div>' +
+                '<pre class="kf-syntax-item-code"><code></code></pre>' +
+              '</div>' +
+              '<button type="button" class="kf-syntax-copy" title="Copy this snippet">📋</button>' +
+            '</div>';
+          li.querySelector('code').textContent = item.code;
+          var btn = li.querySelector('.kf-syntax-copy');
+          btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            copyToClipboard(item.code).then(function (ok) {
+              flashCopyButton(btn, ok, '✅', '📋');
+              if (ok && window.UI && UI.showToast) UI.showToast('Copied snippet: ' + item.title);
+            });
+          });
+          /* Click on the code itself also drops into the editor */
+          li.querySelector('.kf-syntax-item-code').addEventListener('click', function () {
+            if (window.UI && UI.insertCode) UI.insertCode(item.code);
+            else copyToClipboard(item.code);
+            /* Close the dropdown after inserting */
+            var inst = window.bootstrap && bootstrap.Dropdown
+              ? bootstrap.Dropdown.getInstance(toggleBtnRef) : null;
+            if (inst) inst.hide();
+          });
+          menu.appendChild(li);
+        });
+      });
+
+      setupDropdownPortal(menu, 'kf-syntax-menu-portaled');
+    }
+
+    function copyToClipboard(text) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        return navigator.clipboard.writeText(text).then(function () { return true; }, function () { return fallbackCopy(text); });
+      }
+      return Promise.resolve(fallbackCopy(text));
+    }
+
+    function fallbackCopy(text) {
+      try {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0';
+        document.body.appendChild(ta);
+        ta.select();
+        var ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+        return ok;
+      } catch (e) { return false; }
+    }
+
+    function flashCopyButton(btn, ok, okLabel, defaultLabel) {
+      if (!btn) return;
+      var prev = btn.innerHTML;
+      var inner = btn.querySelector('.kf-syntax-copy-prompt-text');
+      if (inner) {
+        inner.textContent = ok ? okLabel : 'Copy failed';
+        btn.classList.add(ok ? 'kf-copy-ok' : 'kf-copy-err');
+        setTimeout(function () {
+          inner.textContent = defaultLabel.replace(/^[^\s]+\s/, '');
+          btn.classList.remove('kf-copy-ok', 'kf-copy-err');
+        }, 1800);
+        return;
+      }
+      btn.textContent = ok ? okLabel : '⚠️';
+      btn.classList.add(ok ? 'kf-copy-ok' : 'kf-copy-err');
+      setTimeout(function () {
+        btn.innerHTML = prev;
+        btn.classList.remove('kf-copy-ok', 'kf-copy-err');
+      }, 1500);
+    }
+
+    /* Portal the menu to <body> on mobile so it escapes ancestor
+     * containing-blocks (backdrop-filter / transform / filter cause
+     * fixed-positioned descendants to render INSIDE the ancestor box). */
+    function setupDropdownPortal(menu, portalClass) {
+      var dropdownEl = menu.parentElement;
       if (!dropdownEl) return;
       var toggleBtn = dropdownEl.querySelector('[data-bs-toggle="dropdown"]');
       if (!toggleBtn) return;
 
-      var placeholder = document.createComment('kf-examples-menu-placeholder');
+      var placeholder = document.createComment('kf-portal-placeholder');
       var backdrop = null;
       var portaled = false;
 
-      function isMobile() {
-        return window.matchMedia('(max-width: 576px)').matches;
-      }
+      function isMobile() { return window.matchMedia('(max-width: 576px)').matches; }
 
       function portalToBody() {
         if (portaled || !isMobile()) return;
         if (menu.parentNode === dropdownEl) {
           dropdownEl.insertBefore(placeholder, menu);
           document.body.appendChild(menu);
-          menu.classList.add('kf-examples-menu-portaled');
+          menu.classList.add(portalClass);
           backdrop = document.createElement('div');
           backdrop.className = 'kf-examples-backdrop';
           backdrop.addEventListener('click', function () {
             var inst = window.bootstrap && bootstrap.Dropdown
-              ? bootstrap.Dropdown.getInstance(toggleBtn)
-              : null;
+              ? bootstrap.Dropdown.getInstance(toggleBtn) : null;
             if (inst) inst.hide();
           });
           document.body.appendChild(backdrop);
@@ -510,7 +627,7 @@
         if (menu.parentNode === document.body && placeholder.parentNode === dropdownEl) {
           dropdownEl.insertBefore(menu, placeholder);
           placeholder.remove();
-          menu.classList.remove('kf-examples-menu-portaled');
+          menu.classList.remove(portalClass);
         }
         portaled = false;
       }
@@ -518,12 +635,10 @@
       toggleBtn.addEventListener('show.bs.dropdown', portalToBody);
       toggleBtn.addEventListener('hidden.bs.dropdown', restoreFromBody);
 
-      /* Close on resize from mobile → desktop while open */
       window.addEventListener('resize', function () {
         if (portaled && !isMobile()) {
           var inst = window.bootstrap && bootstrap.Dropdown
-            ? bootstrap.Dropdown.getInstance(toggleBtn)
-            : null;
+            ? bootstrap.Dropdown.getInstance(toggleBtn) : null;
           if (inst) inst.hide();
         }
       });
