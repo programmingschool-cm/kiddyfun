@@ -113,37 +113,134 @@
   };
 
   /* ── TTS Engine (Speech Synthesis) ──────────────────────────────────── */
+  /* Per-character voice profiles — pitch / rate variations so each
+   * actor sounds different. Specific named characters map to a profile;
+   * unknown actors get a profile picked by name-hash. */
+  var VOICE_PROFILES = {
+    /* gender hint: 'f' female, 'm' male, 'n' neutral/narrator, 'r' robot */
+    rafi:     { gender: 'm', pitch: 1.10, rate: 0.95 },
+    mostak:   { gender: 'm', pitch: 0.95, rate: 0.92 },
+    sagor:    { gender: 'm', pitch: 1.00, rate: 0.94 },
+    rabiul:   { gender: 'm', pitch: 0.92, rate: 0.90 },
+    buyer:    { gender: 'm', pitch: 1.02, rate: 0.95 },
+    mina:     { gender: 'f', pitch: 1.30, rate: 0.96 },
+    teacher:  { gender: 'f', pitch: 1.15, rate: 0.92 },
+    seller:   { gender: 'f', pitch: 1.20, rate: 0.98 },
+    narrator: { gender: 'n', pitch: 0.92, rate: 0.88 },
+    lion:     { gender: 'm', pitch: 0.65, rate: 0.82 },
+    bird:     { gender: 'f', pitch: 1.60, rate: 1.05 },
+    monkey:   { gender: 'm', pitch: 1.45, rate: 1.10 },
+    cat:      { gender: 'f', pitch: 1.50, rate: 1.00 },
+    dog:      { gender: 'm', pitch: 0.85, rate: 0.95 },
+    robot:    { gender: 'r', pitch: 0.50, rate: 0.95 },
+  };
+
+  /* Voice name patterns (cross-platform) for each profile gender */
+  var VOICE_PATTERNS = {
+    f: [
+      'Google UK English Female', 'Microsoft Aria', 'Microsoft Jenny',
+      'Microsoft Zira', 'Samantha', 'Karen', 'Moira', 'Tessa',
+      'Google US English', 'Joanna', 'Salli',
+    ],
+    m: [
+      'Google UK English Male', 'Microsoft Guy', 'Microsoft Davis',
+      'Microsoft David', 'Daniel', 'Alex', 'Fred', 'Aaron',
+      'Joey', 'Matthew',
+    ],
+    n: [
+      'Microsoft Aria', 'Google US English', 'Samantha', 'Daniel', 'Karen',
+    ],
+    r: [
+      'Microsoft Mark', 'Microsoft David', 'Daniel', 'Alex',
+    ],
+  };
+
+  function nameHash(s) {
+    var h = 0;
+    s = String(s || '').toLowerCase();
+    for (var i = 0; i < s.length; i++) h = ((h << 5) - h) + s.charCodeAt(i);
+    return Math.abs(h);
+  }
+
   function TTSEngine() {
     this.enabled = true;
-    this.rate = 0.88;
-    this.pitch = 1.05;
     this._voices = [];
     this._ready = false;
     this._current = null;
+    this._voiceCache = {};
     this._loadVoices();
   }
 
   TTSEngine.prototype._loadVoices = function () {
     var self = this;
     function load() {
-      self._voices = speechSynthesis.getVoices();
+      self._voices = speechSynthesis.getVoices() || [];
       self._ready = self._voices.length > 0;
     }
     load();
-    if (speechSynthesis.onvoiceschanged !== undefined) {
+    if ('onvoiceschanged' in speechSynthesis) {
       speechSynthesis.onvoiceschanged = load;
     }
   };
 
-  TTSEngine.prototype._pickVoice = function () {
-    if (!this._voices.length) return null;
-    var preferred = ['Google UK English Female', 'Google US English', 'Samantha', 'Karen', 'Moira', 'Daniel'];
-    for (var i = 0; i < preferred.length; i++) {
-      var v = this._voices.find(function (vo) { return vo.name.indexOf(preferred[i]) !== -1; });
-      if (v) return v;
+  TTSEngine.prototype._findVoiceByPatterns = function (patterns) {
+    for (var i = 0; i < patterns.length; i++) {
+      var pat = patterns[i];
+      for (var j = 0; j < this._voices.length; j++) {
+        if (this._voices[j].name.indexOf(pat) !== -1) return this._voices[j];
+      }
     }
-    var en = this._voices.find(function (v) { return v.lang && v.lang.indexOf('en') === 0; });
-    return en || this._voices[0];
+    return null;
+  };
+
+  TTSEngine.prototype._fallbackEnglishVoice = function () {
+    var en = this._voices.filter(function (v) {
+      return v.lang && v.lang.toLowerCase().indexOf('en') === 0;
+    });
+    return en[0] || this._voices[0] || null;
+  };
+
+  TTSEngine.prototype._getProfile = function (actor) {
+    var key = String(actor || '').toLowerCase();
+    if (VOICE_PROFILES[key]) return VOICE_PROFILES[key];
+    /* Unknown actor: deterministic profile based on name hash */
+    var h = nameHash(key);
+    var gender = (h % 2 === 0) ? 'f' : 'm';
+    var pitchVar = ((h % 25) - 12) / 100; // -0.12 .. +0.12
+    var rateVar = ((h % 11) - 5) / 100;   // -0.05 .. +0.05
+    return {
+      gender: gender,
+      pitch: 1.05 + pitchVar,
+      rate: 0.92 + rateVar,
+    };
+  };
+
+  TTSEngine.prototype._pickVoiceFor = function (actor) {
+    if (!this._voices.length) return null;
+    var key = String(actor || '').toLowerCase();
+    if (this._voiceCache[key]) return this._voiceCache[key];
+
+    var profile = this._getProfile(actor);
+    var patterns = VOICE_PATTERNS[profile.gender] || VOICE_PATTERNS.n;
+
+    /* Cycle among matching voices so different characters of same gender
+     * still sound distinct.                                              */
+    var matching = this._voices.filter(function (v) {
+      return v.lang && v.lang.toLowerCase().indexOf('en') === 0 &&
+        patterns.some(function (p) { return v.name.indexOf(p) !== -1; });
+    });
+
+    if (!matching.length) {
+      matching = this._voices.filter(function (v) {
+        return v.lang && v.lang.toLowerCase().indexOf('en') === 0;
+      });
+    }
+    if (!matching.length) matching = this._voices.slice();
+
+    var pick = matching[nameHash(key) % matching.length] ||
+      this._fallbackEnglishVoice();
+    this._voiceCache[key] = pick;
+    return pick;
   };
 
   TTSEngine.prototype.setEnabled = function (on) {
@@ -152,40 +249,57 @@
   };
 
   TTSEngine.prototype.cancel = function () {
-    speechSynthesis.cancel();
+    if (window.speechSynthesis) speechSynthesis.cancel();
     this._current = null;
+  };
+
+  TTSEngine.prototype.estimateDuration = function (text, actor) {
+    var profile = this._getProfile(actor);
+    var rate = profile.rate || 0.92;
+    var charMs = 55 / rate;
+    return Math.min(Math.max(String(text || '').length * charMs, 800), 7000);
   };
 
   TTSEngine.prototype.speak = function (text, actor) {
     var self = this;
+    var fallbackMs = this.estimateDuration(text, actor);
     if (!this.enabled || !text || !window.speechSynthesis) {
-      return Promise.resolve(Math.min(text.length * 55, 3500));
+      return Promise.resolve(fallbackMs);
     }
 
     return new Promise(function (resolve) {
       self.cancel();
       var utter = new SpeechSynthesisUtterance(text);
-      utter.rate = self.rate;
-      utter.pitch = actor && actor.toLowerCase() === 'narrator' ? 0.95 : self.pitch;
+      var profile = self._getProfile(actor);
+      utter.rate = profile.rate;
+      utter.pitch = profile.pitch;
       utter.volume = 1;
-      var voice = self._pickVoice();
-      if (voice) utter.voice = voice;
+      var voice = self._pickVoiceFor(actor);
+      if (voice) {
+        utter.voice = voice;
+        utter.lang = voice.lang || 'en-US';
+      }
 
       var done = false;
       function finish(ms) {
         if (done) return;
         done = true;
         self._current = null;
-        resolve(ms || Math.min(text.length * 55 + 400, 6000));
+        resolve(ms || fallbackMs);
       }
 
-      utter.onend = function () { finish(Math.min(text.length * 55 + 300, 6000)); };
-      utter.onerror = function () { finish(1500); };
+      utter.onstart = function () {
+        /* nothing — speaking now */
+      };
+      utter.onend = function () { finish(fallbackMs); };
+      utter.onerror = function () { finish(Math.min(1500, fallbackMs)); };
 
       self._current = utter;
       speechSynthesis.speak(utter);
 
-      setTimeout(function () { finish(4000); }, Math.min(text.length * 80 + 2000, 8000));
+      /* Hard timeout — some browsers leave utterance hanging */
+      setTimeout(function () { finish(fallbackMs + 400); },
+        Math.min(text.length * 90 + 2200, 9000));
     });
   };
 
@@ -198,6 +312,7 @@
     tts: tts,
     playSound: function (name) { sounds.play(name); },
     speak: function (text, actor) { return tts.speak(text, actor); },
+    estimateSpeechMs: function (text, actor) { return tts.estimateDuration(text, actor); },
     cancelAll: function () { tts.cancel(); },
     setVoiceEnabled: function (on) { tts.setEnabled(on); },
     setSoundEnabled: function (on) { sounds.setEnabled(on); },

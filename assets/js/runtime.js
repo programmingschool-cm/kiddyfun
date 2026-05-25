@@ -97,11 +97,13 @@
         this.stage.appendChild(this.voiceIndicator);
         if (window.StageGraphics) StageGraphics.buildSceneLayers(this.stage);
         if (window.StageActions) StageActions.init(this.stage);
+        if (window.StagePro) StagePro.clearAmbient(this.stage);
         this._startAmbientParticles();
         this._setScene('default');
       }
       if (this.logPanel)     this.logPanel.innerHTML = '';
       if (this.vocabPanel)   this.vocabPanel.innerHTML = '';
+      this._displayedScore = 0;
       if (this.scoreDisplay) this.scoreDisplay.innerHTML = '🏆 Score: <span>0</span>';
       this.hideUserInput(true);
       if (window.KiddyApp && window.KiddyApp.unlockMobileTab) {
@@ -133,7 +135,14 @@
           self.stage.style.background = def.bg;
         }
         self._clearDecorations();
-        self._addSceneDecorations(def.deco);
+        if (window.StagePro) {
+          /* StagePro provides much richer ambient — skip legacy decorations */
+          StagePro.applyAmbient(self.stage, name);
+          StagePro.showSceneTitle(self.stage, def.emoji, def.label);
+          StagePro.flash(self.stage, 'rgba(255,255,255,0.35)');
+        } else {
+          self._addSceneDecorations(def.deco);
+        }
 
         var lbl = self.stage.querySelector('.ss-scene-label');
         if (!lbl) {
@@ -257,6 +266,13 @@
             '<span class="ss-char-emoji">' + (def.emoji || '🧑') + '</span></div>' +
           '<div class="ss-char-label" style="color:' + def.color + '">' + escHtml(def.label || name) + '</div>';
       }
+      /* Anti-overlap placement — pick a slot that's free */
+      var self = this;
+      setTimeout(function () {
+        if (window.StagePro && self.stage) {
+          StagePro.placeCharacter(self.stage, el, self.characters);
+        }
+      }, 0);
       return el;
     },
 
@@ -308,22 +324,37 @@
       }
       el.classList.add('kf-moving');
       el.classList.toggle('kf-moving-run', mode === 'run');
-      this.charPositions[key] = (this.charPositions[key] || 0) + deltaPx;
-      var dur = mode === 'run' ? 0.52 : 0.78;
-      el.style.transition = 'transform ' + dur + 's cubic-bezier(0.22, 1, 0.36, 1)';
-      el.style.transform = 'translateX(' + this.charPositions[key] + 'px)';
+
+      /* Clamp movement so the character stays inside the stage with room for the bubble */
+      var stageW = this.stage ? this.stage.clientWidth : 600;
+      var elRect = el.getBoundingClientRect();
+      var stageRect = this.stage ? this.stage.getBoundingClientRect() : { left: 0 };
+      var curCenter = (elRect.left - stageRect.left) + elRect.width / 2;
+      var minX = 60, maxX = stageW - 60;
+      var prev = this.charPositions[key] || 0;
+      var nextDelta = deltaPx;
+      if (curCenter + nextDelta < minX) nextDelta = minX - curCenter;
+      else if (curCenter + nextDelta > maxX) nextDelta = maxX - curCenter;
+      var newPos = prev + nextDelta;
+      this.charPositions[key] = newPos;
+
+      var dur = mode === 'run' ? 0.55 : 0.85;
+      /* Anticipation → travel → settle: spring-like cubic-bezier */
+      el.style.transition = 'transform ' + dur + 's cubic-bezier(0.16, 1.04, 0.34, 1)';
+      el.style.transform = 'translateX(' + newPos + 'px)';
 
       if (window.StageGraphics && this.stage) {
         var rect = el.getBoundingClientRect();
-        var stageRect = this.stage.getBoundingClientRect();
+        var stageRect2 = this.stage.getBoundingClientRect();
         StageGraphics.spawnDust(
           this.stage,
-          rect.left - stageRect.left + rect.width / 2,
-          stageRect.height - 72,
+          rect.left - stageRect2.left + rect.width / 2,
+          stageRect2.height - 72,
           mode === 'run'
         );
       }
       if (mode === 'run' && window.KiddyAudio) KiddyAudio.playSound('pop');
+      if (mode === 'run' && window.StagePro) StagePro.shake(this.stage, 'normal');
 
       var self = this;
       setTimeout(function () {
@@ -335,6 +366,16 @@
     _animateChar: function (key, action) {
       var el = this.characters[key] && this.characters[key].el;
       if (!el) return;
+
+      /* Camera shake + emote burst — gaming-zone polish */
+      if (window.StagePro) {
+        var shakeMap = { jumps: 'normal', cheers: 'normal', dances: false, claps: false, runs: 'normal' };
+        if (shakeMap[action] !== undefined && shakeMap[action]) {
+          StagePro.shake(this.stage, shakeMap[action] === 'big' ? 'big' : 'normal');
+        }
+        StagePro.emoteBurst(this.stage, el, action);
+      }
+
       if (window.StageGraphics) {
         StageGraphics.setMotion(el, action);
         var dur = { hides: 600, flies: 1200, jumps: 700, bows: 800 }[action] || 1100;
@@ -368,13 +409,7 @@
       if (!this.characters[key]) this.characterAppears(name);
 
       var charEl = this.characters[key].el;
-      var old    = charEl.querySelector('.ss-bubble');
-      if (old) old.remove();
-
-      var bubble = document.createElement('div');
-      bubble.className   = 'ss-bubble ss-anim-popin ss-bubble-speaking';
-      bubble.textContent = text;
-      charEl.appendChild(bubble);
+      var def    = this.characters[key].def || {};
       this._addLog('💬 ' + name + ': "' + text + '"');
 
       if (window.StageActions) {
@@ -383,11 +418,37 @@
       if (window.StageGraphics) StageGraphics.setTalking(charEl, true);
 
       var self = this;
-      return this._speakWithIndicator(text, name).then(function () {
+      var spokenMs = window.KiddyAudio && KiddyAudio.estimateSpeechMs
+        ? KiddyAudio.estimateSpeechMs(text, name)
+        : Math.min(Math.max(text.length * 55, 900), 4500);
+
+      /* Premium bubble (typewriter, char color, tail) — runs in parallel with TTS */
+      var typingPromise;
+      if (window.StagePro) {
+        typingPromise = StagePro.showBubble(self.stage, charEl, text, {
+          color: def.color,
+          spokenMs: spokenMs,
+        });
+      } else {
+        var bubble = document.createElement('div');
+        bubble.className = 'ss-bubble ss-anim-popin ss-bubble-speaking';
+        bubble.textContent = text;
+        charEl.appendChild(bubble);
+        typingPromise = Promise.resolve();
+      }
+
+      var speechPromise = this._speakWithIndicator(text, name);
+
+      /* Wait for BOTH typewriter and speech to finish */
+      return Promise.all([typingPromise, speechPromise]).then(function () {
         if (window.StageGraphics) StageGraphics.setTalking(charEl, false);
-        bubble.classList.remove('ss-bubble-speaking');
-        bubble.classList.add('ss-bubble-fade');
-        setTimeout(function () { if (bubble.parentNode) bubble.remove(); }, 600);
+        if (window.StagePro) StagePro.fadeBubble(charEl, 450);
+        var legacy = charEl.querySelector('.ss-bubble');
+        if (legacy) {
+          legacy.classList.remove('ss-bubble-speaking');
+          legacy.classList.add('ss-bubble-fade');
+          setTimeout(function () { if (legacy.parentNode) legacy.remove(); }, 600);
+        }
       });
     },
 
@@ -619,12 +680,29 @@
     },
     _updateScoreEl: function (animate) {
       if (!this.scoreDisplay) return;
-      this.scoreDisplay.innerHTML = '🏆 Score: <span>' + this.score + '</span>';
-      if (animate) {
-        this.scoreDisplay.classList.remove('ss-score-pulse');
-        void this.scoreDisplay.offsetWidth;
-        this.scoreDisplay.classList.add('ss-score-pulse');
+      var prev = this._displayedScore || 0;
+      var target = this.score;
+      if (!animate || prev === target) {
+        this.scoreDisplay.innerHTML = '🏆 Score: <span>' + target + '</span>';
+        this._displayedScore = target;
+        return;
       }
+      var self = this;
+      this.scoreDisplay.classList.remove('ss-score-pulse');
+      void this.scoreDisplay.offsetWidth;
+      this.scoreDisplay.classList.add('ss-score-pulse');
+
+      var start = performance.now();
+      var dur = 600;
+      function tick(now) {
+        var t = Math.min(1, (now - start) / dur);
+        var eased = 1 - Math.pow(1 - t, 3);
+        var val = Math.round(prev + (target - prev) * eased);
+        self.scoreDisplay.innerHTML = '🏆 Score: <span>' + val + '</span>';
+        if (t < 1) requestAnimationFrame(tick);
+        else self._displayedScore = target;
+      }
+      requestAnimationFrame(tick);
     },
     showScore: function () {
       var toast = document.createElement('div');
