@@ -69,23 +69,46 @@
 
   /**
    * Show a premium speech bubble attached to a character.
-   * Returns a Promise resolving when text finishes typing.
+   * Reuses an existing bubble for the same character (same position),
+   * otherwise creates a new one with smart positioning.
    */
   function showBubble(stage, charEl, text, options) {
     options = options || {};
     if (!stage || !charEl || !text) return Promise.resolve();
 
-    /* Remove any previous bubble for this char */
-    var old = charEl.querySelector('.kf-pro-bubble');
-    if (old) {
-      old.classList.add('kf-pro-bubble-fade');
-      setTimeout(function () { if (old.parentNode) old.remove(); }, 250);
-    }
-
     var color = options.color || getCharColor(charEl);
     var charType = charEl.dataset.charType || 'human';
     var speakerName = options.speakerName || charEl.dataset.key || '';
+    var fullText = String(text);
+    var spokenMs = options.spokenMs ||
+      Math.min(Math.max(fullText.length * 55, 900), 4500);
 
+    /* ── Reuse path: same character, same position ─────────────────── */
+    var existing = charEl.querySelector('.kf-pro-bubble');
+    if (existing) {
+      /* Cancel any pending fade-out + remove timer */
+      existing.classList.remove('kf-pro-bubble-fade');
+      if (existing._removeTimer) {
+        clearTimeout(existing._removeTimer);
+        existing._removeTimer = null;
+      }
+      /* Update color in case it changed (defensive) */
+      existing.style.setProperty('--bub-color', color);
+      /* Refresh text element — clear + retype */
+      var oldText = existing.querySelector('.kf-pro-bubble-text');
+      if (oldText) {
+        oldText.textContent = '';
+        oldText.classList.remove('kf-pro-bubble-text-done');
+      }
+      /* Tiny "speak again" pulse so the user sees it's a new line */
+      existing.classList.remove('kf-pro-bubble-repeat');
+      void existing.offsetWidth;
+      existing.classList.add('kf-pro-bubble-repeat');
+      setTimeout(function () { existing.classList.remove('kf-pro-bubble-repeat'); }, 360);
+      return typewrite(oldText, fullText, spokenMs);
+    }
+
+    /* ── New bubble path ───────────────────────────────────────────── */
     var bubble = document.createElement('div');
     bubble.className = 'kf-pro-bubble';
     bubble.setAttribute('data-char-type', charType);
@@ -151,12 +174,17 @@
         tail.style.setProperty('--tail-shift', (-shift).toFixed(0) + 'px');
       }
 
-      /* Avoid overlap with OTHER characters' active bubbles */
+      /* Avoid overlap with OTHER characters' active bubbles only.
+       * Bubbles inside the same character are reused above, never
+       * stacked, so skip same-char and fading bubbles here. */
       var others = stage.querySelectorAll('.kf-pro-bubble.kf-pro-bubble-in');
       var r3 = bubble.getBoundingClientRect();
       for (var i = 0; i < others.length; i++) {
         var ob = others[i];
         if (ob === bubble) continue;
+        if (charEl.contains(ob)) continue;
+        if (ob.classList.contains('kf-pro-bubble-fade')) continue;
+        if (ob._removeTimer) continue;
         var or = ob.getBoundingClientRect();
         var overlapX = !(r3.right < or.left || r3.left > or.right);
         var overlapY = !(r3.bottom < or.top || r3.top > or.bottom);
@@ -170,10 +198,6 @@
       }
     });
 
-    var fullText = String(text);
-    var spokenMs = options.spokenMs ||
-      Math.min(Math.max(fullText.length * 55, 900), 4500);
-
     return typewrite(textEl, fullText, spokenMs);
   }
 
@@ -181,10 +205,19 @@
     if (!charEl) return;
     var bubble = charEl.querySelector('.kf-pro-bubble');
     if (!bubble) return;
-    setTimeout(function () {
+    /* If a previous remove is already pending, cancel it */
+    if (bubble._removeTimer) {
+      clearTimeout(bubble._removeTimer);
+      bubble._removeTimer = null;
+    }
+    var fadeTimer = setTimeout(function () {
       bubble.classList.add('kf-pro-bubble-fade');
-      setTimeout(function () { if (bubble.parentNode) bubble.remove(); }, 450);
+      bubble._removeTimer = setTimeout(function () {
+        if (bubble.parentNode) bubble.remove();
+        bubble._removeTimer = null;
+      }, 450);
     }, delay || 0);
+    bubble._removeTimer = fadeTimer;
   }
 
   /* Narrator typewriter — same effect as character bubbles */
