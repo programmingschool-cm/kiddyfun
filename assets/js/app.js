@@ -356,6 +356,10 @@
         return;
       }
 
+      if (editorMaximized && window.innerWidth >= 992) {
+        toggleMaxEditor();
+      }
+
       interpreter = new Interpreter(Runtime);
       interpreter.run(ast).then(function () {
         checkMissions(code);
