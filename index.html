@@ -127,6 +127,7 @@
             <div class="d-flex gap-1">
               <button class="kf-toolbar-btn d-sm-none" id="btn-toggle-voice-mobile" title="Voice">🔊</button>
               <button class="kf-toolbar-btn d-sm-none" id="btn-toggle-sound-mobile" title="Sound">🎵</button>
+              <button class="kf-toolbar-btn d-none d-lg-inline-block" id="btn-max-editor" title="Maximize editor" aria-pressed="false">🗖</button>
               <button class="kf-toolbar-btn" id="btn-clear" title="Clear">🗑️ <span class="d-none d-md-inline">Clear</span></button>
               <button class="kf-toolbar-btn" id="btn-save" title="Save">💾 <span class="d-none d-md-inline">Save</span></button>
               <button class="kf-toolbar-btn d-none d-sm-inline-block" id="btn-download" title="Download">📥</button>
@@ -137,27 +138,17 @@
             <div class="kf-editor-wrap flex-grow-1">
               <div class="kf-line-numbers" id="ss-line-numbers" aria-hidden="true"></div>
               <div class="kf-editor-stack flex-grow-1" id="kf-editor-stack">
-                <div class="kf-editor-mode-bar" role="tablist" aria-label="How to write code">
-                  <button type="button" class="kf-mode-btn active" id="kf-mode-type" data-mode="type" role="tab" aria-selected="true">
-                    ✏️ Type
-                  </button>
-                  <button type="button" class="kf-mode-btn" id="kf-mode-blocks" data-mode="blocks" role="tab" aria-selected="false">
-                    🧩 Blocks
-                  </button>
-                </div>
                 <div class="kf-editor-input-area position-relative flex-grow-1">
-                  <p class="kf-editor-helper" id="kf-editor-helper">Type your story here — or switch to <strong>Blocks</strong> to click and add lines.</p>
                   <div class="kf-editor-layer" id="kf-editor-layer">
                     <div class="kf-editor-guides" id="kf-editor-guides" aria-hidden="true"></div>
                     <pre class="kf-editor-highlight d-none" id="kf-editor-highlight" aria-hidden="true"></pre>
                     <textarea class="kf-editor" id="ss-editor" spellcheck="false" aria-label="Code editor"
-                      autocomplete="off" autocorrect="off" autocapitalize="off"
+                      autocomplete="off" autocorrect="off" autocapitalize="off" wrap="off"
                       placeholder="scene &quot;school&quot;&#10;Rafi appears&#10;Rafi says &quot;Hello!&quot;"></textarea>
                   </div>
                   <ul class="kf-autocomplete d-none" id="kf-autocomplete" role="listbox" aria-label="Suggestions"></ul>
                 </div>
                 <div class="kf-editor-ghost d-none" id="kf-editor-ghost" aria-live="polite"></div>
-                <div id="kf-builder-slot"></div>
               </div>
             </div>
 
@@ -266,7 +257,6 @@
   <script src="assets/js/stage-actions.js"></script>
   <script src="assets/js/runtime.js"></script>
   <script src="assets/js/interpreter.js"></script>
-  <script src="assets/js/editor-builder.js"></script>
   <script src="assets/js/editor-highlight.js"></script>
   <script src="assets/js/editor-blocks.js"></script>
   <script src="assets/js/smart-editor.js"></script>

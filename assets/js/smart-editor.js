@@ -817,11 +817,6 @@
     if (!item) return;
     lockAutocomplete();
     hideGhost();
-    if (item.blockId && window.KiddyCodeBuilder && KiddyCodeBuilder.smartInsert) {
-      KiddyCodeBuilder.smartInsert(item.blockId);
-      flashMagic();
-      return;
-    }
     var rs = item.replaceStart != null ? item.replaceStart : state.replaceStart;
     var re = item.replaceEnd != null ? item.replaceEnd : state.replaceEnd;
     insertText(rs, re, item.insert);
@@ -1219,10 +1214,6 @@
     if (state.beginner) wrap.classList.add('kf-editor-simple');
 
     bindGutterDrag();
-
-    if (window.KiddyCodeBuilder) {
-      KiddyCodeBuilder.init(editor, stack);
-    }
 
     editor.setAttribute('autocomplete', 'off');
     editor.setAttribute('autocorrect', 'off');

@@ -222,9 +222,6 @@
     insertCode: function(snippet) {
       var editor = document.getElementById('ss-editor');
       if (!editor) return;
-      if (window.KiddyCodeBuilder && window.KiddyCodeBuilder.setMode) {
-        KiddyCodeBuilder.setMode('type');
-      }
       if (window.KiddySmartEditor && window.KiddySmartEditor.insertAtCursor) {
         KiddySmartEditor.insertAtCursor(snippet);
       } else {

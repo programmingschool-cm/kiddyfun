@@ -102,6 +102,7 @@
       if (window.KiddyTutorial && window.KiddyTutorial.openInMenu) window.KiddyTutorial.openInMenu();
     });
     bind('btn-toggle-code', toggleDesktopCodePanel);
+    bind('btn-max-editor', toggleMaxEditor);
     bind('tab-code-btn', function () {
       unlockMobileTab();
       setMobileTab('code');
@@ -183,6 +184,42 @@
     });
 
     var desktopCodeVisible = true;
+    var editorMaximized = false;
+
+    function toggleMaxEditor() {
+      if (window.innerWidth < 992) return;
+      var codeCol = $id('code-col');
+      var outCol  = $id('output-col');
+      var btn     = $id('btn-max-editor');
+      if (!codeCol || !outCol) return;
+
+      editorMaximized = !editorMaximized;
+      if (editorMaximized) {
+        outCol.classList.add('d-none');
+        codeCol.classList.remove('kf-col-code');
+        codeCol.classList.add('kf-col-full');
+        document.body.classList.add('kf-editor-maximized');
+        if (btn) {
+          btn.textContent = '🗗';
+          btn.title = 'Restore editor';
+          btn.setAttribute('aria-pressed', 'true');
+        }
+      } else {
+        outCol.classList.remove('d-none');
+        codeCol.classList.remove('kf-col-full');
+        codeCol.classList.add('kf-col-code');
+        document.body.classList.remove('kf-editor-maximized');
+        if (btn) {
+          btn.textContent = '🗖';
+          btn.title = 'Maximize editor';
+          btn.setAttribute('aria-pressed', 'false');
+        }
+      }
+
+      if (window.KiddySmartEditor && KiddySmartEditor.updateGutter) {
+        KiddySmartEditor.updateGutter();
+      }
+    }
 
     function toggleDesktopCodePanel() {
       if (window.innerWidth < 992) return;
@@ -357,9 +394,6 @@
         UI.syncLineNumbers();
         if (window.KiddySmartEditor && window.KiddySmartEditor.notifyExternalChange) {
           KiddySmartEditor.notifyExternalChange();
-        }
-        if (window.KiddyCodeBuilder && window.KiddyCodeBuilder.setMode) {
-          KiddyCodeBuilder.setMode('blocks');
         }
         editorEl.focus();
         UI.showToast('🗑 Editor cleared');
