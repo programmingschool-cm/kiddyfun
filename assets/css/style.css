@@ -427,14 +427,15 @@ body.kf-mobile-mode.kf-tab-output-active .kf-tab-btn#tab-output-btn {
 }
 
 .kf-ac-hint {
-  padding: 6px 10px 4px;
-  font-size: 0.7rem;
+  padding: 5px 10px 4px;
+  font-size: 0.66rem;
   font-weight: 600;
   color: #fcd34d;
   border-bottom: 1px solid #30363d;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
   cursor: default;
   list-style: none;
+  letter-spacing: 0.02em;
 }
 
 .kf-editor-stack {
@@ -503,23 +504,44 @@ body.kf-mobile-mode.kf-tab-output-active .kf-tab-btn#tab-output-btn {
 
 .kf-autocomplete {
   position: absolute;
-  left: 8px;
-  right: 8px;
-  top: 36px;
-  max-height: min(180px, 32vh);
+  width: 280px;
+  max-width: calc(100% - 16px);
+  max-height: 200px;
   overflow-y: auto;
   margin: 0;
-  padding: 6px;
+  padding: 4px;
   list-style: none;
-  background: #1c2128;
+  background: rgba(28, 33, 40, 0.97);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   border: 1px solid #30363d;
   border-radius: 10px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.55);
   z-index: 50;
-  animation: kf-ac-in 0.18s ease;
+  animation: kf-ac-in 0.14s ease;
+}
+.kf-autocomplete::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 14px;
+  width: 10px;
+  height: 10px;
+  background: rgba(28, 33, 40, 0.97);
+  border-top: 1px solid #30363d;
+  border-left: 1px solid #30363d;
+  transform: rotate(45deg);
+}
+.kf-autocomplete.kf-ac-above::before {
+  top: auto;
+  bottom: -6px;
+  border-top: none;
+  border-left: none;
+  border-bottom: 1px solid #30363d;
+  border-right: 1px solid #30363d;
 }
 @keyframes kf-ac-in {
-  from { opacity: 0; transform: translateY(6px); }
+  from { opacity: 0; transform: translateY(-4px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
@@ -528,24 +550,27 @@ body.kf-mobile-mode.kf-tab-output-active .kf-tab-btn#tab-output-btn {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 10px 12px;
-  min-height: 44px;
-  border-radius: 8px;
+  padding: 7px 10px;
+  min-height: 34px;
+  border-radius: 6px;
   cursor: pointer;
-  transition: background 0.12s ease;
+  transition: background 0.1s ease;
 }
 .kf-ac-item:hover,
 .kf-ac-item.active {
-  background: rgba(56, 139, 253, 0.18);
+  background: rgba(56, 139, 253, 0.22);
 }
 .kf-ac-label {
   font-family: var(--kf-code);
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   color: #e6edf3;
   font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .kf-ac-detail {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   color: #8b949e;
   white-space: nowrap;
   flex-shrink: 0;

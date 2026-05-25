@@ -758,7 +758,10 @@
     state.selected = 0;
     if (state.acList) {
       state.acList.classList.add('d-none');
+      state.acList.classList.remove('kf-ac-above');
       state.acList.innerHTML = '';
+      state.acList.style.top = '';
+      state.acList.style.left = '';
     }
   }
 
@@ -792,6 +795,105 @@
     }, { passive: false });
   }
 
+  var CARET_MIRROR_PROPS = [
+    'direction', 'boxSizing',
+    'width', 'height',
+    'overflowX', 'overflowY',
+    'borderTopWidth', 'borderRightWidth', 'borderBottomWidth', 'borderLeftWidth', 'borderStyle',
+    'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft',
+    'fontStyle', 'fontVariant', 'fontWeight', 'fontStretch', 'fontSize', 'fontSizeAdjust',
+    'lineHeight', 'fontFamily',
+    'textAlign', 'textTransform', 'textIndent', 'textDecoration',
+    'letterSpacing', 'wordSpacing',
+    'tabSize', 'MozTabSize',
+    'whiteSpace', 'wordWrap', 'overflowWrap',
+  ];
+
+  function getCaretCoords(textarea, position) {
+    var div = document.createElement('div');
+    div.setAttribute('aria-hidden', 'true');
+    var style = div.style;
+    var computed = window.getComputedStyle(textarea);
+
+    style.position = 'absolute';
+    style.visibility = 'hidden';
+    style.top = '0';
+    style.left = '-9999px';
+    style.whiteSpace = 'pre';
+    style.wordWrap = 'normal';
+    style.overflowWrap = 'normal';
+    style.overflow = 'hidden';
+
+    CARET_MIRROR_PROPS.forEach(function (prop) {
+      try { style[prop] = computed[prop]; } catch (e) { /* ignore */ }
+    });
+
+    document.body.appendChild(div);
+
+    var value = textarea.value.substring(0, position);
+    var rest = textarea.value.substring(position) || '.';
+    div.textContent = value;
+    var span = document.createElement('span');
+    span.textContent = rest;
+    div.appendChild(span);
+
+    var lineHeight = parseInt(computed.lineHeight, 10) || 28;
+    var rect = {
+      top: span.offsetTop + (parseInt(computed.borderTopWidth, 10) || 0),
+      left: span.offsetLeft + (parseInt(computed.borderLeftWidth, 10) || 0),
+      height: lineHeight,
+    };
+
+    document.body.removeChild(div);
+    return rect;
+  }
+
+  function positionAutocomplete() {
+    var list = state.acList;
+    var ed = state.editor;
+    if (!list || !ed || list.classList.contains('d-none')) return;
+    var parent = list.offsetParent;
+    if (!parent) return;
+
+    var coords;
+    try { coords = getCaretCoords(ed, ed.selectionStart); }
+    catch (e) { return; }
+
+    var edRect = ed.getBoundingClientRect();
+    var parentRect = parent.getBoundingClientRect();
+
+    var caretViewportTop = edRect.top + coords.top - ed.scrollTop;
+    var caretViewportLeft = edRect.left + coords.left - ed.scrollLeft;
+
+    var listWidth = list.offsetWidth || 280;
+    var listHeight = list.offsetHeight || 180;
+
+    var top = caretViewportTop - parentRect.top + coords.height + 8;
+    var left = caretViewportLeft - parentRect.left;
+
+    if (left + listWidth > parentRect.width - 8) {
+      left = Math.max(8, parentRect.width - listWidth - 8);
+    }
+    if (left < 8) left = 8;
+
+    var viewportH = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+    var viewportOffset = (window.visualViewport && window.visualViewport.offsetTop) || 0;
+    var caretFromVisualTop = caretViewportTop - viewportOffset;
+    var above = false;
+    var spaceBelow = viewportH - (caretFromVisualTop + coords.height + 8);
+    var spaceAbove = caretFromVisualTop - 8;
+    if (spaceBelow < listHeight + 16 && spaceAbove > spaceBelow) {
+      top = caretViewportTop - parentRect.top - listHeight - 8;
+      above = true;
+    }
+
+    list.classList.toggle('kf-ac-above', above);
+    list.style.left = left + 'px';
+    list.style.top = Math.max(0, top) + 'px';
+    list.style.right = 'auto';
+    list.style.bottom = 'auto';
+  }
+
   function renderAutocomplete() {
     var list = state.acList;
     if (!list) return;
@@ -801,16 +903,17 @@
     }
     state.open = true;
     list.classList.remove('d-none');
-    var html = '<li class="kf-ac-hint">Pick one — or press Enter</li>';
+    var html = '<li class="kf-ac-hint">↑↓ choose · ⏎ pick · Esc close</li>';
     for (var i = 0; i < state.items.length; i++) {
       var it = state.items[i];
       html += '<li class="kf-ac-item' + (i === state.selected ? ' active' : '') + '" data-idx="' + i + '">' +
         '<span class="kf-ac-label">' + esc(it.label) + '</span>' +
-        '<span class="kf-ac-detail">' + esc(it.detail || 'Tap to add') + '</span></li>';
+        '<span class="kf-ac-detail">' + esc(it.detail || '') + '</span></li>';
     }
     list.innerHTML = html;
     var active = list.querySelector('.kf-ac-item.active');
     if (active) active.scrollIntoView({ block: 'nearest' });
+    positionAutocomplete();
   }
 
   function applyCompletion(item) {
@@ -1226,6 +1329,10 @@
       syncHighlight();
       if (state.lineNosEl) state.lineNosEl.scrollTop = editor.scrollTop;
       if (state.onScroll) state.onScroll();
+      if (state.open) positionAutocomplete();
+    });
+    window.addEventListener('resize', function () {
+      if (state.open) positionAutocomplete();
     });
     editor.addEventListener('keydown', onKeyDown);
     editor.addEventListener('keyup', updateCurrentLine);
