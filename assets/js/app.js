@@ -456,6 +456,77 @@
         });
         menu.appendChild(li);
       });
+      setupExamplesPortal(menu);
+    }
+
+    /* Portal the examples menu to <body> on mobile so it escapes the
+     * navbar's backdrop-filter containing block. Without this, the menu
+     * is clipped to the navbar's ~56px height because any ancestor with
+     * backdrop-filter creates a containing block for fixed descendants. */
+    function setupExamplesPortal(menu) {
+      var dropdownEl = menu.parentElement; // .dropdown wrapper
+      if (!dropdownEl) return;
+      var toggleBtn = dropdownEl.querySelector('[data-bs-toggle="dropdown"]');
+      if (!toggleBtn) return;
+
+      var placeholder = document.createComment('kf-examples-menu-placeholder');
+      var backdrop = null;
+      var portaled = false;
+
+      function isMobile() {
+        return window.matchMedia('(max-width: 576px)').matches;
+      }
+
+      function portalToBody() {
+        if (portaled || !isMobile()) return;
+        if (menu.parentNode === dropdownEl) {
+          dropdownEl.insertBefore(placeholder, menu);
+          document.body.appendChild(menu);
+          menu.classList.add('kf-examples-menu-portaled');
+          backdrop = document.createElement('div');
+          backdrop.className = 'kf-examples-backdrop';
+          backdrop.addEventListener('click', function () {
+            var inst = window.bootstrap && bootstrap.Dropdown
+              ? bootstrap.Dropdown.getInstance(toggleBtn)
+              : null;
+            if (inst) inst.hide();
+          });
+          document.body.appendChild(backdrop);
+          requestAnimationFrame(function () {
+            if (backdrop) backdrop.classList.add('kf-examples-backdrop-in');
+          });
+          portaled = true;
+        }
+      }
+
+      function restoreFromBody() {
+        if (!portaled) return;
+        if (backdrop) {
+          backdrop.classList.remove('kf-examples-backdrop-in');
+          var bd = backdrop;
+          setTimeout(function () { if (bd && bd.parentNode) bd.remove(); }, 220);
+          backdrop = null;
+        }
+        if (menu.parentNode === document.body && placeholder.parentNode === dropdownEl) {
+          dropdownEl.insertBefore(menu, placeholder);
+          placeholder.remove();
+          menu.classList.remove('kf-examples-menu-portaled');
+        }
+        portaled = false;
+      }
+
+      toggleBtn.addEventListener('show.bs.dropdown', portalToBody);
+      toggleBtn.addEventListener('hidden.bs.dropdown', restoreFromBody);
+
+      /* Close on resize from mobile → desktop while open */
+      window.addEventListener('resize', function () {
+        if (portaled && !isMobile()) {
+          var inst = window.bootstrap && bootstrap.Dropdown
+            ? bootstrap.Dropdown.getInstance(toggleBtn)
+            : null;
+          if (inst) inst.hide();
+        }
+      });
     }
 
     function bind(id, fn) {
