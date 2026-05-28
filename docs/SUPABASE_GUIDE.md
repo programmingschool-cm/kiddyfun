@@ -95,7 +95,8 @@ Dashboard → **Project Settings** → **General**:
 4. **Run** (বা Ctrl+Enter)
 5. **দ্বিতীয় query:** [`002_security_hardening.sql`](../supabase/migrations/002_security_hardening.sql) — role escalation বন্ধ
 6. **তৃতীয় query:** [`003_published_programs.sql`](../supabase/migrations/003_published_programs.sql) — **Publish & share link** (`?p=...`)
-7. নিচে **Success** দেখতে হবে — কোনো লাল error থাকলে [§14](#14-সমস্যা-সমাধান-troubleshooting) দেখুন
+7. **চতুর্থ query:** [`004_published_insert_policy.sql`](../supabase/migrations/004_published_insert_policy.sql) — publish backup (ঐচ্ছিক কিন্তু সুপারিশকৃত)
+8. নিচে **Success** দেখতে হবে — কোনো লাল error থাকলে [§14](#14-সমস্যা-সমাধান-troubleshooting) দেখুন
 
 > **ড্যাশবোর্ড-only চেকলিস্ট:** [`SUPABASE_DASHBOARD_SETUP.md`](SUPABASE_DASHBOARD_SETUP.md)
 

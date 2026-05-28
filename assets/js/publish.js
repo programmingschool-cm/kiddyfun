@@ -46,6 +46,30 @@
     return id;
   }
 
+  function normalizeShareId(data) {
+    if (data == null || data === '') return null;
+    if (typeof data === 'string') {
+      var s = data.trim().replace(/^"|"$/g, '');
+      return parseShareId(s) || null;
+    }
+    if (Array.isArray(data)) {
+      if (!data.length) return null;
+      return normalizeShareId(data[0]);
+    }
+    if (typeof data === 'object') {
+      if (data.share_id) return normalizeShareId(data.share_id);
+    }
+    return null;
+  }
+
+  function friendlyRpcError(err) {
+    var msg = (err && (err.message || err.details || err.hint)) || 'Publish failed';
+    if (/function.*does not exist/i.test(msg) || err.code === 'PGRST202' || err.code === '42883') {
+      return 'Publish is not set up in Supabase yet. Run migrations/003_published_programs.sql (and 004) in SQL Editor, wait one minute, then try again.';
+    }
+    return String(msg);
+  }
+
   function getCloud() {
     return window.KiddyCloud && window.KiddyCloud.isConfigured() ? window.KiddyCloud : null;
   }
@@ -53,8 +77,46 @@
   async function getClient() {
     var cloud = getCloud();
     if (!cloud) return null;
+    if (!cloud.isLibraryLoaded || !cloud.isLibraryLoaded()) {
+      console.warn('[KiddyPublish] Supabase JS library not loaded');
+      return null;
+    }
     await cloud.init();
     return cloud.getClient();
+  }
+
+  async function publishViaRpc(client, code, title) {
+    var res = await client.rpc('publish_program', {
+      p_code: code,
+      p_title: title || null,
+    });
+    if (res.error) {
+      throw new Error(friendlyRpcError(res.error));
+    }
+    return normalizeShareId(res.data);
+  }
+
+  async function publishViaInsert(client, code, title) {
+    var vTitle = (title && String(title).trim()) || 'Shared Program';
+    if (vTitle.length > 120) vTitle = vTitle.slice(0, 120);
+
+    for (var attempt = 0; attempt < 8; attempt++) {
+      var shareId = randomShareId();
+      var res = await client.from('published_programs').insert({
+        share_id: shareId,
+        code: code,
+        title: vTitle,
+      }).select('share_id').single();
+
+      if (!res.error && res.data) {
+        return normalizeShareId(res.data.share_id) || shareId;
+      }
+      if (res.error && res.error.code === '23505') continue;
+      if (res.error) {
+        throw new Error(res.error.message || 'Insert failed');
+      }
+    }
+    throw new Error('Could not generate a unique share id');
   }
 
   var Publish = {
@@ -76,86 +138,102 @@
       return !!getCloud();
     },
 
-    publish: async function (code, title) {
+    publish: function (code, title) {
+      var self = this;
       code = (code || '').trim();
       if (!code) {
-        return { ok: false, error: 'Write some code first!' };
+        return Promise.resolve({ ok: false, error: 'Write some code first!' });
       }
 
-      var client = await getClient();
-      if (client) {
-        try {
-          var res = await client.rpc('publish_program', {
-            p_code: code,
-            p_title: title || null,
-          });
-          if (res.error) {
-            return { ok: false, error: res.error.message || 'Publish failed' };
+      return (async function () {
+        var client = await getClient();
+        if (client) {
+          var shareId = null;
+          try {
+            shareId = await publishViaRpc(client, code, title);
+          } catch (rpcErr) {
+            var msg = rpcErr.message || '';
+            if (/does not exist|PGRST202|42883|not set up/i.test(msg)) {
+              try {
+                shareId = await publishViaInsert(client, code, title);
+              } catch (insErr) {
+                return { ok: false, error: insErr.message || msg };
+              }
+            } else {
+              return { ok: false, error: msg };
+            }
           }
-          var shareId = res.data;
+
           if (!shareId) {
-            return { ok: false, error: 'No share id returned' };
+            try {
+              shareId = await publishViaInsert(client, code, title);
+            } catch (e2) {
+              return {
+                ok: false,
+                error: 'Could not get a share link. Run migration 003 (and 004) in Supabase SQL Editor.',
+              };
+            }
+          }
+
+          var url = self.getShareUrl(shareId, true);
+          return { ok: true, shareId: shareId, url: url, mode: 'cloud' };
+        }
+
+        if (code.length > MAX_URL_CODE) {
+          return {
+            ok: false,
+            error: 'Cloud is not configured and code is too long for a link. Set up Supabase or shorten your program.',
+          };
+        }
+
+        var link = self.getUrlFallbackLink(code, true);
+        if (!link) {
+          return { ok: false, error: 'Could not encode program for sharing' };
+        }
+        return { ok: true, shareId: null, url: link, mode: 'url' };
+      })();
+    },
+
+    loadFromShareId: function (shareId) {
+      var self = this;
+      shareId = parseShareId(shareId);
+      if (!shareId) {
+        return Promise.resolve({ ok: false, error: 'Invalid share link' });
+      }
+
+      return (async function () {
+        var client = await getClient();
+        if (!client) {
+          return { ok: false, error: 'Cloud is not configured — cannot load this link' };
+        }
+
+        try {
+          var res = await client.rpc('get_published_program', { p_share_id: shareId });
+          if (res.error) {
+            return { ok: false, error: res.error.message || 'Load failed' };
+          }
+          var row = res.data;
+          if (Array.isArray(row)) row = row[0];
+          if (!row || !row.code) {
+            var tbl = await client.from('published_programs')
+              .select('code, title')
+              .eq('share_id', shareId)
+              .maybeSingle();
+            if (tbl.error || !tbl.data) {
+              return { ok: false, error: 'Shared program not found' };
+            }
+            row = tbl.data;
           }
           return {
             ok: true,
-            shareId: shareId,
-            url: this.getShareUrl(shareId, true),
+            code: row.code,
+            title: row.title || 'Shared Program',
             mode: 'cloud',
           };
         } catch (e) {
           return { ok: false, error: e.message || String(e) };
         }
-      }
-
-      if (code.length > MAX_URL_CODE) {
-        return {
-          ok: false,
-          error: 'Cloud is not configured and code is too long for a link. Set up Supabase or shorten your program.',
-        };
-      }
-
-      var link = this.getUrlFallbackLink(code, true);
-      if (!link) {
-        return { ok: false, error: 'Could not encode program for sharing' };
-      }
-      return {
-        ok: true,
-        shareId: null,
-        url: link,
-        mode: 'url',
-      };
-    },
-
-    loadFromShareId: async function (shareId) {
-      shareId = parseShareId(shareId);
-      if (!shareId) {
-        return { ok: false, error: 'Invalid share link' };
-      }
-
-      var client = await getClient();
-      if (!client) {
-        return { ok: false, error: 'Cloud is not configured — cannot load this link' };
-      }
-
-      try {
-        var res = await client.rpc('get_published_program', { p_share_id: shareId });
-        if (res.error) {
-          return { ok: false, error: res.error.message || 'Load failed' };
-        }
-        var row = res.data;
-        if (Array.isArray(row)) row = row[0];
-        if (!row || !row.code) {
-          return { ok: false, error: 'Shared program not found' };
-        }
-        return {
-          ok: true,
-          code: row.code,
-          title: row.title || 'Shared Program',
-          mode: 'cloud',
-        };
-      } catch (e) {
-        return { ok: false, error: e.message || String(e) };
-      }
+      })();
     },
 
     loadFromUrlParam: function (encoded) {
@@ -177,7 +255,9 @@
 
     copyToClipboard: function (text) {
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        return navigator.clipboard.writeText(text).then(function () { return true; });
+        return navigator.clipboard.writeText(text).then(function () { return true; }).catch(function () {
+          return false;
+        });
       }
       var ta = document.createElement('textarea');
       ta.value = text;

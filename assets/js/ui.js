@@ -435,72 +435,45 @@
       }).then(function (title) {
         if (title === null) return;
         self.showToast('Publishing…');
-        KiddyPublish.publish(editor.value, title).then(function (res) {
-          if (!res.ok) {
-            self.showAlert(res.error, { title: 'Publish failed', icon: '⚠️' });
-            return;
-          }
-          var hint = res.mode === 'cloud'
-            ? 'Anyone with this link can open and run your program.'
-            : 'Link contains your code (works without cloud). Keep it shorter for smaller URLs.';
-          self.showShareLink(res.url, hint);
-        });
+        KiddyPublish.publish(editor.value, title)
+          .then(function (res) {
+            if (!res || !res.ok || !res.url) {
+              self.showAlert(
+                (res && res.error) || 'Could not create a share link.',
+                { title: 'Publish failed', icon: '⚠️' }
+              );
+              return;
+            }
+            var hint = res.mode === 'cloud'
+              ? 'Anyone with this link can open and run your program. Tap Copy link or select the URL below.'
+              : 'This link contains your code. Share it with friends.';
+            setTimeout(function () {
+              self.showShareLink(res.url, hint);
+            }, 80);
+          })
+          .catch(function (err) {
+            console.error('[KiddyPublish]', err);
+            self.showAlert(
+              (err && err.message) || 'Something went wrong while publishing.',
+              { title: 'Publish failed', icon: '⚠️' }
+            );
+          });
       });
     },
 
     showShareLink: function (url, hint) {
-      var self = this;
-      var overlay = document.getElementById('kf-dialog-overlay');
-      var iconEl = document.getElementById('kf-dialog-icon');
-      var titleEl = document.getElementById('kf-dialog-title');
-      var msgEl = document.getElementById('kf-dialog-message');
-      var inputEl = document.getElementById('kf-dialog-input');
-      var actionsEl = document.getElementById('kf-dialog-actions');
-      if (!overlay || !actionsEl || !inputEl) return Promise.resolve();
-
-      if (iconEl) iconEl.textContent = '🔗';
-      if (titleEl) titleEl.textContent = 'Share link ready!';
-      if (msgEl) msgEl.textContent = hint || 'Copy and send this link to friends.';
-
-      inputEl.classList.remove('d-none');
-      inputEl.classList.add('kf-share-url-input');
-      inputEl.value = url;
-      inputEl.readOnly = true;
-
-      actionsEl.innerHTML = '';
-
-      function addBtn(label, cls, onClick) {
-        var btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'kf-dialog-btn ' + cls;
-        btn.textContent = label;
-        btn.addEventListener('click', onClick);
-        actionsEl.appendChild(btn);
+      if (!url) {
+        this.showAlert('No link was generated.', { title: 'Publish', icon: '⚠️' });
+        return Promise.resolve();
       }
-
-      addBtn('Copy link', 'kf-dialog-btn-secondary', function () {
-        KiddyPublish.copyToClipboard(url).then(function (ok) {
-          self.showToast(ok ? '✅ Link copied!' : 'Could not copy — select the link and copy manually');
-        });
+      return this._openDialog({
+        type: 'share',
+        title: 'Share link ready!',
+        message: hint || 'Copy and send this link to friends.',
+        icon: '🔗',
+        url: url,
+        okLabel: 'Done',
       });
-      addBtn('Done', 'kf-dialog-btn-primary', function () {
-        inputEl.classList.remove('kf-share-url-input');
-        inputEl.readOnly = false;
-        overlay.classList.add('d-none');
-        if (window.KiddyApp && window.KiddyApp.unlockMobileTab) {
-          window.KiddyApp.unlockMobileTab();
-        }
-      });
-
-      overlay.classList.remove('d-none');
-      setTimeout(function () {
-        inputEl.focus();
-        inputEl.select();
-      }, 50);
-
-      if (window.KiddyApp && window.KiddyApp.lockMobileTab && window.innerWidth < 992) {
-        window.KiddyApp.lockMobileTab('code');
-      }
     },
 
     loadSharedCode: function (code, title, autoRun) {
@@ -567,6 +540,11 @@
 
     _closeDialog: function (result) {
       var overlay = document.getElementById('kf-dialog-overlay');
+      var inputEl = document.getElementById('kf-dialog-input');
+      if (inputEl) {
+        inputEl.readOnly = false;
+        inputEl.classList.remove('kf-share-url-input');
+      }
       if (overlay) overlay.classList.add('d-none');
       if (window.KiddyApp && window.KiddyApp.unlockMobileTab) {
         window.KiddyApp.unlockMobileTab();
@@ -596,12 +574,20 @@
         if (msgEl) msgEl.textContent = config.message || '';
 
         var isPrompt = config.type === 'prompt';
+        var isShare = config.type === 'share';
         if (inputEl) {
           if (isPrompt) {
             inputEl.classList.remove('d-none');
+            inputEl.readOnly = false;
             inputEl.value = config.defaultValue || '';
+          } else if (isShare) {
+            inputEl.classList.remove('d-none');
+            inputEl.classList.add('kf-share-url-input');
+            inputEl.readOnly = true;
+            inputEl.value = config.url || '';
           } else {
             inputEl.classList.add('d-none');
+            inputEl.readOnly = false;
             inputEl.value = '';
           }
         }
@@ -614,6 +600,15 @@
           btn.className = 'kf-dialog-btn ' + cls;
           btn.textContent = label;
           btn.addEventListener('click', function () {
+            if (config.type === 'share' && value === 'copy') {
+              var link = config.url || (inputEl ? inputEl.value : '');
+              if (window.KiddyPublish && link) {
+                KiddyPublish.copyToClipboard(link).then(function (ok) {
+                  self.showToast(ok ? '✅ Link copied!' : '⚠️ Select the link and copy manually');
+                });
+              }
+              return;
+            }
             if (isPrompt && value !== null) {
               self._closeDialog(inputEl ? inputEl.value : '');
             } else {
@@ -631,16 +626,19 @@
         } else if (config.type === 'prompt') {
           addBtn(config.cancelLabel || 'Cancel', 'kf-dialog-btn-secondary', null);
           addBtn(config.okLabel || 'Save', 'kf-dialog-btn-primary', true);
+        } else if (config.type === 'share') {
+          addBtn('Copy link', 'kf-dialog-btn-secondary', 'copy');
+          addBtn(config.okLabel || 'Done', 'kf-dialog-btn-primary', true);
         }
 
         overlay.classList.remove('d-none');
 
         if (window.KiddyApp && window.KiddyApp.lockMobileTab && window.innerWidth < 992) {
-          window.KiddyApp.lockMobileTab('output');
+          window.KiddyApp.lockMobileTab(isShare ? 'code' : 'output');
         }
 
         setTimeout(function () {
-          if (isPrompt && inputEl) {
+          if ((isPrompt || isShare) && inputEl) {
             inputEl.focus();
             inputEl.select();
           } else {
