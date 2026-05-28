@@ -18,7 +18,11 @@
     'greater','than','less','equal','equals','length','of','list',
     'item','in','type','value','empty',
     'const','for','each','break','continue','user','as',
-    'random','from','remainder','remove','number'
+    'random','from','remainder','remove','number',
+    /* game mode */
+    'game','player','when','pressed','held','arrow','key','keys',
+    'space','every','frame','stop','move','jump','power','touches',
+    'touch','width','height','view','top','side','wall','coin','platform'
   ]);
 
   const TOKEN_TYPES = {

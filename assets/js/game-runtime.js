@@ -1,0 +1,263 @@
+/**
+ * KiddyFun Game Runtime — DOM sync for game mode (separate from story Runtime)
+ */
+(function () {
+  'use strict';
+
+  var CHARACTER_DEFS = {
+    rafi: { type: 'human', color: '#4f8ef7', label: 'Rafi', pants: '#1e3a5f' },
+    mina: { type: 'human', color: '#f76fa8', label: 'Mina', pants: '#831843' },
+    teacher: { type: 'human', color: '#9b59b6', label: 'Teacher', pants: '#4c1d95' },
+    lion: { type: 'lion', color: '#e8a317', label: 'Lion' },
+    bird: { type: 'bird', color: '#38bdf8', label: 'Bird' },
+    monkey: { type: 'monkey', color: '#a16207', label: 'Monkey' },
+    robot: { type: 'robot', color: '#64748b', label: 'Robot' },
+    cat: { type: 'cat', color: '#f97316', label: 'Cat' },
+    dog: { type: 'dog', color: '#a8a29e', label: 'Dog' },
+    mostak: { type: 'human', color: '#3b82f6', label: 'Mostak', pants: '#1e293b' },
+    sagor: { type: 'human', color: '#10b981', label: 'Sagor', pants: '#064e3b' },
+    rabiul: { type: 'human', color: '#f59e0b', label: 'Rabiul', pants: '#422006' },
+    cow: { type: 'human', color: '#78716c', label: '🐄 Cow', pants: '#44403c' },
+  };
+
+  var SCENE_DEFS = {
+    school: { bg: 'linear-gradient(180deg,#87CEEB 0%,#87CEEB 55%,#90EE90 55%)', emoji: '🏫', label: 'School', deco: 'clouds' },
+    classroom: { bg: 'linear-gradient(180deg,#fff9e6 0%,#fff9e6 55%,#c8b560 55%)', emoji: '📚', label: 'Classroom', deco: 'indoor' },
+    jungle: { bg: 'linear-gradient(180deg,#2d5016 0%,#56ab2f 40%,#4a7c1f 55%)', emoji: '🌿', label: 'Jungle', deco: 'trees' },
+    playground: { bg: 'linear-gradient(180deg,#81d4fa 0%,#81d4fa 50%,#a5d6a7 50%)', emoji: '🛝', label: 'Playground', deco: 'clouds' },
+    space: { bg: 'linear-gradient(180deg,#0d0d2b 0%,#1a1a4e 50%,#0d0d2b 100%)', emoji: '🚀', label: 'Space', deco: 'stars' },
+    default: { bg: 'linear-gradient(180deg,#e8eaf6 0%,#e8eaf6 55%,#b0bec5 55%)', emoji: '🌍', label: 'Scene', deco: 'clouds' },
+  };
+
+  var GameRuntime = {
+    stage: null,
+    logPanel: null,
+    scoreDisplay: null,
+    world: null,
+    loop: null,
+    input: null,
+    score: 0,
+    currentScene: 'default',
+    _gameLayer: null,
+    _debug: false,
+
+    init: function (stageEl, logEl, scoreEl) {
+      this.stage = stageEl;
+      this.logPanel = logEl;
+      this.scoreDisplay = scoreEl;
+      this.world = new window.KiddyGameWorld({ view: 'side' });
+      this.loop = new window.KiddyGameLoop();
+      this.input = new window.KiddyGameInput();
+    },
+
+    reset: function () {
+      if (this.loop) this.loop.stop();
+      if (this.input) {
+        this.input.stop();
+        this.input.removeTouchPad();
+      }
+      this.score = 0;
+      this._updateScore();
+      if (this.world) this.world.reset();
+      if (this.stage) {
+        this.stage.innerHTML = '';
+        this.stage.classList.remove('kf-game-mode');
+        this._buildStageShell();
+      }
+    },
+
+    _buildStageShell: function () {
+      var stage = this.stage;
+      stage.classList.add('kf-game-mode');
+      stage.innerHTML =
+        '<div class="kf-layer-sky kf-layer"></div>' +
+        '<div class="kf-layer-ground kf-layer"></div>' +
+        '<div class="kf-stage-floor"></div>' +
+        '<div class="kf-layer-mid kf-layer"></div>' +
+        '<div class="kf-game-layer" id="kf-game-layer"></div>' +
+        '<div class="kf-game-hud" id="kf-game-hud"></div>';
+      this._gameLayer = document.getElementById('kf-game-layer');
+    },
+
+    setScene: function (name, withWalls) {
+      this.currentScene = (name || 'default').toLowerCase().replace(/[^a-z0-9]/g, '');
+      var def = SCENE_DEFS[this.currentScene] || SCENE_DEFS.default;
+      if (this.stage) {
+        this.stage.style.background = def.bg;
+        var label = this.stage.querySelector('.kf-scene-label');
+        if (!label) {
+          label = document.createElement('div');
+          label.className = 'kf-scene-label';
+          this.stage.insertBefore(label, this.stage.firstChild);
+        }
+        label.textContent = def.emoji + ' ' + (def.label || name);
+      }
+      if (withWalls && this.world) {
+        this.world.loadSceneData(this.currentScene);
+      }
+      this._addLog('Scene: ' + name);
+    },
+
+    setView: function (view) {
+      if (this.world) this.world.setView(view);
+      if (this.stage) {
+        this.stage.classList.toggle('kf-game-view-top', view === 'top');
+        this.stage.classList.toggle('kf-game-view-side', view !== 'top');
+      }
+    },
+
+    resizeWorld: function () {
+      if (!this.stage || !this.world) return;
+      var w = this.stage.clientWidth || 600;
+      var h = this.stage.clientHeight || 360;
+      this.world.setBounds(w, h);
+    },
+
+    entityAppears: function (name, opts) {
+      opts = opts || {};
+      var key = name.toLowerCase();
+      var def = CHARACTER_DEFS[key] || { type: 'human', color: '#6366f1', label: name };
+      if (!this.world.entities[key]) {
+        this.world.addEntity(key, {
+          name: name,
+          def: def,
+          x: opts.x,
+          y: opts.y,
+          tags: opts.tags || [],
+        });
+      }
+      var ent = this.world.entities[key];
+      if (!ent.el && this._gameLayer) {
+        var el;
+        if (window.StageGraphics) {
+          el = StageGraphics.createCharacter(name, def);
+        } else {
+          el = document.createElement('div');
+          el.className = 'ss-character';
+          el.innerHTML = '<span>' + name + '</span>';
+        }
+        el.classList.add('kf-game-entity');
+        el.dataset.key = key;
+        el.style.position = 'absolute';
+        el.style.left = '0';
+        el.style.top = '0';
+        el.style.bottom = 'auto';
+        el.style.right = 'auto';
+        el.style.willChange = 'transform';
+        el.style.transition = 'none';
+        this._gameLayer.appendChild(el);
+        ent.el = el;
+        if (window.StageAnimator && window.StageGraphics) {
+          var wrap = StageGraphics.getBodyWrap(el);
+          var t = el.dataset.charType;
+          if (wrap && (t === 'human' || t === 'robot')) {
+            StageAnimator.idleBreath(el, wrap);
+          }
+        }
+      }
+      ent.active = true;
+      this._addLog(name + ' ready');
+    },
+
+    spawnCoin: function (x, y) {
+      var id = 'coin_' + Date.now() + '_' + Math.floor(Math.random() * 999);
+      this.world.addEntity(id, {
+        name: 'Coin',
+        x: x,
+        y: y,
+        w: 28,
+        h: 28,
+        tags: ['coin'],
+        def: { type: 'human', color: '#fbbf24', label: 'Coin' },
+      });
+      var ent = this.world.entities[id];
+      if (ent && this._gameLayer) {
+        var el = document.createElement('div');
+        el.className = 'kf-game-coin';
+        el.innerHTML = '<span class="kf-game-coin-inner">🪙</span>';
+        el.dataset.key = id;
+        el.style.position = 'absolute';
+        this._gameLayer.appendChild(el);
+        ent.el = el;
+      }
+      return id;
+    },
+
+    addObstacleVisual: function (obs) {
+      if (!this._gameLayer) return;
+      var el = document.createElement('div');
+      el.className = 'kf-game-obstacle kf-game-obstacle-' + (obs.tag || 'wall');
+      el.style.cssText =
+        'left:' + obs.x + 'px;top:' + obs.y + 'px;width:' + obs.w + 'px;height:' + obs.h + 'px;';
+      el.dataset.tag = obs.tag || 'wall';
+      this._gameLayer.appendChild(el);
+      obs.el = el;
+    },
+
+    render: function () {
+      if (!this.world) return;
+      var self = this;
+      Object.keys(this.world.entities).forEach(function (key) {
+        var e = self.world.entities[key];
+        if (!e.el || !e.active) {
+          if (e.el) e.el.style.display = 'none';
+          return;
+        }
+        e.el.style.display = '';
+        e.el.style.transform = 'translate(' + Math.round(e.x) + 'px,' + Math.round(e.y) + 'px)';
+
+        if (window.StageGraphics) {
+          StageGraphics.setFacing(e.el, e.facing === 'left' ? 'left' : 'right');
+          if (self.world.view === 'side') {
+            if (!e.onGround && e.vy < 0) StageGraphics.setMotion(e.el, 'jumps');
+            else if (!e.onGround) StageGraphics.setMotion(e.el, 'walks');
+            else if (Math.abs(e.vx) > 0.5) StageGraphics.setMotion(e.el, 'runs');
+            else StageGraphics.setMotion(e.el, 'idle');
+          }
+        }
+      });
+
+      if (this._debug) this._renderDebug();
+    },
+
+    _renderDebug: function () {
+      /* optional hitbox overlay — toggled via KiddyGameRuntime.debug = true */
+    },
+
+    addScore: function (n) {
+      this.score += n;
+      this._updateScore();
+    },
+
+    setScore: function (n) {
+      this.score = n;
+      this._updateScore();
+    },
+
+    _updateScore: function () {
+      if (this.scoreDisplay) {
+        this.scoreDisplay.textContent = 'Score: ' + this.score;
+      }
+    },
+
+    showHud: function (text) {
+      var hud = document.getElementById('kf-game-hud');
+      if (hud) hud.textContent = text || '';
+    },
+
+    _addLog: function (msg) {
+      if (!this.logPanel) return;
+      var item = document.createElement('div');
+      item.className = 'ss-log-item';
+      item.textContent = msg;
+      this.logPanel.appendChild(item);
+      this.logPanel.scrollTop = this.logPanel.scrollHeight;
+    },
+
+    log: function (msg) {
+      this._addLog(msg);
+    },
+  };
+
+  window.KiddyGameRuntime = GameRuntime;
+})();

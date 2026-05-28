@@ -31,6 +31,15 @@
         {desc:'Move left or right',code:'Robot moves right\nRobot moves left'},
         {desc:'Hide and show',code:'Cat hides\nCat shows'},
       ]},
+    { icon:'🎮', title:'Build your first game',
+      items:[
+        {desc:'Step 1: Minimal playable starter (run this first)',
+         code:'game "Starter"\nscene "playground" with walls\nRafi is player\n\nevery frame\n    if left key is held\n        move Rafi left by 4\n    end\n    if right key is held\n        move Rafi right by 4\n    end\nend'},
+        {desc:'Step 2: Add jump + collision reward',
+         code:'when space is pressed\n    Rafi jump with power 12\nend\n\nif Rafi touches coin\n    add 10 points\n    play sound "success"\n    remove coin\nend'},
+        {desc:'Step 3: Top-down version (no jump)',
+         code:'game "Coin Collector"\ngame view top\nscene "school" with walls\nMina is player\n\nevery frame\n    if left key is held\n        move Mina left by 4\n    end\n    if right key is held\n        move Mina right by 4\n    end\n    if up key is held\n        move Mina up by 4\n    end\n    if down key is held\n        move Mina down by 4\n    end\nend'},
+      ]},
     { icon:'📚', title:'Vocabulary',
       items:[
         {desc:'Learn English words with meanings',code:'show word "brave" means "সাহসী"'},

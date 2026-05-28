@@ -28,6 +28,14 @@
 | Remove | `remove item 2 from items` |
 | Empty / contains | `is empty`, `is in` |
 | break / continue | inside loops |
+| Game start (game mode only) | `game "My Game"` |
+| Top-down view (game mode only) | `game view top` |
+| Set player (game mode only) | `Rafi is player` |
+| Key pressed (game mode only) | `when space is pressed` |
+| Key held (game mode only) | `if left key is held` |
+| Movement (game mode only) | `move Rafi left by 4` |
+| Jump (game mode only) | `Rafi jump with power 12` |
+| Collision (game mode only) | `if Rafi touches coin` |
 | Comment | `# note` |
 
 ---
@@ -42,8 +50,43 @@ Teacher says "Hello!"
 
 ---
 
+## Game mode quick starter
+
+```text
+game "Starter"
+scene "playground" with walls
+Rafi is player
+
+when space is pressed
+    Rafi jump with power 12
+end
+
+every frame
+    if left key is held
+        move Rafi left by 4
+    end
+    if right key is held
+        move Rafi right by 4
+    end
+end
+
+if Rafi touches coin
+    add 10 points
+    remove coin
+end
+```
+
+Game mode tips:
+- Use `game "..."` at the top of the file.
+- Use `if <key> is held` inside `every frame`.
+- Use `if <character> touches <target>` for collisions.
+- On mobile, use the on-screen touch pad in Output.
+
+---
+
 ## See also
 
 - **[TUTORIAL.md](./TUTORIAL.md)** — complete documentation (recommended)
+- **[GAME_ENGINE.md](./GAME_ENGINE.md)** — game mode behavior and architecture
 - In-app **Guide** menu — copy-paste snippets
-- **Examples** menu — Programming 101, 102, 103
+- **Examples** menu — Platform Jump, Coin Collector, Programming 101/102/103

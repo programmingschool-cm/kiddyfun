@@ -80,6 +80,20 @@ High impact, low complexity. Good next sprint.
 
 ---
 
+## Phase G — Game engine (keyboard / 2D)
+
+Real-time **Game mode** alongside existing **Story mode** (dual mode — story programs unchanged).
+
+- [x] G0: Architecture — `game-world.js`, `game-loop.js`, `game-input.js`, `game-runtime.js`, `docs/GAME_ENGINE.md`
+- [x] G1: Language — `game "..."`, `Rafi is player`, `when` / `while key` / `every frame`
+- [x] G2: Side-view physics — gravity, jump, `move … by`, entity render sync
+- [x] G3: AABB collision — `if … touches`, `scene … with walls`, `add wall at`, `remove coin`
+- [x] G4: Examples + missions + syntax reference (Game mode group)
+- [x] G5: Top-down — `game view top`, 4-direction movement, Coin Collector example
+- [ ] G6 (future): Scrolling camera, enemy templates, tile editor, block mode mapping
+
+---
+
 ## Phase B — Core platform (1–2 months)
 
 Makes KiddyFun a **product**, not just a demo.
@@ -248,7 +262,7 @@ Record completed steps here. Newest first.
 
 | Date | Item | Notes |
 |------|------|-------|
-| 2026-05-24 | Phase C2 (partial) | Supabase schema, auth, offline-first cloud sync — see `docs/BACKEND.md` |
+| 2026-05-27 | Phase G (Game engine) | Dual mode: game loop, keyboard, jump, collision, top-down view |
 | 2026-05-24 | Roadmap created | Initial plan from product review |
 | 2026-05-24 | Phase 0 baseline | v1.0: TTS, audio, UI upgrade, mobile stage fix |
 

@@ -436,6 +436,10 @@
     return new Promise(function (res) { setTimeout(res, ms); });
   };
 
-  window.SpeakInterpreter = { Interpreter: Interpreter, InterpretError: InterpretError };
+  window.SpeakInterpreter = {
+    Interpreter: Interpreter,
+    InterpretError: InterpretError,
+    Environment: Environment,
+  };
   console.log('[KiddyFun] Interpreter v2.2 ready');
 })();

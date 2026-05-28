@@ -424,6 +424,125 @@ end
 narrator says "You used random, remainder, list add/remove, empty, and is in!"
 `,
   },
+  {
+    id   : 'platformer',
+    title: '🎮 Platform Jump',
+    desc : 'Side-view game: arrows to move, space to jump, collect coins.',
+    code : `# Platform Jump — Game Mode
+# Learn first: TUTORIAL.md sections 28-31
+game "Platform Jump"
+
+scene "playground" with walls
+score starts at 0
+
+Rafi is player
+set Rafi speed to 5
+
+when space is pressed
+    Rafi jump with power 14
+end
+
+every frame
+    if left key is held
+        move Rafi left by 5
+    end
+    if right key is held
+        move Rafi right by 5
+    end
+end
+
+if Rafi touches coin
+    add 10 points
+    play sound "success"
+    remove coin
+end
+`,
+  },
+  {
+    id   : 'coin_collector',
+    title: '🪙 Coin Collector (Top-Down)',
+    desc : 'Top-down maze: move in four directions and collect all coins.',
+    code : `# Coin Collector — top-down view
+# Learn first: TUTORIAL.md sections 28-31
+game "Coin Collector"
+game view top
+
+scene "school" with walls
+score starts at 0
+
+Mina is player
+set Mina speed to 4
+
+every frame
+    if left key is held
+        move Mina left by 4
+    end
+    if right key is held
+        move Mina right by 4
+    end
+    if up key is held
+        move Mina up by 4
+    end
+    if down key is held
+        move Mina down by 4
+    end
+end
+
+if Mina touches coin
+    add 15 points
+    play sound "cheer"
+    remove coin
+end
+`,
+  },
+  {
+    id   : 'eid_2026',
+    title: '🕌 Eid ul Adha 2026 — Eid Mubarak',
+    desc : 'Mostak, Sagor, and Rabiul run with a cow and wish friends Eid Mubarak from Programming School.',
+    code : `# Eid ul Adha 2026 — Programming School
+scene "school"
+
+play sound "success"
+
+Mostak appears
+Sagor appears
+Rabiul appears
+Cow appears
+
+narrator says "Eid ul Adha 2026 at Programming School!"
+narrator says "Mostak, Sagor, and Rabiul are running with a cow to wish everyone Eid Mubarak."
+
+Mostak runs
+Mostak moves right
+Sagor runs
+Sagor moves right
+Rabiul runs
+Rabiul moves right
+Cow walks
+
+Mostak says "Eid Mubarak to all our friends at Programming School!"
+Sagor says "Eid Mubarak! Happy Eid ul Adha 2026!"
+Rabiul says "May this Eid bring peace, joy, and blessings to everyone!"
+
+Cow walks
+Cow walks
+
+narrator says "They wish Eid Mubarak to Rafi, Mina, Teacher, and every kiddyFun learner."
+
+Mostak waves
+Sagor cheers
+Rabiul handshakes
+Cow walks
+
+play sound "cheer"
+
+Mostak says "Eid Mubarak 2026 from Programming School!"
+Sagor says "Korbanir Eid Mubarak to all!"
+Rabiul says "Stay happy, stay kind — Eid Mubarak!"
+
+narrator says "Eid Mubarak! Happy Eid ul Adha 2026 from Mostak, Sagor, Rabiul, and friends."
+`,
+  },
 ];
 
 window.SpeakExamples = EXAMPLES;

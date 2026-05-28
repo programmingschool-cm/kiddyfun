@@ -11,8 +11,10 @@
     var Parser      = window.SpeakParser;
     var Errors      = window.SpeakErrors;
     var Runtime     = window.SpeakRuntime;
+    var GameRuntime = window.KiddyGameRuntime;
     var Storage     = window.SpeakStorage;
     var Interpreter = window.SpeakInterpreter && window.SpeakInterpreter.Interpreter;
+    var GameInterpreter = window.KiddyGameInterpreter;
 
     if (!Parser || !Errors || !Runtime || !Storage || !Interpreter) {
       document.body.innerHTML =
@@ -32,6 +34,9 @@
     function $id(id) { return document.getElementById(id); }
 
     Runtime.init($id('ss-stage'), $id('ss-log'), $id('ss-vocab'), $id('ss-score'));
+    if (GameRuntime) {
+      GameRuntime.init($id('ss-stage'), $id('ss-log'), $id('ss-score'));
+    }
 
     var last = Storage.loadLastCode();
     if (last) $id('ss-editor').value = last;
@@ -361,8 +366,29 @@
         toggleMaxEditor();
       }
 
+      if (ast.mode === 'game') {
+        if (!GameRuntime || !GameInterpreter) {
+          UI.showErrors('Game mode is not loaded. Check game-*.js scripts in index.html.');
+          UI.setRunning(false);
+          unlockMobileTab();
+          return;
+        }
+        if (editorEl && editorEl.blur) editorEl.blur();
+        Runtime.reset();
+        interpreter = new GameInterpreter(GameRuntime);
+        interpreter.run(ast).then(function () {
+          checkMissions(code);
+        }).catch(function (err) {
+          UI.showErrors(Errors.renderError(Errors.friendlyError(err)));
+        }).finally(function () {
+          UI.setRunning(false);
+          interpreter = null;
+        });
+        return;
+      }
+
       interpreter = new Interpreter(Runtime);
-      interpreter.run(ast).then(function () {
+      interpreter.run(ast.nodes || ast).then(function () {
         checkMissions(code);
       }).catch(function (err) {
         UI.showErrors(Errors.renderError(Errors.friendlyError(err)));
@@ -374,6 +400,7 @@
 
     function stopProgram() {
       if (interpreter) interpreter.stop();
+      if (GameRuntime && GameRuntime.loop) GameRuntime.loop.stop();
       UI.setRunning(false);
       unlockMobileTab();
       UI.showToast('⏹️ Stopped.');
@@ -383,6 +410,7 @@
       if (interpreter) interpreter.stop();
       interpreter = null;
       Runtime.reset();
+      if (GameRuntime) GameRuntime.reset();
       UI.clearErrors();
       UI.setRunning(false);
     }

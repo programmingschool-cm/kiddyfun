@@ -82,6 +82,12 @@
     var type    = tok.type;
 
     if (type === TT.KEYWORD) {
+      if (val === 'game')     return this.parseGame(lineNum);
+      if (val === 'when')     return this.parseWhenKey(lineNum);
+      if (val === 'while')    return this.parseWhileKeyHeld(lineNum);
+      if (val === 'every')    return this.parseEveryFrame(lineNum);
+      if (val === 'move')     return this.parseGameMove(lineNum);
+      if (val === 'stop')     return this.parseGameStop(lineNum);
       if (val === 'const')    return this.parseConst(lineNum);
       if (val === 'set')      return this.parseSet(lineNum);
       if (val === 'define')   return this.parseDefine(lineNum);
@@ -150,14 +156,25 @@
 
   Parser.prototype.parseSet = function (line) {
     this.advance(); // set
-    var varName = this.readVarName(line, 'Expected: set name to value. Example: set points to 10');
+    var first = this.readVarName(line, 'Expected: set name to value. Example: set points to 10');
+    if (this.peek() && this.peek().value === 'speed') {
+      this.advance();
+      var actor = first;
+      if (!this.peek() || this.peek().value !== 'to') {
+        throw new ParseError('Expected: set Rafi speed to 4', line);
+      }
+      this.advance();
+      var speedExpr = this.parseExpressionFromHere(line);
+      this.restOfLine(line);
+      return { type: 'set_entity_speed', actor: actor, speedExpr: speedExpr, line: line };
+    }
     if (!this.peek() || this.peek().value !== 'to') {
       throw new ParseError('Expected "to" after variable name. Example: set name to "Rafi"', line);
     }
     this.advance(); // to
     var expr = this.parseExpressionFromHere(line);
     this.restOfLine(line);
-    return { type: 'set_var', name: varName, expr: expr, line: line };
+    return { type: 'set_var', name: first, expr: expr, line: line };
   };
 
   Parser.prototype.parseDefine = function (line) {
@@ -234,8 +251,191 @@
   Parser.prototype.parseScene = function (line) {
     this.advance();
     var str = this.expectString(line, 'scene "school"');
+    var withWalls = false;
+    if (this.peek() && this.peek().value === 'with') {
+      this.advance();
+      var w = this.peek();
+      if (w && w.value === 'walls') {
+        this.advance();
+        withWalls = true;
+      }
+    }
     this.restOfLine(line);
-    return { type: 'scene', value: str.toLowerCase(), line: line };
+    return { type: 'scene', value: str.toLowerCase().replace(/[^a-z0-9]/g, ''), withWalls: withWalls, line: line };
+  };
+
+  /* ── Game mode parsers ───────────────────────────────────────────── */
+  Parser.prototype.parseGame = function (line) {
+    this.advance();
+    if (this.peek() && this.peek().value === 'view') {
+      this.advance();
+      var vOnly = this.advance();
+      var viewOnly = (vOnly && vOnly.value === 'top') ? 'top' : 'side';
+      this.restOfLine(line);
+      return { type: 'game_view', view: viewOnly, line: line };
+    }
+    var title = 'Game';
+    if (this.peek() && this.peek().type === TT.STRING) {
+      title = this.expectString(line, 'game "My Game"');
+    }
+    var view = 'side';
+    if (this.peek() && this.peek().value === 'view') {
+      this.advance();
+      var v = this.advance();
+      if (v && (v.value === 'top' || v.value === 'side')) view = v.value;
+    }
+    this.restOfLine(line);
+    return { type: 'game_start', title: title, view: view, line: line };
+  };
+
+  Parser.prototype.parseGameView = function (line) {
+    this.advance();
+    var v = this.advance();
+    var view = (v && v.value === 'top') ? 'top' : 'side';
+    this.restOfLine(line);
+    return { type: 'game_view', view: view, line: line };
+  };
+
+  Parser.prototype.parseGameStop = function (line) {
+    this.advance();
+    if (this.peek() && this.peek().value === 'game') this.advance();
+    this.restOfLine(line);
+    return { type: 'game_stop', line: line };
+  };
+
+  Parser.prototype.parseKeyName = function (line) {
+    var parts = [];
+    while (this.peek() && this.peek().type !== TT.EOL) {
+      var t = this.peek();
+      if (t.value === 'is' || t.value === 'pressed' || t.value === 'held') break;
+      if (t.type === TT.KEYWORD || t.type === TT.IDENTIFIER) {
+        parts.push(t.value);
+        this.advance();
+        if (t.value === 'arrow' || t.value === 'key' || t.value === 'keys') continue;
+        if (t.value === 'left' || t.value === 'right' || t.value === 'up' ||
+            t.value === 'down' || t.value === 'space' || t.value === 'jump') {
+          if (this.peek() && (this.peek().value === 'key' || this.peek().value === 'arrow')) continue;
+          break;
+        }
+      } else break;
+    }
+    var key = parts.join(' ').replace(/\s+arrow\s*$/, '').replace(/\s+key\s*$/, '').trim();
+    if (key.indexOf('arrow') >= 0) key = key.replace(/\s*arrow/g, '').trim();
+    if (key === 'space') key = 'jump';
+    return key || 'left';
+  };
+
+  Parser.prototype.parseWhenKey = function (line) {
+    this.advance();
+    var key = this.parseKeyName(line);
+    if (!this.peek() || this.peek().value !== 'is') {
+      throw new ParseError('Expected: when left arrow is pressed', line);
+    }
+    this.advance();
+    if (!this.peek() || this.peek().value !== 'pressed') {
+      throw new ParseError('Expected "pressed". Example: when space is pressed', line);
+    }
+    this.advance();
+    this.restOfLine(line);
+    var body = this.parseBlock('when', line, false);
+    return { type: 'on_key_down', key: key, body: body, line: line };
+  };
+
+  Parser.prototype.parseWhileKeyHeld = function (line) {
+    this.advance();
+    var key = this.parseKeyName(line);
+    if (!this.peek() || this.peek().value !== 'is') {
+      throw new ParseError('Expected: while right arrow is held', line);
+    }
+    this.advance();
+    if (!this.peek() || this.peek().value !== 'held') {
+      throw new ParseError('Expected "held". Example: while left key is held', line);
+    }
+    this.advance();
+    this.restOfLine(line);
+    var body = this.parseBlock('while', line, false);
+    return { type: 'on_key_held', key: key, body: body, line: line };
+  };
+
+  Parser.prototype.parseEveryFrame = function (line) {
+    this.advance();
+    if (!this.peek() || this.peek().value !== 'frame') {
+      throw new ParseError('Expected: every frame', line);
+    }
+    this.advance();
+    this.restOfLine(line);
+    var body = this.parseBlock('every frame', line, false);
+    return { type: 'every_frame', body: body, line: line };
+  };
+
+  Parser.prototype.parseGameMove = function (line) {
+    this.advance();
+    var actorTok = this.advance();
+    if (!actorTok || actorTok.type !== TT.IDENTIFIER) {
+      throw new ParseError('Expected: move Rafi left by 4', line);
+    }
+    var dirTok = this.advance();
+    if (!dirTok) throw new ParseError('Expected direction: left, right, up, or down', line);
+    var dir = dirTok.value;
+    if (dir !== 'left' && dir !== 'right' && dir !== 'up' && dir !== 'down') {
+      throw new ParseError('Direction must be left, right, up, or down', line);
+    }
+    if (!this.peek() || this.peek().value !== 'by') {
+      throw new ParseError('Expected "by" after direction. Example: move Rafi left by 4', line);
+    }
+    this.advance();
+    var amountExpr = this.parseExpressionFromHere(line);
+    this.restOfLine(line);
+    return { type: 'game_move', actor: actorTok.value, direction: dir, amountExpr: amountExpr, line: line };
+  };
+
+  Parser.prototype.parseIfTouch = function (line, actor) {
+    if (!this.peek() || this.peek().value !== 'touches') {
+      return null;
+    }
+    this.advance();
+    var targetTok = this.advance();
+    var target = targetTok ? targetTok.value : 'wall';
+    this.restOfLine(line);
+    var trueBranch = this.parseBlock('if', line, true);
+    var falseBranch = this.parseElseBranch(line);
+    return {
+      type: 'if_touch',
+      actor: actor,
+      target: target.toLowerCase(),
+      trueBranch: trueBranch,
+      falseBranch: falseBranch,
+      line: line,
+    };
+  };
+
+  Parser.prototype.parseAddObstacle = function (line) {
+    this.advance();
+    var tagTok = this.advance();
+    var tag = tagTok ? tagTok.value : 'wall';
+    if (!this.peek() || this.peek().value !== 'at') {
+      throw new ParseError('Expected: add wall at x 200 y 300 width 80 height 40', line);
+    }
+    this.advance();
+    if (!this.peek() || this.peek().value !== 'x') throw new ParseError('Expected x after at', line);
+    this.advance();
+    var xExpr = this.parseExpressionFromHere(line);
+    if (!this.peek() || this.peek().value !== 'y') throw new ParseError('Expected y', line);
+    this.advance();
+    var yExpr = this.parseExpressionFromHere(line);
+    var w = 40, h = 40;
+    if (this.peek() && this.peek().value === 'width') {
+      this.advance();
+      var wExpr = this.parseExpressionFromHere(line);
+      if (this.peek() && this.peek().value === 'height') {
+        this.advance();
+        var hExpr = this.parseExpressionFromHere(line);
+        h = hExpr;
+      }
+      w = wExpr;
+    }
+    this.restOfLine(line);
+    return { type: 'add_obstacle', tag: tag, xExpr: xExpr, yExpr: yExpr, wExpr: w, hExpr: h, line: line };
   };
 
   Parser.prototype.parseNarrator = function (line) {
@@ -352,6 +552,32 @@
 
   Parser.prototype.parseIf = function (line) {
     this.advance(); // if
+    /* Game helper: if <key> [arrow] [key] is held */
+    if (this.peek() && (this.peek().type === TT.KEYWORD || this.peek().type === TT.IDENTIFIER)) {
+      var savePosKeyHeld = this.pos;
+      var maybeKey = this.parseKeyName(line);
+      if (this.peek() && this.peek().value === 'is') {
+        this.advance();
+        if (this.peek() && this.peek().value === 'held') {
+          this.advance();
+          this.restOfLine(line);
+          var heldBody0 = this.parseBlock('if', line, true);
+          var heldElse0 = this.parseElseBranch(line);
+          return { type: 'if_key_held', key: maybeKey, trueBranch: heldBody0, falseBranch: heldElse0, line: line };
+        }
+      }
+      this.pos = savePosKeyHeld;
+    }
+
+    if (this.peek() && this.peek().type === TT.IDENTIFIER) {
+      var actorTok = this.peek();
+      var actor = actorTok.value;
+      var savedPos = this.pos;
+      this.advance();
+      var touchNode = this.parseIfTouch(line, actor);
+      if (touchNode) return touchNode;
+      this.pos = savedPos;
+    }
     if (this.peek() && this.peek().value === 'answer') {
       this.advance(); // answer
       this.advance(); // is
@@ -393,6 +619,10 @@
   Parser.prototype.parseAdd = function (line) {
     this.advance(); // add
     var next = this.peek();
+    if (next && (next.type === TT.IDENTIFIER ||
+        (next.type === TT.KEYWORD && ['wall', 'coin', 'platform'].indexOf(next.value) >= 0))) {
+      return this.parseAddObstacle(line);
+    }
     if (next && next.type === TT.NUMBER) {
       var numTok = this.advance();
       if (this.peek() && this.peek().value === 'points') {
@@ -417,7 +647,10 @@
   Parser.prototype.parseRemoveFromList = function (line) {
     this.advance(); // remove
     if (!this.peek() || this.peek().value !== 'item') {
-      throw new ParseError('Expected: remove item 2 from myList', line);
+      var targetTok = this.advance();
+      var target = targetTok ? targetTok.value : 'coin';
+      this.restOfLine(line);
+      return { type: 'remove_entity', target: target, line: line };
     }
     this.advance(); // item
     var numTok = this.advance();
@@ -452,6 +685,29 @@
 
     var verb = verbTok.value;
 
+    if (verb === 'is') {
+      this.advance();
+      if (!this.peek() || this.peek().value !== 'player') {
+        throw new ParseError('Expected: ' + actor + ' is player', line);
+      }
+      this.advance();
+      this.restOfLine(line);
+      return { type: 'set_player', actor: actor, line: line };
+    }
+    if (verb === 'jump') {
+      this.advance();
+      var power = 12;
+      if (this.peek() && this.peek().value === 'with') {
+        this.advance();
+        if (this.peek() && this.peek().value === 'power') {
+          this.advance();
+          var pTok = this.advance();
+          if (pTok && pTok.type === TT.NUMBER) power = pTok.value;
+        }
+      }
+      this.restOfLine(line);
+      return { type: 'game_jump', actor: actor, power: power, line: line };
+    }
     if (verb === 'appears') { this.advance(); this.restOfLine(line); return { type: 'character_appears', actor: actor, line: line }; }
     if (verb === 'says') {
       this.advance();
@@ -539,6 +795,58 @@
     return result;
   }
 
+  function buildGameProgram(nodes) {
+    var program = {
+      mode: 'game',
+      title: 'Game',
+      view: 'side',
+      setup: [],
+      onKeyDown: [],
+      onKeyHeld: [],
+      everyFrame: [],
+      onTouch: [],
+    };
+    for (var i = 0; i < nodes.length; i++) {
+      var n = nodes[i];
+      if (n.type === 'game_start') {
+        program.title = n.title || program.title;
+        if (n.view) program.view = n.view;
+        continue;
+      }
+      if (n.type === 'game_view') {
+        program.view = n.view;
+        continue;
+      }
+      if (n.type === 'on_key_down') {
+        program.onKeyDown.push(n);
+        continue;
+      }
+      if (n.type === 'on_key_held') {
+        program.onKeyHeld.push(n);
+        continue;
+      }
+      if (n.type === 'every_frame') {
+        program.everyFrame.push(n);
+        continue;
+      }
+      if (n.type === 'if_touch') {
+        program.onTouch.push(n);
+        continue;
+      }
+      program.setup.push(n);
+    }
+    return program;
+  }
+
+  function isGameProgram(nodes) {
+    for (var i = 0; i < nodes.length; i++) {
+      if (nodes[i].type === 'game_start' || nodes[i].type === 'game_view') return true;
+      if (nodes[i].type === 'on_key_down' || nodes[i].type === 'on_key_held' ||
+          nodes[i].type === 'every_frame') return true;
+    }
+    return false;
+  }
+
   /* ── parseProgram: full pipeline ───────────────────────────────────── */
   function parseProgram(source) {
     var lexer  = window.SpeakLexer;
@@ -546,7 +854,11 @@
     var tokens   = lexer.tokenize(source);
     var parser   = new Parser(tokens);
     var rawNodes = parser.parseAll();
-    return groupQuizNodes(rawNodes);
+    var nodes = groupQuizNodes(rawNodes);
+    if (isGameProgram(nodes)) {
+      return buildGameProgram(nodes);
+    }
+    return { mode: 'story', nodes: nodes };
   }
 
   /* ── Export ────────────────────────────────────────────────────────── */

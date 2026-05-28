@@ -214,6 +214,56 @@
       ],
     },
     {
+      group: '🎮 Game mode (keyboard)',
+      items: [
+        {
+          title: 'Start a game',
+          desc: 'Use this first line when you want keyboard gameplay instead of story-only flow.',
+          code: 'game "My Platform Game"',
+        },
+        {
+          title: 'Top-down view',
+          desc: 'Four-direction movement (no gravity). Default is side view.',
+          code: 'game view top',
+        },
+        {
+          title: 'Player character',
+          desc: 'Marks who you control with arrow keys / touch pad. Add appears to show actor clearly.',
+          code: 'Rafi is player\nRafi appears',
+        },
+        {
+          title: 'When key pressed (once)',
+          desc: 'Runs once per key press — good for jump.',
+          code: 'when space is pressed\n    Rafi jump with power 12\nend',
+        },
+        {
+          title: 'While key held',
+          desc: 'Use inside every frame for smooth, continuous movement.',
+          code: 'every frame\n    if left key is held\n        move Rafi left by 4\n    end\nend',
+        },
+        {
+          title: 'Move & jump',
+          desc: 'Move by pixels per frame; jump needs side view + space.',
+          code: 'move Rafi right by 5\nRafi jump with power 14',
+        },
+        {
+          title: 'Touch / collect',
+          desc: 'Use collisions for rewards and rules. Scene with walls loads preset coins/obstacles.',
+          code: 'scene "playground" with walls\nif Rafi touches coin\n    add 10 points\n    remove coin\nend',
+        },
+        {
+          title: 'Add a wall',
+          desc: 'Static obstacle box (pixels).',
+          code: 'add wall at x 200 y 250 width 80 height 40',
+        },
+        {
+          title: 'Ready-to-run mini game',
+          desc: 'Copy one block and run. Good first project for new learners.',
+          code: 'game "Starter"\nscene "playground" with walls\nscore starts at 0\nRafi is player\n\nwhen space is pressed\n    Rafi jump with power 12\nend\n\nevery frame\n    if left key is held\n        move Rafi left by 4\n    end\n    if right key is held\n        move Rafi right by 4\n    end\nend\n\nif Rafi touches coin\n    add 10 points\n    play sound "success"\n    remove coin\nend',
+        },
+      ],
+    },
+    {
       group: '📖 Vocabulary & debug',
       items: [
         {

@@ -182,6 +182,118 @@ narrator says "The bird loves to sing!"
       return hasRepeat && hasEnd && num >= 3;
     },
   },
+
+  {
+    id    : 'game_move_mission',
+    title : '🎮 Mission 6: Move with Keys',
+    emoji : '🎮',
+    goal  : 'Start a game and move a player with arrow keys.',
+    hint  : 'Use game, Rafi is player, every frame, if left key is held, move Rafi left by 4.',
+    badge : '🕹️ Game Starter Badge',
+    requiredSyntax: [
+      'game "..."',
+      'Rafi is player',
+      'every frame',
+      'move Rafi left by 4',
+    ],
+    starterCode: `# Move with Keys
+game "My Game"
+
+scene "playground"
+Rafi is player
+
+every frame
+    if left key is held
+        move Rafi left by 4
+    end
+    if right key is held
+        move Rafi right by 4
+    end
+end
+`,
+    validate(code) {
+      const c = code.toLowerCase();
+      return /^game\s+"/m.test(c) &&
+        /is\s+player/.test(c) &&
+        /every\s+frame/.test(c) &&
+        /move\s+\w+\s+(left|right)\s+by/.test(c);
+    },
+  },
+
+  {
+    id    : 'game_jump_mission',
+    title : '⬆️ Mission 7: Jump!',
+    emoji : '⬆️',
+    goal  : 'Add a jump when space is pressed in game mode.',
+    hint  : 'Use: when space is pressed ... Rafi jump with power 12 ... end',
+    badge : '🦘 Jumper Badge',
+    requiredSyntax: [
+      'when space is pressed',
+      'jump with power',
+    ],
+    starterCode: `# Jump Game
+game "Jump"
+
+scene "playground" with walls
+Rafi is player
+
+when space is pressed
+    Rafi jump with power 12
+end
+
+every frame
+    if right key is held
+        move Rafi right by 4
+    end
+end
+`,
+    validate(code) {
+      const c = code.toLowerCase();
+      return /when\s+space\s+is\s+pressed/.test(c) &&
+        /jump\s+with\s+power/.test(c);
+    },
+  },
+
+  {
+    id    : 'game_coin_mission',
+    title : '🪙 Mission 8: Collect Coins',
+    emoji : '🪙',
+    goal  : 'Collect coins for points when your player touches them.',
+    hint  : 'Use: if Rafi touches coin ... add 10 points ... remove coin ... end',
+    badge : '💰 Treasure Hunter Badge',
+    requiredSyntax: [
+      'if Rafi touches coin',
+      'add 10 points',
+      'remove coin',
+    ],
+    starterCode: `# Collect Coins
+game "Coins"
+
+scene "playground" with walls
+score starts at 0
+Rafi is player
+
+every frame
+    if left key is held
+        move Rafi left by 4
+    end
+    if right key is held
+        move Rafi right by 4
+    end
+end
+
+if Rafi touches coin
+    add 10 points
+    remove coin
+end
+`,
+    validate(code) {
+      const c = code.toLowerCase();
+      return /touches\s+coin/.test(c) &&
+        /add\s+\d+\s+points/.test(c) &&
+        /remove\s+coin/.test(c);
+    },
+  },
 ];
 
 window.SpeakMissions = MISSIONS;

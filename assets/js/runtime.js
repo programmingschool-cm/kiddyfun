@@ -20,6 +20,7 @@
     mostak  : { type: 'human', color: '#3b82f6', label: 'Mostak', pants: '#1e293b' },
     sagor   : { type: 'human', color: '#10b981', label: 'Sagor', pants: '#064e3b' },
     rabiul  : { type: 'human', color: '#f59e0b', label: 'Rabiul', pants: '#422006' },
+    cow     : { type: 'human', color: '#78716c', label: '🐄 Cow', pants: '#44403c' },
     narrator: { type: 'human', color: '#546e7a', label: 'Narrator', pants: '#334155' },
   };
 

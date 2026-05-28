@@ -35,6 +35,10 @@
 25. [Common mistakes](#25-common-mistakes)
 26. [Quick reference cheat sheet](#26-quick-reference-cheat-sheet)
 27. [Learning path & examples](#27-learning-path--examples)
+28. [Game mode quick start](#28-game-mode-quick-start)
+29. [Build a side-view game in 5 steps](#29-build-a-side-view-game-in-5-steps)
+30. [Build a top-down game in 5 steps](#30-build-a-top-down-game-in-5-steps)
+31. [Game debug checklist](#31-game-debug-checklist)
 
 ---
 
@@ -850,11 +854,169 @@ Load these from the **Examples** menu in the app:
 
 ---
 
+## 28. Game mode quick start
+
+Game mode is separate from story mode. Use it when you want real-time controls (arrow keys / touch pad), jump, and collisions.
+
+```text
+game "My First Game"
+scene "playground" with walls
+Rafi is player
+
+every frame
+    if left key is held
+        move Rafi left by 4
+    end
+    if right key is held
+        move Rafi right by 4
+    end
+end
+```
+
+Game-mode-only commands:
+- `game "Title"`
+- `game view top`
+- `Rafi is player`
+- `when <key> is pressed`
+- `if <key> is held`
+- `move <character> <dir> by <number>`
+- `<character> jump with power <number>`
+- `if <character> touches <coin/wall/...>`
+
+---
+
+## 29. Build a side-view game in 5 steps
+
+### Step 1: Start game + scene
+```text
+game "Platform Jump"
+scene "playground" with walls
+score starts at 0
+Rafi is player
+```
+
+### Step 2: Horizontal movement
+```text
+every frame
+    if left key is held
+        move Rafi left by 5
+    end
+    if right key is held
+        move Rafi right by 5
+    end
+end
+```
+
+### Step 3: Add jump
+```text
+when space is pressed
+    Rafi jump with power 14
+end
+```
+
+### Step 4: Add collision reward
+```text
+if Rafi touches coin
+    add 10 points
+    play sound "success"
+    remove coin
+end
+```
+
+### Step 5: Polish + run
+- Click **Run**
+- Collect coins and watch score
+- Tune difficulty by changing `move ... by` and `jump with power`
+
+---
+
+## 30. Build a top-down game in 5 steps
+
+### Step 1: Enable top view
+```text
+game "Coin Collector"
+game view top
+scene "school" with walls
+score starts at 0
+Mina is player
+```
+
+### Step 2: 4-direction controls
+```text
+every frame
+    if left key is held
+        move Mina left by 4
+    end
+    if right key is held
+        move Mina right by 4
+    end
+    if up key is held
+        move Mina up by 4
+    end
+    if down key is held
+        move Mina down by 4
+    end
+end
+```
+
+### Step 3: Collect coins
+```text
+if Mina touches coin
+    add 15 points
+    play sound "cheer"
+    remove coin
+end
+```
+
+### Step 4: Balance gameplay
+- Lower speed for precision (`by 3`)
+- Increase speed for challenge (`by 5`)
+
+### Step 5: Make your own level
+- Change scene (`school`, `jungle`, `playground`)
+- Add custom walls with `add wall at x ... y ... width ... height ...`
+
+---
+
+## 31. Game debug checklist
+
+If your game is not running correctly, check in this order:
+
+1. **Mode start**: First line is `game "..."`.
+2. **Player set**: You have `<Character> is player`.
+3. **Movement block**: `every frame` block exists and lines are indented.
+4. **Key condition**: Use `if left key is held` (not `if left key held`).
+5. **Collision format**: Use `if Rafi touches coin` exactly.
+6. **Block closing**: Every `if` / `when` / `every frame` ends with `end`.
+7. **Mobile controls**: Use the on-screen pad at bottom-right in Output panel.
+
+Quick test snippet:
+```text
+game "Input Test"
+scene "playground"
+Rafi is player
+every frame
+    if left key is held
+        move Rafi left by 4
+    end
+    if right key is held
+        move Rafi right by 4
+    end
+end
+```
+
+If this snippet works, your issue is in your game-specific logic.
+
+See also [GAME_ENGINE.md](./GAME_ENGINE.md) for engine-level details.
+
+---
+
 ## Related documents
 
 | Document | Purpose |
 |----------|---------|
 | [LANGUAGE.md](./LANGUAGE.md) | Short syntax summary |
+| [GAME_ENGINE.md](./GAME_ENGINE.md) | Game mode (keyboard, collision) |
 | [../README.md](../README.md) | Project overview & setup |
 | [SUPABASE_GUIDE.md](./SUPABASE_GUIDE.md) | Cloud save & login |
 | [GITHUB_PAGES.md](./GITHUB_PAGES.md) | Publish online |
