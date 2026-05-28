@@ -24,6 +24,29 @@
     return null;
   }
 
+  function waitForLibrary(timeoutMs) {
+    timeoutMs = timeoutMs || 4000;
+    return new Promise(function (resolve) {
+      if (getSupabaseGlobal()) {
+        resolve(true);
+        return;
+      }
+      var elapsed = 0;
+      var timer = setInterval(function () {
+        if (getSupabaseGlobal()) {
+          clearInterval(timer);
+          resolve(true);
+        } else {
+          elapsed += 50;
+          if (elapsed >= timeoutMs) {
+            clearInterval(timer);
+            resolve(false);
+          }
+        }
+      }, 50);
+    });
+  }
+
   function getClient() {
     if (!isConfigured()) return null;
     if (client) return client;
@@ -32,7 +55,19 @@
       console.warn('[KiddyCloud] Supabase JS not loaded — check index.html UMD script');
       return null;
     }
-    client = lib.createClient(cfg().url, cfg().anonKey);
+    var c = cfg();
+    try {
+      client = lib.createClient(c.url, c.anonKey, {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true,
+        },
+      });
+    } catch (e) {
+      console.error('[KiddyCloud] createClient failed:', e);
+      return null;
+    }
     return client;
   }
 
@@ -45,7 +80,13 @@
       return Promise.resolve(null);
     }
     if (initPromise) return initPromise;
-    initPromise = Promise.resolve(getClient());
+    initPromise = waitForLibrary(4000).then(function (ok) {
+      if (!ok) {
+        console.warn('[KiddyCloud] Supabase JS not loaded after wait');
+        return null;
+      }
+      return getClient();
+    });
     return initPromise;
   }
 

@@ -434,7 +434,8 @@
         okLabel: 'Publish',
       }).then(function (title) {
         if (title === null) return;
-        self.showToast('Publishing…');
+        var useCloud = window.KiddyPublish && KiddyPublish.isCloudAvailable && KiddyPublish.isCloudAvailable();
+        self.showToast(useCloud ? '☁️ Publishing to cloud…' : '🔗 Creating share link…');
         KiddyPublish.publish(editor.value, title)
           .then(function (res) {
             if (!res || !res.ok || !res.url) {

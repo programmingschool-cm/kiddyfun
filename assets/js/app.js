@@ -38,6 +38,12 @@
       GameRuntime.init($id('ss-stage'), $id('ss-log'), $id('ss-score'));
     }
 
+    if (window.KiddyCloud && window.KiddyCloud.isConfigured()) {
+      window.KiddyCloud.init().then(function (sb) {
+        if (sb) console.log('[KiddyFun] Supabase client ready');
+      });
+    }
+
     var last = Storage.loadLastCode();
     if (last) $id('ss-editor').value = last;
 

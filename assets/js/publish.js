@@ -70,22 +70,22 @@
     return String(msg);
   }
 
-  function getCloud() {
-    return window.KiddyCloud && window.KiddyCloud.isConfigured() ? window.KiddyCloud : null;
+  function isCloudConfigured() {
+    return !!(window.KiddyCloud && window.KiddyCloud.isConfigured());
   }
 
   async function getClient() {
-    var cloud = getCloud();
-    if (!cloud) return null;
-    if (!cloud.isLibraryLoaded || !cloud.isLibraryLoaded()) {
-      console.warn('[KiddyPublish] Supabase JS library not loaded');
-      return null;
+    if (!isCloudConfigured()) return null;
+    await window.KiddyCloud.init();
+    var client = window.KiddyCloud.getClient();
+    if (!client) {
+      console.warn('[KiddyPublish] Supabase client is null after init');
     }
-    await cloud.init();
-    return cloud.getClient();
+    return client;
   }
 
   async function publishViaRpc(client, code, title) {
+    console.log('[KiddyPublish] POST rpc/publish_program');
     var res = await client.rpc('publish_program', {
       p_code: code,
       p_title: title || null,
@@ -102,6 +102,7 @@
 
     for (var attempt = 0; attempt < 8; attempt++) {
       var shareId = randomShareId();
+      console.log('[KiddyPublish] POST published_programs insert');
       var res = await client.from('published_programs').insert({
         share_id: shareId,
         code: code,
@@ -135,7 +136,7 @@
     },
 
     isCloudAvailable: function () {
-      return !!getCloud();
+      return isCloudConfigured();
     },
 
     publish: function (code, title) {
@@ -146,13 +147,21 @@
       }
 
       return (async function () {
-        var client = await getClient();
-        if (client) {
+        if (isCloudConfigured()) {
+          var client = await getClient();
+          if (!client) {
+            return {
+              ok: false,
+              error: 'Supabase did not start. Refresh the page, check your internet, and make sure the Supabase script loads (see browser console).',
+            };
+          }
+
           var shareId = null;
           try {
             shareId = await publishViaRpc(client, code, title);
           } catch (rpcErr) {
             var msg = rpcErr.message || '';
+            console.warn('[KiddyPublish] RPC failed:', msg);
             if (/does not exist|PGRST202|42883|not set up/i.test(msg)) {
               try {
                 shareId = await publishViaInsert(client, code, title);
@@ -179,10 +188,11 @@
           return { ok: true, shareId: shareId, url: url, mode: 'cloud' };
         }
 
+        console.log('[KiddyPublish] No Supabase config — using URL fallback (no API call)');
         if (code.length > MAX_URL_CODE) {
           return {
             ok: false,
-            error: 'Cloud is not configured and code is too long for a link. Set up Supabase or shorten your program.',
+            error: 'Supabase is not configured and code is too long for a link. Add keys in supabase-config.js.',
           };
         }
 
