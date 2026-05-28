@@ -415,6 +415,112 @@
       });
     },
 
+    /* ── Publish & share link ─────────────────────────────────────────── */
+    publishProgram: function () {
+      var self = this;
+      var editor = document.getElementById('ss-editor');
+      if (!editor || !editor.value.trim()) {
+        self.showAlert('Write some code first!', { title: 'Nothing to publish', icon: '🔗' });
+        return;
+      }
+      if (!window.KiddyPublish) {
+        self.showAlert('Publish is not loaded. Refresh the page.', { title: 'Error', icon: '⚠️' });
+        return;
+      }
+
+      self.showPrompt('Title for this shared program (optional):', 'My KiddyFun Program', {
+        title: 'Publish & share',
+        icon: '🔗',
+        okLabel: 'Publish',
+      }).then(function (title) {
+        if (title === null) return;
+        self.showToast('Publishing…');
+        KiddyPublish.publish(editor.value, title).then(function (res) {
+          if (!res.ok) {
+            self.showAlert(res.error, { title: 'Publish failed', icon: '⚠️' });
+            return;
+          }
+          var hint = res.mode === 'cloud'
+            ? 'Anyone with this link can open and run your program.'
+            : 'Link contains your code (works without cloud). Keep it shorter for smaller URLs.';
+          self.showShareLink(res.url, hint);
+        });
+      });
+    },
+
+    showShareLink: function (url, hint) {
+      var self = this;
+      var overlay = document.getElementById('kf-dialog-overlay');
+      var iconEl = document.getElementById('kf-dialog-icon');
+      var titleEl = document.getElementById('kf-dialog-title');
+      var msgEl = document.getElementById('kf-dialog-message');
+      var inputEl = document.getElementById('kf-dialog-input');
+      var actionsEl = document.getElementById('kf-dialog-actions');
+      if (!overlay || !actionsEl || !inputEl) return Promise.resolve();
+
+      if (iconEl) iconEl.textContent = '🔗';
+      if (titleEl) titleEl.textContent = 'Share link ready!';
+      if (msgEl) msgEl.textContent = hint || 'Copy and send this link to friends.';
+
+      inputEl.classList.remove('d-none');
+      inputEl.classList.add('kf-share-url-input');
+      inputEl.value = url;
+      inputEl.readOnly = true;
+
+      actionsEl.innerHTML = '';
+
+      function addBtn(label, cls, onClick) {
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'kf-dialog-btn ' + cls;
+        btn.textContent = label;
+        btn.addEventListener('click', onClick);
+        actionsEl.appendChild(btn);
+      }
+
+      addBtn('Copy link', 'kf-dialog-btn-secondary', function () {
+        KiddyPublish.copyToClipboard(url).then(function (ok) {
+          self.showToast(ok ? '✅ Link copied!' : 'Could not copy — select the link and copy manually');
+        });
+      });
+      addBtn('Done', 'kf-dialog-btn-primary', function () {
+        inputEl.classList.remove('kf-share-url-input');
+        inputEl.readOnly = false;
+        overlay.classList.add('d-none');
+        if (window.KiddyApp && window.KiddyApp.unlockMobileTab) {
+          window.KiddyApp.unlockMobileTab();
+        }
+      });
+
+      overlay.classList.remove('d-none');
+      setTimeout(function () {
+        inputEl.focus();
+        inputEl.select();
+      }, 50);
+
+      if (window.KiddyApp && window.KiddyApp.lockMobileTab && window.innerWidth < 992) {
+        window.KiddyApp.lockMobileTab('code');
+      }
+    },
+
+    loadSharedCode: function (code, title, autoRun) {
+      var editor = document.getElementById('ss-editor');
+      if (!editor || !code) return;
+      editor.value = code;
+      if (window.SpeakStorage) SpeakStorage.saveLastCode(code);
+      this.syncLineNumbers();
+      if (window.KiddySmartEditor && window.KiddySmartEditor.notifyExternalChange) {
+        KiddySmartEditor.notifyExternalChange();
+      }
+      this.showToast('🔗 Loaded: ' + (title || 'Shared program'));
+      if (window.innerWidth < 992 && window.KiddyApp && window.KiddyApp.setMobileTab) {
+        window.KiddyApp.setMobileTab(autoRun ? 'output' : 'code');
+      }
+      if (autoRun && window.KiddyApp && window.KiddyApp.runProgram) {
+        setTimeout(function () { window.KiddyApp.runProgram(); }, 450);
+      }
+    },
+
     /* ── Download ────────────────────────────────────────────────────── */
     downloadProgram: function() {
       var editor = document.getElementById('ss-editor');

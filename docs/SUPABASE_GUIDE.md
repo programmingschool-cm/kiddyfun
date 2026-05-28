@@ -94,7 +94,8 @@ Dashboard → **Project Settings** → **General**:
 3. **সম্পূর্ণ** কপি করে SQL Editor-এ পেস্ট করুন
 4. **Run** (বা Ctrl+Enter)
 5. **দ্বিতীয় query:** [`002_security_hardening.sql`](../supabase/migrations/002_security_hardening.sql) — role escalation বন্ধ
-6. নিচে **Success** দেখতে হবে — কোনো লাল error থাকলে [§14](#14-সমস্যা-সমাধান-troubleshooting) দেখুন
+6. **তৃতীয় query:** [`003_published_programs.sql`](../supabase/migrations/003_published_programs.sql) — **Publish & share link** (`?p=...`)
+7. নিচে **Success** দেখতে হবে — কোনো লাল error থাকলে [§14](#14-সমস্যা-সমাধান-troubleshooting) দেখুন
 
 > **ড্যাশবোর্ড-only চেকলিস্ট:** [`SUPABASE_DASHBOARD_SETUP.md`](SUPABASE_DASHBOARD_SETUP.md)
 
@@ -108,6 +109,7 @@ Dashboard → **Project Settings** → **General**:
 | `badges` | অর্জিত ব্যাজ |
 | `classes` | শিক্ষকের ক্লাস + `class_code` |
 | `class_members` | কোন শিক্ষার্থী কোন ক্লাসে |
+| `published_programs` | পাবলিশ করা শেয়ার লিংক (`publish_program` RPC) |
 
 এছাড়া:
 

@@ -98,6 +98,7 @@
     bind('btn-reset', resetStage);
     bind('btn-clear', clearEditor);
     bind('btn-save', function () { UI.promptSaveProgram(); });
+    bind('btn-publish', function () { UI.publishProgram(); });
     bind('btn-download', function () { UI.downloadProgram(); });
     bind('btn-reset-progress', resetProgress);
     bind('btn-reset-progress-mobile', resetProgress);
@@ -336,9 +337,33 @@
       setMobileTab: setMobileTab,
       lockMobileTab: lockMobileTab,
       unlockMobileTab: unlockMobileTab,
+      runProgram: runProgram,
     };
 
+    tryLoadSharedFromUrl();
+
     console.log('✅ KiddyFun Code v1.0 ready');
+
+    function tryLoadSharedFromUrl() {
+      if (!window.KiddyPublish) return;
+      var params = KiddyPublish.getParamsFromLocation();
+      if (!params.shareId && !params.urlCode) return;
+
+      var loadPromise;
+      if (params.shareId) {
+        loadPromise = KiddyPublish.loadFromShareId(params.shareId);
+      } else {
+        loadPromise = Promise.resolve(KiddyPublish.loadFromUrlParam(params.urlCode));
+      }
+
+      loadPromise.then(function (res) {
+        if (!res.ok) {
+          UI.showAlert(res.error, { title: 'Share link', icon: '🔗' });
+          return;
+        }
+        UI.loadSharedCode(res.code, res.title, params.autoRun);
+      });
+    }
 
     function runProgram() {
       var code = editorEl.value.trim();
