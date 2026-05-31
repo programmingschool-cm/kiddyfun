@@ -36,8 +36,12 @@
 
   GameWorld.prototype.addEntity = function (key, data) {
     key = key.toLowerCase();
-    var initX = data.x != null ? data.x : 80;
-    var initY = data.y != null ? data.y : (this.view === 'side' ? this.groundY : this.bounds.h / 2 - ENTITY_H / 2);
+    var initX = data.x != null ? data.x : (this.view === 'top'
+      ? Math.max(40, this.bounds.w / 2 - ENTITY_W / 2)
+      : 80);
+    var initY = data.y != null ? data.y : (this.view === 'side'
+      ? this.groundY
+      : Math.max(40, this.bounds.h / 2 - ENTITY_H / 2));
     var e = {
       key: key,
       name: data.name || key,
@@ -67,9 +71,9 @@
   };
 
   GameWorld.prototype.setPlayer = function (key) {
-    this.playerKey = key.toLowerCase();
+    this.playerKey = String(key).toLowerCase();
     var e = this.entities[this.playerKey];
-    if (e) e.tags.push('player');
+    if (e && e.tags.indexOf('player') < 0) e.tags.push('player');
   };
 
   GameWorld.prototype.getEntity = function (key) {
@@ -162,13 +166,9 @@
 
     if (this.view === 'side') {
       this.groundY = this.bounds.h - ENTITY_H - 8;
-      Object.keys(this.entities).forEach(function (key) {
-        var e = self.entities[key];
-        if (!e || e.tags.indexOf('player') < 0) return;
-        e.y = self.groundY;
-        e.onGround = true;
-        e.vy = 0;
-      });
+    }
+    if (this.playerKey && this.entities[this.playerKey]) {
+      this.layoutPlayer();
     }
   };
 
@@ -186,6 +186,8 @@
     var e = this.getEntity(key);
     if (!e || !e.active) return;
     var amt = amount || e.speed;
+    var prevX = e.x;
+    var prevY = e.y;
     if (dir === 'left') {
       e.x -= amt;
       e.facing = 'left';
@@ -202,6 +204,7 @@
       e.facing = 'down';
     }
     this._clampEntity(e);
+    e._movedThisFrame = e.x !== prevX || e.y !== prevY;
   };
 
   GameWorld.prototype._clampEntity = function (e) {
@@ -353,6 +356,22 @@
     this.touchEvents = [];
     this._touchCooldown = {};
     this._removed = [];
+    this.view = 'side';
+  };
+
+  GameWorld.prototype.layoutPlayer = function () {
+    if (!this.playerKey) return;
+    var e = this.entities[this.playerKey];
+    if (!e || !e.active) return;
+    if (this.view === 'top') {
+      e.x = Math.round(this.bounds.w / 2 - e.w / 2);
+      e.y = Math.round(this.bounds.h / 2 - e.h / 2);
+    } else {
+      e.y = this.groundY;
+      e.onGround = true;
+      e.vy = 0;
+      if (e.x == null || e.x < 40) e.x = 80;
+    }
   };
 
   window.KiddyGameWorld = GameWorld;

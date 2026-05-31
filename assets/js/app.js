@@ -397,6 +397,11 @@
         toggleMaxEditor();
       }
 
+      if (interpreter) {
+        interpreter.stop();
+        interpreter = null;
+      }
+
       if (ast.mode === 'game') {
         if (!GameRuntime || !GameInterpreter) {
           UI.showErrors('Game mode is not loaded. Check game-*.js scripts in index.html.');

@@ -137,14 +137,16 @@
           el.innerHTML = '<span>' + name + '</span>';
         }
         el.classList.add('kf-game-entity');
+        el.classList.remove('ss-anim-enter');
         el.dataset.key = key;
         el.style.position = 'absolute';
-        el.style.left = '0';
-        el.style.top = '0';
         el.style.bottom = 'auto';
         el.style.right = 'auto';
-        el.style.willChange = 'transform';
+        el.style.marginLeft = '0';
+        el.style.opacity = '1';
+        el.style.transform = 'none';
         el.style.transition = 'none';
+        el.style.willChange = 'left, top';
         this._gameLayer.appendChild(el);
         ent.el = el;
         if (window.StageAnimator && window.StageGraphics) {
@@ -204,7 +206,9 @@
           return;
         }
         e.el.style.display = '';
-        e.el.style.transform = 'translate(' + Math.round(e.x) + 'px,' + Math.round(e.y) + 'px)';
+        e.el.style.transform = 'none';
+        e.el.style.left = Math.round(e.x) + 'px';
+        e.el.style.top = Math.round(e.y) + 'px';
 
         if (window.StageGraphics) {
           StageGraphics.setFacing(e.el, e.facing === 'left' ? 'left' : 'right');
@@ -213,8 +217,13 @@
             else if (!e.onGround) StageGraphics.setMotion(e.el, 'walks');
             else if (Math.abs(e.vx) > 0.5) StageGraphics.setMotion(e.el, 'runs');
             else StageGraphics.setMotion(e.el, 'idle');
+          } else if (e.tags.indexOf('coin') < 0 && e.key.indexOf('coin') !== 0) {
+            var moving = e._movedThisFrame;
+            e.el.classList.toggle('kf-game-moving', !!moving);
+            StageGraphics.setMotion(e.el, moving ? 'walks' : 'idle');
           }
         }
+        e._movedThisFrame = false;
       });
 
       if (this._debug) this._renderDebug();

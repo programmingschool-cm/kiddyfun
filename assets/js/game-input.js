@@ -16,42 +16,71 @@
     this._pressed = { left: false, right: false, up: false, down: false, jump: false };
     this._justPressed = {};
     this._active = false;
+    this._sessionActive = false;
     this._handlers = { down: null, up: null };
     this._padEl = null;
+    this._stageClick = null;
   }
 
   GameInput.prototype.start = function () {
-    if (this._active) return;
-    this._active = true;
-    var self = this;
-    this._handlers.down = function (e) { self._onKeyDown(e); };
-    this._handlers.up = function (e) { self._onKeyUp(e); };
-    window.addEventListener('keydown', this._handlers.down);
-    window.addEventListener('keyup', this._handlers.up);
+    this._sessionActive = true;
+    this.keys = { left: false, right: false, up: false, down: false, jump: false };
+    this._justPressed = {};
+    if (!this._active) {
+      this._active = true;
+      var self = this;
+      this._handlers.down = function (e) { self._onKeyDown(e); };
+      this._handlers.up = function (e) { self._onKeyUp(e); };
+      window.addEventListener('keydown', this._handlers.down, true);
+      window.addEventListener('keyup', this._handlers.up, true);
+    }
     this._mountTouchPad();
+    this._bindStageFocus();
   };
 
   GameInput.prototype.stop = function () {
+    this._sessionActive = false;
     if (!this._active) return;
     this._active = false;
-    window.removeEventListener('keydown', this._handlers.down);
-    window.removeEventListener('keyup', this._handlers.up);
+    window.removeEventListener('keydown', this._handlers.down, true);
+    window.removeEventListener('keyup', this._handlers.up, true);
+    this._unbindStageFocus();
+  };
+
+  GameInput.prototype._bindStageFocus = function () {
+    var stage = document.getElementById('ss-stage');
+    if (!stage || this._stageClick) return;
+    var self = this;
+    this._stageClick = function () {
+      if (self._sessionActive && stage.focus) {
+        try { stage.focus({ preventScroll: true }); } catch (e) { stage.focus(); }
+      }
+    };
+    stage.addEventListener('pointerdown', this._stageClick);
+    stage.setAttribute('tabindex', '-1');
+    try { stage.focus({ preventScroll: true }); } catch (e2) { stage.focus(); }
+  };
+
+  GameInput.prototype._unbindStageFocus = function () {
+    var stage = document.getElementById('ss-stage');
+    if (stage && this._stageClick) {
+      stage.removeEventListener('pointerdown', this._stageClick);
+    }
+    this._stageClick = null;
   };
 
   GameInput.prototype._gameActive = function () {
-    var stage = document.getElementById('ss-stage');
-    return stage && stage.classList.contains('kf-game-mode');
+    return !!this._sessionActive;
   };
 
   GameInput.prototype._onKeyDown = function (e) {
     if (!this._gameActive()) return;
-    if (e.repeat) return;
     var k = KEY_MAP[e.key] || KEY_MAP[e.code];
     if (!k) return;
     if (['left', 'right', 'up', 'down', 'jump'].indexOf(k) >= 0) {
       e.preventDefault();
       this.keys[k] = true;
-      this._justPressed[k] = true;
+      if (!e.repeat) this._justPressed[k] = true;
     }
   };
 

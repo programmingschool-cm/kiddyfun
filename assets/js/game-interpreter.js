@@ -211,8 +211,10 @@
         R.entityAppears(node.actor);
         return Promise.resolve();
       case 'set_player':
-        R.world.setPlayer(node.actor);
         R.entityAppears(node.actor);
+        R.world.setPlayer(node.actor);
+        if (R.world) R.world.layoutPlayer();
+        R.render();
         return Promise.resolve();
       case 'set_entity_speed':
         R.world.setEntitySpeed(node.actor, this._evalNumber(node.speedExpr));

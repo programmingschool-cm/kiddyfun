@@ -1229,10 +1229,12 @@
 .kf-game-entity {
   z-index: 10;
   bottom: auto !important;
-  top: 0 !important;
-  left: 0 !important;
   transition: none !important;
-  transform-origin: top left;
+  animation: none !important;
+  opacity: 1 !important;
+}
+.ss-stage.kf-game-mode .kf-char-pro.kf-game-entity {
+  bottom: auto !important;
 }
 .ss-stage.kf-game-mode .kf-game-coin,
 .ss-stage.kf-game-mode .kf-game-obstacle {
