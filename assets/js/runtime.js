@@ -87,6 +87,7 @@
       if (window.KiddyAudio) KiddyAudio.cancelAll();
       this._hideVoiceIndicator();
       if (this.stage) {
+        this.stage.classList.remove('kf-game-mode', 'kf-game-view-top', 'kf-game-view-side');
         this.stage.innerHTML = '';
         this.particlesEl = document.createElement('div');
         this.particlesEl.id = 'kf-particles';
@@ -262,6 +263,7 @@
       if (window.StageGraphics) {
         el = StageGraphics.createCharacter(name, def);
         el.style.left = leftPct + '%';
+        el.style.marginLeft = '0';
       } else {
         el = document.createElement('div');
         el.className = 'ss-character ss-anim-enter';
@@ -272,13 +274,18 @@
             '<span class="ss-char-emoji">' + (def.emoji || '🧑') + '</span></div>' +
           '<div class="ss-char-label" style="color:' + def.color + '">' + escHtml(def.label || name) + '</div>';
       }
-      /* Anti-overlap placement — pick a slot that's free */
       var self = this;
       setTimeout(function () {
         if (window.StagePro && self.stage) {
           StagePro.placeCharacter(self.stage, el, self.characters);
+          var pct = parseFloat(el.style.left);
+          if (!isNaN(pct)) el.dataset.baseLeftPct = String(pct);
         }
       }, 0);
+      setTimeout(function () {
+        el.classList.remove('ss-anim-enter');
+        el.style.transform = '';
+      }, 720);
       return el;
     },
 
@@ -330,8 +337,9 @@
       }
       el.classList.add('kf-moving');
       el.classList.toggle('kf-moving-run', mode === 'run');
+      el.classList.remove('ss-anim-enter');
+      el.style.transform = '';
 
-      /* Clamp movement so the character stays inside the stage with room for the bubble */
       var stageW = this.stage ? this.stage.clientWidth : 600;
       var elRect = el.getBoundingClientRect();
       var stageRect = this.stage ? this.stage.getBoundingClientRect() : { left: 0 };
@@ -345,9 +353,8 @@
       this.charPositions[key] = newPos;
 
       var dur = mode === 'run' ? 0.55 : 0.85;
-      /* Anticipation → travel → settle: spring-like cubic-bezier */
-      el.style.transition = 'transform ' + dur + 's cubic-bezier(0.16, 1.04, 0.34, 1)';
-      el.style.transform = 'translateX(' + newPos + 'px)';
+      el.style.transition = 'margin-left ' + dur + 's cubic-bezier(0.16, 1.04, 0.34, 1)';
+      el.style.marginLeft = newPos + 'px';
 
       if (window.StageGraphics && this.stage) {
         var rect = el.getBoundingClientRect();
