@@ -25,7 +25,9 @@
     'touch','width','height','view','top','side','wall','coin','platform',
     'spawn','lives','life','timer','goal','collect','collected','message','restart',
     'enemy','patrols','between','camera','follows','follow','lose','ground',
-    'pause','resume','level','next'
+    'pause','resume','level','next','load','map',
+    'choose','health','damage','hurt','chases','chase','shoot','bullet',
+    'toward','hazard','give','has','export'
   ]);
 
   const TOKEN_TYPES = {

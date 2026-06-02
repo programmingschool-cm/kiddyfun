@@ -88,6 +88,10 @@
       if (val === 'timer')    return this.parseTimer(lineNum);
       if (val === 'goal')     return this.parseGoal(lineNum);
       if (val === 'level')    return this.parseLevel(lineNum);
+      if (val === 'health')   return this.parseHealth(lineNum);
+      if (val === 'damage' || val === 'hurt') return this.parseDamage(lineNum);
+      if (val === 'give')     return this.parseGive(lineNum);
+      if (val === 'shoot')    return this.parseShoot(lineNum);
       if (val === 'pause')    return this.parsePauseGame(lineNum);
       if (val === 'resume')   return this.parseResumeGame(lineNum);
       if (val === 'next')     return this.parseNextLevel(lineNum);
@@ -118,6 +122,8 @@
       if (val === 'add')      return this.parseAdd(lineNum);
       if (val === 'remove')   return this.parseRemoveFromList(lineNum);
       if (val === 'play')     return this.parsePlaySound(lineNum);
+      if (val === 'load')     return this.parseLoadMap(lineNum);
+      if (val === 'choose')   return this.parseStoryChoose(lineNum);
       if (val === 'spawn')    return this.parseSpawn(lineNum);
       if (val === 'end')      { this.advance(); this.restOfLine(lineNum); return null; }
     }
@@ -269,6 +275,31 @@
   };
 
   /* ── Individual parsers ────────────────────────────────────────────── */
+  Parser.prototype.parseLoadMap = function (line) {
+    this.advance();
+    if (!this.peek() || this.peek().value !== 'map') {
+      throw new ParseError('Expected: load map "school_maze"', line);
+    }
+    this.advance();
+    var name = this.expectString(line, 'load map "school_maze"');
+    this.restOfLine(line);
+    var key = name.toLowerCase().replace(/[^a-z0-9_]/g, '');
+    return { type: 'load_map', mapName: key, line: line };
+  };
+
+  Parser.prototype.parseStoryChoose = function (line) {
+    this.advance();
+    var options = [];
+    var first = this.expectString(line, 'choose "Go left" or "Go right"');
+    options.push(first);
+    while (this.peek() && this.peek().value === 'or') {
+      this.advance();
+      options.push(this.expectString(line, 'choose "A" or "B"'));
+    }
+    this.restOfLine(line);
+    return { type: 'story_choose', options: options, line: line };
+  };
+
   Parser.prototype.parseScene = function (line) {
     this.advance();
     var str = this.expectString(line, 'scene "school"');
@@ -390,6 +421,20 @@
       var bodyTz = this.parseBlock('when', line, false);
       return { type: 'on_game_event', event: 'time_zero', body: bodyTz, line: line };
     }
+    if (this.peek() && this.peek().value === 'health') {
+      this.advance();
+      if (!this.peek() || this.peek().value !== 'is') {
+        throw new ParseError('Expected: when health is 0', line);
+      }
+      this.advance();
+      var hz = this.advance();
+      if (!hz || hz.type !== TT.NUMBER || hz.value !== 0) {
+        throw new ParseError('Expected: when health is 0', line);
+      }
+      this.restOfLine(line);
+      var bodyHz = this.parseBlock('when', line, false);
+      return { type: 'on_game_event', event: 'health_zero', body: bodyHz, line: line };
+    }
     var key = this.parseKeyName(line);
     if (!this.peek() || this.peek().value !== 'is') {
       throw new ParseError('Expected: when left arrow is pressed', line);
@@ -477,6 +522,9 @@
     var first = this.advance();
     if (!first) throw new ParseError('Expected: spawn coin at x 200 y 150  OR  spawn Lion as enemy at x 400 y 250', line);
 
+    if (first.value === 'hazard') {
+      return this._parseSpawnHazard(line);
+    }
     if (first.value === 'coin') {
       return this._parseSpawnAt(line, 'spawn_coin');
     }
@@ -496,6 +544,45 @@
       throw new ParseError('Expected: spawn coin … or spawn Lion as enemy at …', line);
     }
     throw new ParseError('Expected: spawn coin at x 200 y 150', line);
+  };
+
+  Parser.prototype._parseSpawnHazard = function (line) {
+    var nameTok = this.advance();
+    var hazardName = nameTok ? nameTok.value : 'lava';
+    if (!this.peek() || this.peek().value !== 'at') {
+      throw new ParseError('Expected: spawn hazard lava at x 100 y 150 width 80 height 30', line);
+    }
+    this.advance();
+    if (!this.peek() || this.peek().value !== 'x') {
+      throw new ParseError('Expected x after at', line);
+    }
+    this.advance();
+    var xExpr = this.parseCoordNumber(line);
+    if (!this.peek() || this.peek().value !== 'y') {
+      throw new ParseError('Expected y after x', line);
+    }
+    this.advance();
+    var yExpr = this.parseCoordNumber(line);
+    if (!this.peek() || this.peek().value !== 'width') {
+      throw new ParseError('Expected width after y', line);
+    }
+    this.advance();
+    var wExpr = this.parseCoordNumber(line);
+    if (!this.peek() || this.peek().value !== 'height') {
+      throw new ParseError('Expected height after width', line);
+    }
+    this.advance();
+    var hExpr = this.parseCoordNumber(line);
+    this.restOfLine(line);
+    return {
+      type: 'spawn_hazard',
+      name: hazardName,
+      xExpr: xExpr,
+      yExpr: yExpr,
+      wExpr: wExpr,
+      hExpr: hExpr,
+      line: line,
+    };
   };
 
   Parser.prototype._parseSpawnAt = function (line, nodeType) {
@@ -599,6 +686,86 @@
     this.advance();
     this.restOfLine(line);
     return { type: 'goal_coins', value: n.value, line: line };
+  };
+
+  Parser.prototype.parseHealth = function (line) {
+    this.advance();
+    if (!this.peek() || (this.peek().value !== 'start' && this.peek().value !== 'starts')) {
+      throw new ParseError('Expected: health starts at 100', line);
+    }
+    this.advance();
+    if (!this.peek() || this.peek().value !== 'at') {
+      throw new ParseError('Expected: health starts at 100', line);
+    }
+    this.advance();
+    var n = this.advance();
+    if (!n || n.type !== TT.NUMBER) throw new ParseError('Expected: health starts at 100', line);
+    this.restOfLine(line);
+    return { type: 'health_set', value: n.value, line: line };
+  };
+
+  Parser.prototype.parseDamage = function (line) {
+    this.advance();
+    var actorTok = this.advance();
+    if (!actorTok || actorTok.type !== TT.IDENTIFIER) {
+      throw new ParseError('Expected: damage Rafi by 10', line);
+    }
+    if (!this.peek() || this.peek().value !== 'by') {
+      throw new ParseError('Expected: damage Rafi by 10', line);
+    }
+    this.advance();
+    var n = this.advance();
+    if (!n || n.type !== TT.NUMBER) throw new ParseError('Expected a number after by', line);
+    this.restOfLine(line);
+    return { type: 'damage_player', actor: actorTok.value, amount: n.value, line: line };
+  };
+
+  Parser.prototype.parseGive = function (line) {
+    this.advance();
+    var actorTok = this.advance();
+    if (!actorTok || actorTok.type !== TT.IDENTIFIER) {
+      throw new ParseError('Expected: give Rafi key', line);
+    }
+    var itemTok = this.advance();
+    var item = itemTok ? itemTok.value : 'key';
+    this.restOfLine(line);
+    return { type: 'give_item', actor: actorTok.value, item: item, line: line };
+  };
+
+  Parser.prototype.parseShoot = function (line) {
+    this.advance();
+    if (!this.peek() || this.peek().value !== 'bullet') {
+      throw new ParseError('Expected: shoot bullet from Rafi toward right speed 6', line);
+    }
+    this.advance();
+    if (!this.peek() || this.peek().value !== 'from') {
+      throw new ParseError('Expected from after bullet', line);
+    }
+    this.advance();
+    var actorTok = this.advance();
+    if (!actorTok || actorTok.type !== TT.IDENTIFIER) {
+      throw new ParseError('Expected actor name after from', line);
+    }
+    if (!this.peek() || this.peek().value !== 'toward') {
+      throw new ParseError('Expected toward after actor', line);
+    }
+    this.advance();
+    var dirTok = this.advance();
+    var dir = dirTok ? dirTok.value : 'right';
+    var speed = 6;
+    if (this.peek() && this.peek().value === 'speed') {
+      this.advance();
+      var sp = this.advance();
+      if (sp && sp.type === TT.NUMBER) speed = sp.value;
+    }
+    this.restOfLine(line);
+    return {
+      type: 'shoot_bullet',
+      actor: actorTok.value,
+      direction: dir,
+      speed: speed,
+      line: line,
+    };
   };
 
   Parser.prototype.parseLevel = function (line) {
@@ -870,6 +1037,28 @@
       var falseBranch = this.parseElseBranch(line);
       return { type: 'if_answer', condition: c.value, trueBranch: trueBranch, falseBranch: falseBranch, line: line };
     }
+    if (this.peek() && this.peek().type === TT.IDENTIFIER) {
+      var saveHas = this.pos;
+      var actTok = this.advance();
+      var actName = actTok.value;
+      if (this.peek() && this.peek().value === 'has') {
+        this.advance();
+        var itTok = this.advance();
+        var itemName = itTok ? (itTok.type === TT.STRING ? itTok.value : itTok.value) : 'key';
+        this.restOfLine(line);
+        var tHas = this.parseBlock('if', line, true);
+        var fHas = this.parseElseBranch(line);
+        return {
+          type: 'if_has_item',
+          actor: actName,
+          item: itemName,
+          trueBranch: tHas,
+          falseBranch: fHas,
+          line: line,
+        };
+      }
+      this.pos = saveHas;
+    }
     var cond = this.parseExpressionFromHere(line);
     this.restOfLine(line);
     var tBranch = this.parseBlock('if', line, true);
@@ -975,6 +1164,15 @@
       this.advance();
       this.restOfLine(line);
       return { type: 'set_player', actor: actor, line: line };
+    }
+    if (verb === 'chases') {
+      this.advance();
+      var targetTok = this.advance();
+      if (!targetTok || targetTok.type !== TT.IDENTIFIER) {
+        throw new ParseError('Expected: Lion chases Rafi', line);
+      }
+      this.restOfLine(line);
+      return { type: 'enemy_chase', actor: actor, target: targetTok.value, line: line };
     }
     if (verb === 'patrols') {
       this.advance();
@@ -1129,6 +1327,7 @@
       everyFrame: [],
       onTouch: [],
       onGameEvent: [],
+      onInventory: [],
     };
     for (var i = 0; i < nodes.length; i++) {
       var n = nodes[i];
@@ -1157,6 +1356,11 @@
         program.onTouch.push(n);
         continue;
       }
+      if (n.type === 'if_has_item') {
+        program.onInventory = program.onInventory || [];
+        program.onInventory.push(n);
+        continue;
+      }
       if (n.type === 'on_game_event') {
         program.onGameEvent.push(n);
         continue;
@@ -1172,8 +1376,8 @@
       var t = nodes[i].type;
       if (t === 'game_start' || t === 'game_view') return true;
       if (t === 'on_key_down' || t === 'on_key_held' || t === 'every_frame') return true;
-      if (t === 'on_game_event' || t === 'lives_set' || t === 'timer_set' || t === 'goal_coins' || t === 'level_set') return true;
-      if (t === 'spawn_enemy' || t === 'camera_follow') return true;
+      if (t === 'on_game_event' || t === 'lives_set' || t === 'timer_set' || t === 'goal_coins' || t === 'level_set' || t === 'health_set') return true;
+      if (t === 'spawn_enemy' || t === 'camera_follow' || t === 'load_map') return true;
     }
     return false;
   }

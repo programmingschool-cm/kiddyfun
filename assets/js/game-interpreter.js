@@ -27,6 +27,7 @@
       everyFrame: [],
       touch: [],
       gameEvent: [],
+      inventory: [],
     };
     this._touchState = {};
   }
@@ -34,6 +35,7 @@
   GameInterpreter.prototype.stop = function () {
     this._stopped = true;
     this._running = false;
+    if (window.KiddyGameDebugger && KiddyGameDebugger.detach) KiddyGameDebugger.detach();
     if (this._resizeHandler) {
       window.removeEventListener('resize', this._resizeHandler);
       this._resizeHandler = null;
@@ -61,6 +63,7 @@
       self._spawnSceneEntities();
       self._layoutGameStage();
       self.runtime.updateGameHud();
+      if (window.KiddyGameDebugger && KiddyGameDebugger.attach) KiddyGameDebugger.attach(self);
       return self._startLoop();
     });
   };
@@ -132,6 +135,8 @@
     this.handlers.everyFrame = program.everyFrame || [];
     this.handlers.touch = program.onTouch || [];
     this.handlers.gameEvent = program.onGameEvent || [];
+    this.handlers.inventory = program.onInventory || [];
+    this._invState = {};
   };
 
   GameInterpreter.prototype._startLoop = function () {
@@ -158,8 +163,14 @@
       self._runHandlers('keyDown', input, true);
       self._runEveryFrame();
       if (window.KiddyGameEnemies) KiddyGameEnemies.update(world, dt);
+      if (window.KiddyGameCombat && KiddyGameCombat.updateProjectiles) {
+        KiddyGameCombat.updateProjectiles(R, dt);
+        KiddyGameCombat.checkHazardTouch(R);
+      }
       world.integrate(dt);
+      if (window.KiddyGameDebugger && KiddyGameDebugger.refresh) KiddyGameDebugger.refresh();
       self._runTouchHandlers();
+      self._runInventoryHandlers();
       if (gs) gs.tickTimer(dt);
       self._runGameEventHandlers(false);
       input.resetFrame();
@@ -186,6 +197,8 @@
         return gs.lives != null && gs.lives <= 0;
       case 'time_zero':
         return gs.timer != null && gs.timer <= 0;
+      case 'health_zero':
+        return gs.health != null && gs.health <= 0;
       default:
         return false;
     }
@@ -276,6 +289,27 @@
     }
   };
 
+  GameInterpreter.prototype._runInventoryHandlers = function () {
+    var self = this;
+    var gs = this.runtime.gameState;
+    if (!gs) return;
+    (this.handlers.inventory || []).forEach(function (h) {
+      var has = gs.hasItem(h.actor, h.item);
+      var id = h.actor + ':' + h.item + ':' + (h.line || 0);
+      if (has) {
+        if (!self._invState[id]) {
+          self._invState[id] = true;
+          self._execBlock(h.trueBranch || []);
+        }
+      } else {
+        self._invState[id] = false;
+        if (h.falseBranch && h.falseBranch.length) {
+          self._execBlock(h.falseBranch);
+        }
+      }
+    });
+  };
+
   GameInterpreter.prototype._runTouchHandlers = function () {
     var self = this;
     (this.handlers.touch || []).forEach(function (h) {
@@ -317,6 +351,15 @@
         R.setScene(node.value, node.withWalls);
         R.resizeWorld();
         break;
+      case 'load_map':
+        R.resizeWorld();
+        if (!R.loadMap(node.mapName)) {
+          throw new GameInterpretError(
+            'Unknown map "' + node.mapName + '". Try: school_maze, playground_extended, jungle_run, arena_coins',
+            node.line
+          );
+        }
+        break;
       case 'game_view':
         R.setView(node.view);
         if (R.world) R.world.setView(node.view);
@@ -327,8 +370,49 @@
       case 'set_player':
         R.entityAppears(node.actor);
         R.world.setPlayer(node.actor);
+        if (gs) gs.applyHealthToPlayer(node.actor);
         if (R.world) R.world.layoutPlayer();
+        R.updateGameHud();
         R.render();
+        break;
+      case 'health_set':
+        if (gs) {
+          gs.setHealth(node.value);
+          if (R.world && R.world.playerKey) gs.applyHealthToPlayer(R.world.playerKey);
+          R.updateGameHud();
+        }
+        break;
+      case 'damage_player':
+        if (gs) {
+          gs.damagePlayer(node.actor, node.amount);
+          R.updateGameHud();
+          if (gs.health <= 0) this._onGameLost();
+        }
+        break;
+      case 'give_item':
+        if (gs) gs.giveItem(node.actor, node.item);
+        break;
+      case 'enemy_chase':
+        if (window.KiddyGameCombat) KiddyGameCombat.setChase(R.world, node.actor, node.target);
+        break;
+      case 'spawn_hazard': {
+        if (window.KiddyGameCombat) {
+          var hobs = KiddyGameCombat.spawnHazard(
+            R,
+            node.name,
+            this._evalNumber(node.xExpr),
+            this._evalNumber(node.yExpr),
+            this._evalNumber(node.wExpr),
+            this._evalNumber(node.hExpr)
+          );
+          if (hobs) R.addObstacleVisual(hobs);
+        }
+        break;
+      }
+      case 'shoot_bullet':
+        if (window.KiddyGameCombat) {
+          KiddyGameCombat.shootBullet(R, node.actor, node.direction, node.speed);
+        }
         break;
       case 'set_entity_speed':
         R.world.setEntitySpeed(node.actor, this._evalNumber(node.speedExpr));

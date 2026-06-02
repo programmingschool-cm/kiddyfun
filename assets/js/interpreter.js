@@ -278,6 +278,16 @@
           return self._delay(900);
         });
 
+      case 'story_choose':
+        return new Promise(function (resolve) {
+          R.showStoryChoice(node.options, function (picked) {
+            env.set('choice', E.kfVal('string', picked), line);
+            resolve();
+          });
+        }).then(function () {
+          return self._delay(500);
+        });
+
       case 'repeat':
         return this._repeatCount(node.count, node.body, env);
 

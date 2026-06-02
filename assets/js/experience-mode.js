@@ -1,17 +1,17 @@
 /**
- * KiddyFun Experience Mode — Phase E1 (All Ages Foundation)
- * Kid (default) | Creator — UI theme + optional tools
+ * KiddyFun Experience Mode — Kid | Creator | Studio (E1 + E3)
  */
 (function () {
   'use strict';
 
   var KEY = 'kf_experience_mode';
-  var MODES = { kid: 'kid', creator: 'creator' };
+  var MODES = { kid: 'kid', creator: 'creator', studio: 'studio' };
+  var CYCLE = [MODES.kid, MODES.creator, MODES.studio];
 
   function readUrlMode() {
     try {
       var m = new URLSearchParams(location.search).get('mode');
-      if (m === 'creator' || m === 'kid') return m;
+      if (m === 'creator' || m === 'kid' || m === 'studio') return m;
     } catch (e) { /* ignore */ }
     return null;
   }
@@ -19,7 +19,7 @@
   function loadStored() {
     try {
       var v = localStorage.getItem(KEY);
-      if (v === 'creator' || v === 'kid') return v;
+      if (v === 'creator' || v === 'kid' || v === 'studio') return v;
     } catch (e) { /* ignore */ }
     return MODES.kid;
   }
@@ -31,28 +31,39 @@
   var current = readUrlMode() || loadStored();
   if (readUrlMode()) saveStored(current);
 
+  function normalize(mode) {
+    if (mode === MODES.creator || mode === MODES.studio) return mode;
+    return MODES.kid;
+  }
+
   function applyMode(mode) {
-    current = mode === MODES.creator ? MODES.creator : MODES.kid;
+    current = normalize(mode);
     saveStored(current);
     var body = document.body;
     if (!body) return;
-    body.classList.remove('kf-mode-kid', 'kf-mode-creator');
-    body.classList.add(current === MODES.creator ? 'kf-mode-creator' : 'kf-mode-kid');
+    body.classList.remove('kf-mode-kid', 'kf-mode-creator', 'kf-mode-studio');
+    if (current === MODES.studio) body.classList.add('kf-mode-studio', 'kf-mode-creator');
+    else if (current === MODES.creator) body.classList.add('kf-mode-creator');
+    else body.classList.add('kf-mode-kid');
+
+    var isPro = current === MODES.creator || current === MODES.studio;
     document.querySelectorAll('[data-creator-only]').forEach(function (el) {
-      el.classList.toggle('d-none', current !== MODES.creator);
+      el.classList.toggle('d-none', !isPro);
+    });
+    document.querySelectorAll('[data-studio-only]').forEach(function (el) {
+      el.classList.toggle('d-none', current !== MODES.studio);
     });
     document.querySelectorAll('[data-kid-only]').forEach(function (el) {
-      el.classList.toggle('d-none', current === MODES.creator);
+      el.classList.toggle('d-none', isPro);
     });
     var btn = document.getElementById('btn-experience-mode');
     if (btn) {
-      var isCreator = current === MODES.creator;
-      btn.title = isCreator ? 'Creator mode — click for Kid mode' : 'Kid mode — click for Creator mode';
-      btn.setAttribute('aria-pressed', isCreator ? 'true' : 'false');
-      btn.innerHTML = isCreator
-        ? '🎨 <span class="d-none d-sm-inline">Creator</span>'
-        : '🧒 <span class="d-none d-sm-inline">Kid</span>';
-      btn.classList.toggle('kf-mode-btn-active', isCreator);
+      var labels = { kid: '🧒', creator: '🎨', studio: '🖥️' };
+      var names = { kid: 'Kid', creator: 'Creator', studio: 'Studio' };
+      btn.title = names[current] + ' mode — click to switch';
+      btn.setAttribute('aria-pressed', isPro ? 'true' : 'false');
+      btn.innerHTML = labels[current] + ' <span class="d-none d-sm-inline">' + names[current] + '</span>';
+      btn.classList.toggle('kf-mode-btn-active', isPro);
     }
     window.dispatchEvent(new CustomEvent('kf-experience-change', { detail: { mode: current } }));
   }
@@ -60,11 +71,13 @@
   window.KiddyExperience = {
     MODES: MODES,
     getMode: function () { return current; },
-    isCreator: function () { return current === MODES.creator; },
+    isCreator: function () { return current === MODES.creator || current === MODES.studio; },
+    isStudio: function () { return current === MODES.studio; },
     isKid: function () { return current === MODES.kid; },
     setMode: applyMode,
     toggle: function () {
-      applyMode(current === MODES.creator ? MODES.kid : MODES.creator);
+      var i = CYCLE.indexOf(current);
+      applyMode(CYCLE[(i + 1) % CYCLE.length]);
     },
     init: function () {
       applyMode(current);

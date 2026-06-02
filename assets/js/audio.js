@@ -361,7 +361,8 @@
         try {
           var utter = new SpeechSynthesisUtterance(text);
           var profile = self._getProfile(actor);
-          utter.rate = profile.rate;
+          utter.rate = profile.rate * (window.KiddySpeechPractice && KiddySpeechPractice.getTtsRate
+            ? KiddySpeechPractice.getTtsRate() : 1);
           utter.pitch = profile.pitch;
           utter.volume = 1;
           var voice = self._pickVoiceFor(actor);

@@ -2,8 +2,8 @@
 
 > **Vision:** Scratch-style visual coding + Duolingo-style English speaking + KiddyFun's own English-like language — in one browser platform for kids.
 
-**Last updated:** 2026-05-24 (Supabase cloud sync)  
-**Current version:** v1.0 (compiler, TTS, missions, mobile UI)
+**Last updated:** 2026-05-28 (E2/E3 platform + curriculum)  
+**Current version:** v1.1 (Kid/Creator/Studio, G7–G8 game, gallery, curriculum)
 
 ---
 
@@ -74,7 +74,7 @@ High impact, low complexity. Good next sprint.
 
 ### A4. Platform
 
-- [ ] PWA: `manifest.json` + service worker for offline install
+- [x] PWA: `manifest.json` + service worker for offline install (basic shell cache)
 - [ ] Auto-run all examples in a smoke-test script (headless or manual checklist)
 - [ ] Update README to match KiddyFun branding and v1.0 features
 
@@ -92,7 +92,8 @@ Real-time **Game mode** alongside existing **Story mode** (dual mode — story p
 - [x] G5: Top-down — `game view top`, 4-direction movement, Coin Collector example
 - [x] G5.5: Polish — touch edge detection everywhere, setup validation errors, `spawn coin at`, debug hitboxes, jungle scene scaling, smarter `remove coin`
 - [x] G6: Arcade layer — lives, timer, goals, enemies/patrol, win/lose overlay, FX, `show message`, `spawn enemy`, `camera follows`, examples Coin Rush + Platform Escape
-- [ ] G7 (future): Tile editor, hazards, power-ups, block mode mapping
+- [x] G7 maps + G8 combat (health, chase, bullets, hazards) — see Phase E2
+- [ ] G7 tile painter UI (visual grid editor — JSON editor done in G7b)
 
 ---
 
@@ -111,18 +112,19 @@ Expand beyond kids-only while keeping **Kid mode** as default.
 - [x] Gallery + remix v1 (`gallery.js`, `?p=id&remix=1`, publish dialog Remix)
 - [x] `docs/ADULT_UPGRADE.md` strategy doc
 
-### E2 — Game Pro (next)
+### E2 — Game Pro ✅
 
-- [ ] G7 tile map loader + in-browser layer editor
-- [ ] G8 combat: projectiles, chase AI, health bars
-- [ ] Story branching (`choose` paths)
-- [ ] Debugger: pause frame, watch variables
+- [x] G7 map loader — `load map "name"`, `game-maps.js` (school_maze, playground_extended, jungle_run, arena_coins)
+- [x] Story branching — `choose "A" or "B"`, `if choice equals "…"`
+- [x] G7b map editor + JSON export — `game-map-editor.js`, `game-user-maps.js`
+- [x] G8 combat — `game-combat.js`: projectiles, chase AI, health, hazards, inventory
+- [x] Debugger — `game-debugger.js` (Creator/Studio, step frame, watch vars)
 
-### E3 — Creator Platform
+### E3 — Creator Platform ✅ (v1)
 
-- [ ] Studio mode (IDE layout, multi-file)
-- [ ] Python export
-- [ ] Teacher dashboard assignments
+- [x] Studio mode — third experience tier (`?mode=studio`, multi-file tabs)
+- [x] Python export — `python-export.js`, navbar 🐍 button (Studio)
+- [x] Teacher dashboard lite — class code + CSV export (`teacher-panel.js`)
 
 ---
 
@@ -132,23 +134,19 @@ Makes KiddyFun a **product**, not just a demo.
 
 ### B1. Speak-back & pronunciation (★ top differentiator)
 
-- [ ] Web Speech **Recognition** API integration (`assets/js/speech-practice.js`)
-- [ ] After character speaks: “Your turn!” → kid speaks → match score
-- [ ] Gentle feedback: “Try again: Good MOR-ning” (keyword / fuzzy match)
+- [x] Web Speech **Recognition** API integration (`assets/js/speech-practice.js`) — v1
+- [x] “Repeat after me” on speech bubbles + fuzzy match score
+- [~] Gentle phonetic hints — basic toast retry only
 - [ ] Store speaking attempts in localStorage (optional privacy-safe stats)
 - [ ] Mission type: “Say this sentence correctly to continue”
 
 ### B2. Structured curriculum (30 lessons)
 
-- [ ] Create `assets/data/curriculum.json` (or `lessons.js`) — levels 1–6
-- [ ] Level 1: Hello & Scene  
-- [ ] Level 2: Actions & Movement  
-- [ ] Level 3: Quiz & Logic  
-- [ ] Level 4: Loops (`repeat`)  
-- [ ] Level 5: Score & Sound  
-- [ ] Level 6: Mini projects (restaurant, jungle, classroom)
-- [ ] UI: Lesson list in offcanvas with lock/unlock by completion
-- [ ] Each lesson: goal → hint → starter → challenge → badge
+- [x] `assets/data/curriculum.json` + `curriculum.js` — starter path (expand to 30)
+- [x] Levels 1–6 scaffold with lessons + badges
+- [x] UI: Lessons panel in menu
+- [~] Lock/unlock by prior lesson — completion tracked, soft unlock
+- [ ] Full 30-lesson content fill
 
 ### B3. Block mode (ages 6–9)
 
@@ -167,9 +165,9 @@ Makes KiddyFun a **product**, not just a demo.
 
 ### B5. Gamification
 
-- [ ] XP points per mission + daily streak
-- [ ] Badge gallery page (all earned badges)
-- [ ] Daily challenge (rotating goal in menu)
+- [x] XP points per mission + daily streak (`gamification.js`)
+- [~] Badge gallery page — badges in missions/lessons; dedicated page TBD
+- [x] Daily challenge (rotating goal in menu)
 - [ ] Optional avatar / theme unlock (localStorage only, no accounts yet)
 
 ---
@@ -180,7 +178,7 @@ School-ready and growth features.
 
 ### C1. Teacher & parent layer
 
-- [ ] Teacher dashboard (class code, view aggregated progress)
+- [x] Teacher dashboard lite (class code, CSV export on device)
 - [ ] Parent summary: “Today: loops, words: brave, friend”
 - [ ] Printable worksheet generator (PDF or print CSS)
 - [ ] Export student progress CSV
@@ -194,8 +192,8 @@ School-ready and growth features.
 
 ### C3. Grow to Python
 
-- [ ] `SpeakScript → Python` transpiler module
-- [ ] “Export as Python” button in editor
+- [x] KiddyFun → Python transpiler v1 (`python-export.js`)
+- [x] “Export as Python” button (Studio mode)
 - [ ] Side-by-side view: KiddyFun code | Python equivalent
 - [ ] Lesson bridge: “You learned loops — here is Python `for`”
 
@@ -294,6 +292,8 @@ Record completed steps here. Newest first.
 
 | Date | Item | Notes |
 |------|------|-------|
+| 2026-05-28 | E2 + E3 + B1/B2/B5/C1/C3 v1 | G8 combat, map editor, debugger, Studio, Python export, curriculum, speech, gamification, PWA |
+| 2026-05-28 | Phase E2 (partial) | G7 load map, story choose branching |
 | 2026-05-28 | Phase E1 complete | Gallery/remix, saved rename/duplicate, ADULT_UPGRADE.md |
 | 2026-05-28 | Phase E1 (All Ages) | Kid/Creator modes, Map Helper, pause/resume/level game commands |
 | 2026-05-27 | Phase G (Game engine) | Dual mode: game loop, keyboard, jump, collision, top-down view |

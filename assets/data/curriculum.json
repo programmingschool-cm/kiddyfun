@@ -1,0 +1,50 @@
+{
+  "levels": [
+    {
+      "id": 1,
+      "title": "Hello & Scene",
+      "lessons": [
+        { "id": "L1-1", "title": "First scene", "goal": "Use scene and Rafi appears", "starter": "scene \"school\"\n\nRafi appears\nRafi says \"Hello!\"", "badge": "🌟 Scene Starter" },
+        { "id": "L1-2", "title": "Narrator", "goal": "Add narrator says", "starter": "scene \"school\"\nRafi appears\nRafi says \"Hi!\"\nnarrator says \"A new day begins.\"", "badge": "📖 Narrator" },
+        { "id": "L1-3", "title": "Two friends", "goal": "Two characters greet", "starter": "scene \"playground\"\nRafi appears\nMina appears\nRafi says \"Hi Mina!\"\nMina says \"Hi Rafi!\"", "badge": "👫 Friends" }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Actions & Movement",
+      "lessons": [
+        { "id": "L2-1", "title": "Wave & smile", "goal": "Use waves and smiles", "starter": "scene \"school\"\nRafi appears\nRafi waves\nRafi smiles", "badge": "👋 Wave" },
+        { "id": "L2-2", "title": "Move & jump", "goal": "Use moves and jumps", "starter": "scene \"playground\"\nRafi appears\nRafi jumps\nRafi moves right", "badge": "🏃 Move" }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Quiz & Logic",
+      "lessons": [
+        { "id": "L3-1", "title": "Ask a question", "goal": "Use ask and if answer", "starter": "scene \"classroom\"\nTeacher appears\nask \"What is 2 + 2?\" with answers \"3\", \"4\", \"5\"\nif answer equals \"4\"\n    Teacher says \"Correct!\"\nend", "badge": "❓ Quiz" }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Loops",
+      "lessons": [
+        { "id": "L4-1", "title": "Repeat", "goal": "repeat 3 times", "starter": "scene \"school\"\nRafi appears\nrepeat 3 times\n    Rafi waves\nend", "badge": "🔁 Loop" }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Score & Sound",
+      "lessons": [
+        { "id": "L5-1", "title": "Points", "goal": "add points", "starter": "scene \"school\"\nscore starts at 0\nRafi appears\nadd 10 points", "badge": "⭐ Score" }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Mini projects",
+      "lessons": [
+        { "id": "L6-1", "title": "Restaurant story", "goal": "scene restaurant + dialogue", "starter": "scene \"restaurant\"\nRafi appears\nRafi says \"One juice please!\"", "badge": "🍽️ Project" },
+        { "id": "L6-2", "title": "First game", "goal": "game view top + player", "starter": "game \"My Game\"\ngame view top\nscene \"school\" with walls\nRafi is player", "badge": "🎮 Game Dev" }
+      ]
+    }
+  ]
+}

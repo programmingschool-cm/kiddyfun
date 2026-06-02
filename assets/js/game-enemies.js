@@ -33,10 +33,14 @@
 
     update: function (world, dt) {
       if (!world) return;
+      if (window.KiddyGameCombat && KiddyGameCombat.updateChase) {
+        KiddyGameCombat.updateChase(world, dt);
+      }
       var scale = dt / 16.67;
       Object.keys(world.entities).forEach(function (key) {
         var e = world.entities[key];
         if (!e || !e.active || e.tags.indexOf('enemy') < 0) return;
+        if (e.chaseTarget) return;
         if (e.patrolMin == null || e.patrolMax == null) return;
         var spd = (e.patrolSpeed || 2) * scale;
         e.x += spd * (e.patrolDir || 1);

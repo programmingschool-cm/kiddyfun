@@ -21,6 +21,7 @@
   <meta property="og:url" content="https://programmingschool-cm.github.io/kiddyfun/" />
   <meta property="og:image" content="https://placehold.co/1200x630/0f172a/eab308.png?text=KiddyFun+Code" />
   <meta name="twitter:card" content="summary_large_image" />
+  <link rel="manifest" href="manifest.json" />
 </head>
 <body>
 
@@ -47,6 +48,12 @@
         <button class="kf-btn-icon d-none d-sm-flex" id="btn-toggle-voice" title="English Voice (Text-to-Speech)" aria-label="Toggle voice">
           🔊
         </button>
+        <button class="kf-btn-icon d-none d-md-flex" id="btn-tts-speed" title="TTS speed: Normal / Slow / Fast" aria-label="TTS speed">
+          ⏩
+        </button>
+        <button class="btn btn-light kf-pill-btn border shadow-sm d-none d-md-inline-flex align-items-center gap-1" data-studio-only type="button" id="btn-export-python" title="Export code as Python">
+          🐍 <span class="d-none d-lg-inline">Python</span>
+        </button>
         <button class="kf-btn-icon d-none d-sm-flex" id="btn-toggle-sound" title="Sound Effects" aria-label="Toggle sound">
           🎵
         </button>
@@ -71,7 +78,7 @@
         <button class="btn btn-light kf-pill-btn border shadow-sm d-none d-md-inline-flex align-items-center gap-1" data-creator-only type="button" id="btn-map-helper" title="Click stage to insert spawn coin or wall lines (Creator mode)">
           🗺️ <span class="d-none d-lg-inline">Map</span>
         </button>
-        <button class="btn btn-light kf-pill-btn border shadow-sm d-none d-sm-inline-flex align-items-center gap-1" type="button" id="btn-experience-mode" title="Switch Kid / Creator experience">
+        <button class="btn btn-light kf-pill-btn border shadow-sm d-none d-sm-inline-flex align-items-center gap-1" type="button" id="btn-experience-mode" title="Switch Kid / Creator / Studio">
           🧒 <span class="d-none d-sm-inline">Kid</span>
         </button>
         <button class="btn btn-outline-danger kf-pill-btn d-none d-md-inline-block" id="btn-reset-progress" title="Reset all progress">Reset</button>
@@ -100,20 +107,25 @@
         <button type="button" class="btn btn-outline-secondary active" data-map-tool="coin">🪙 Coin</button>
         <button type="button" class="btn btn-outline-secondary" data-map-tool="wall">🧱 Wall</button>
       </div>
+      <div id="panel-map-editor" class="mt-3" data-creator-only></div>
     </div>
     <div class="offcanvas-body p-0 d-flex flex-column">
       <div class="ss-nav-panel">
         <button class="ss-nav-btn active" data-panel="guide">📖 Guide</button>
+        <button class="ss-nav-btn" data-panel="lessons">📚 Lessons</button>
         <!-- <button class="ss-nav-btn" data-panel="tutorial">📘 Tutorial</button> -->
         <button class="ss-nav-btn" data-panel="missions">🎯 Missions</button>
         <button class="ss-nav-btn" data-panel="saved">💾 Saved</button>
         <button class="ss-nav-btn" data-panel="gallery">🌐 Gallery</button>
+        <button class="ss-nav-btn" data-panel="teacher">👩‍🏫 Teacher</button>
         <button class="ss-nav-btn" data-panel="sync">☁️ Sync</button>
       </div>
       <div class="ss-side-panel flex-grow-1">
         <div id="panel-guide"></div>
+        <div id="panel-lessons" class="d-none p-3"></div>
         <div id="panel-tutorial" class="d-none ss-tutorial-panel"></div>
         <div id="panel-missions" class="d-none"></div>
+        <div id="panel-teacher" class="d-none p-3"></div>
         <div id="panel-saved" class="d-none"></div>
         <div id="panel-gallery" class="d-none p-3"></div>
         <div id="panel-sync" class="d-none p-3">
@@ -141,6 +153,7 @@
       <!-- CODE PANEL -->
       <div class="col-12 kf-col-code d-flex flex-column kf-col" id="code-col">
         <div class="kf-panel">
+          <div id="kf-studio-tabs" class="kf-studio-tabs d-none" data-studio-only aria-label="Project files"></div>
           <div class="kf-editor-toolbar">
             <span class="fw-bold d-flex align-items-center gap-2 flex-wrap">
               <span class="text-warning">✏️</span> Your Code
@@ -292,6 +305,9 @@
   <script src="assets/js/game-input.js"></script>
   <script src="assets/js/game-loop.js"></script>
   <script src="assets/js/game-scenes.js"></script>
+  <script src="assets/js/game-maps.js"></script>
+  <script src="assets/js/game-user-maps.js"></script>
+  <script src="assets/js/game-combat.js"></script>
   <script src="assets/js/game-state.js"></script>
   <script src="assets/js/game-enemies.js"></script>
   <script src="assets/js/game-fx.js"></script>
@@ -308,7 +324,14 @@
   <script src="assets/js/editor-linter.js"></script>
   <script src="assets/js/smart-editor.js"></script>
   <script src="assets/js/game-map-helper.js"></script>
+  <script src="assets/js/game-map-editor.js"></script>
+  <script src="assets/js/game-debugger.js"></script>
+  <script src="assets/js/curriculum.js"></script>
+  <script src="assets/js/speech-practice.js"></script>
+  <script src="assets/js/gamification.js"></script>
+  <script src="assets/js/teacher-panel.js"></script>
+  <script src="assets/js/python-export.js"></script>
+  <script src="assets/js/project-files.js"></script>
   <script src="assets/js/ui.js"></script>
   <script src="assets/js/app.js"></script>
-</body>
 </html>

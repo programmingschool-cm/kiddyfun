@@ -64,6 +64,21 @@
       ],
     },
     {
+      group: '🔀 Story branching',
+      items: [
+        {
+          title: 'Choose a path',
+          desc: 'Shows buttons; stores result in variable choice.',
+          code: 'choose "Go left" or "Go right"',
+        },
+        {
+          title: 'If choice',
+          desc: 'Use equals with the exact option text.',
+          code: 'if choice equals "Go left"\n    narrator says "You went left!"\nelse\n    narrator says "You went right!"\nend',
+        },
+      ],
+    },
+    {
       group: '❓ Quiz & Score',
       items: [
         {
@@ -192,6 +207,16 @@
           code: 'add wall at x 200 y 250 width 80 height 40',
         },
         {
+          title: 'Load map (G7)',
+          desc: 'Built-in layouts: school_maze, playground_extended, jungle_run, arena_coins. Replaces prior map coins/walls.',
+          code: 'scene "school"\nload map "school_maze"',
+        },
+        {
+          title: 'Health & combat (G8)',
+          desc: 'health, damage, hazards, chase AI, bullets, inventory.',
+          code: 'health starts at 100\ndamage Rafi by 10\nLion chases Rafi\nspawn hazard lava at x 100 y 150 width 60 height 30\nshoot bullet from Rafi toward right speed 8\ngive Rafi key\nif Rafi has key\n    show message "Win!"\nend\nwhen health is 0\n    pause game\nend',
+        },
+        {
           title: 'Touch enemy → lose life',
           desc: 'Edge-triggered once per touch (same as coins).',
           code: 'if Rafi touches enemy\n    lose 1 life\n    play sound "wrong"\nend',
@@ -317,6 +342,16 @@
     '- `wait <N>` or `wait <N> second(s)` — pause 1..8 seconds.',
     '- `show word "english" means "meaning"` — vocabulary card.',
     '',
+    '## Story branching',
+    '```',
+    'choose "Go to the forest" or "Stay at school"',
+    'if choice equals "Go to the forest"',
+    '    narrator says "Adventure!"',
+    'else',
+    '    narrator says "Safe at school!"',
+    'end',
+    '```',
+    '',
     '## Quiz (multiple choice buttons)',
     '```',
     'ask "Question text?"',
@@ -412,6 +447,15 @@
     'set Rafi speed to 5    # optional',
     'camera follows Rafi    # optional side-scroll',
     '',
+    'load map "school_maze"   # G7 maps: school_maze, playground_extended, jungle_run, arena_coins',
+    'health starts at 100     # G8 combat',
+    'damage Rafi by 10',
+    'Lion chases Rafi',
+    'spawn hazard lava at x 100 y 150 width 60 height 30',
+    'shoot bullet from Rafi toward right speed 8',
+    'give Rafi key',
+    'if Rafi has key ... end',
+    'when health is 0 ... end',
     'spawn coin at x 200 y 150',
     'spawn Lion as enemy at x 350 y ground',
     'Lion patrols between x 200 and x 500',

@@ -55,6 +55,13 @@
     UI.buildMissionsPanel();
     UI.buildSavedPanel();
     if (window.KiddyGallery && KiddyGallery.buildPanel) KiddyGallery.buildPanel();
+    if (window.KiddyCurriculum && KiddyCurriculum.buildPanel) KiddyCurriculum.buildPanel();
+    if (window.KiddyTeacher && KiddyTeacher.buildPanel) KiddyTeacher.buildPanel();
+    if (window.KiddyMapEditor && KiddyMapEditor.buildPanel) KiddyMapEditor.buildPanel();
+    if (window.KiddyGamification && KiddyGamification.init) KiddyGamification.init();
+    if (window.KiddySpeechPractice && KiddySpeechPractice.init) KiddySpeechPractice.init();
+    if (window.KiddyProjectFiles && KiddyProjectFiles.init) KiddyProjectFiles.init();
+    if (window.KiddyGameDebugger && KiddyGameDebugger.buildPanel) KiddyGameDebugger.buildPanel();
     UI.updateProgress();
     UI.showPanel('guide');
 
@@ -82,12 +89,14 @@
     buildSyntaxDropdown();
     initAudioToggles();
     initExperienceMode();
+    initPlatformExtras();
 
     var editorEl = $id('ss-editor');
     if (window.KiddySmartEditor && window.KiddySmartEditor.init) {
       KiddySmartEditor.init(editorEl, {
         onChange: function () {
           Storage.saveLastCode(editorEl.value);
+          if (window.KiddyProjectFiles && KiddyProjectFiles.syncFromEditor) KiddyProjectFiles.syncFromEditor();
           UI.syncLineNumbers();
         },
         onScroll: function () { UI.syncLineNumbers(); },
@@ -389,18 +398,36 @@
             KiddyExperience.toggle();
             var mode = KiddyExperience.getMode();
             if (window.UI && UI.showToast) {
-              UI.showToast(mode === 'creator'
-                ? '🎨 Creator mode — Map tool & pro theme enabled'
-                : '🧒 Kid mode — simple learning UI');
+              var msg = { kid: '🧒 Kid mode', creator: '🎨 Creator mode', studio: '🖥️ Studio mode' };
+              UI.showToast(msg[mode] || mode);
             }
+            if (window.KiddyProjectFiles && KiddyProjectFiles.buildTabs) KiddyProjectFiles.buildTabs();
           }
         });
+      }
+      window.addEventListener('kf-experience-change', function () {
+        if (window.KiddyMapEditor && KiddyMapEditor.buildPanel) KiddyMapEditor.buildPanel();
+        if (window.KiddyProjectFiles && KiddyProjectFiles.buildTabs) KiddyProjectFiles.buildTabs();
+      });
+    }
+
+    function initPlatformExtras() {
+      var pyBtn = $id('btn-export-python');
+      if (pyBtn && window.KiddyPythonExport) {
+        pyBtn.addEventListener('click', function () { KiddyPythonExport.exportPython(); });
+      }
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').catch(function () { /* offline optional */ });
       }
     }
 
     function runProgram() {
       if (window.KiddyMapHelper && KiddyMapHelper.stop) KiddyMapHelper.stop();
       var code = editorEl.value.trim();
+      if (window.KiddyProjectFiles && KiddyProjectFiles.syncFromEditor) KiddyProjectFiles.syncFromEditor();
+      if (window.KiddyProjectFiles && KiddyProjectFiles.mergeForRun) {
+        code = KiddyProjectFiles.mergeForRun(code);
+      }
       if (window.KiddySmartEditor && window.KiddySmartEditor.expandForRun) {
         code = KiddySmartEditor.expandForRun(code).trim();
       }
@@ -531,6 +558,7 @@
       if (newComplete) {
         UI.buildMissionsPanel();
         UI.updateProgress();
+        if (window.KiddyGamification && KiddyGamification.addXp) KiddyGamification.addXp(50);
         if (window.KiddyAudio) KiddyAudio.playSound('cheer');
       }
     }

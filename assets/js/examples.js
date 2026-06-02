@@ -1191,6 +1191,167 @@ end
 `,
   },
 
+  /* ── Game — Maps (G7) ───────────────────────────────────────────────── */
+  {
+    id: 'game_map_maze',
+    category: 'Game — Maps (G7)',
+    title: '🗺️ School Maze Map',
+    desc: 'load map "school_maze" — top-down maze with walls and coins.',
+    code: `# G7 — load a built-in map layout
+game "School Maze"
+game view top
+
+scene "school"
+score starts at 0
+goal is collect 5 coins
+
+Mina is player
+load map "school_maze"
+
+every frame
+    if left key is held
+        move Mina left by 4
+    end
+    if right key is held
+        move Mina right by 4
+    end
+    if up key is held
+        move Mina up by 4
+    end
+    if down key is held
+        move Mina down by 4
+    end
+end
+
+if Mina touches coin
+    add 10 points
+    play sound "success"
+    remove coin
+end
+`,
+  },
+  {
+    id: 'game_map_platform',
+    category: 'Game — Maps (G7)',
+    title: '🗺️ Platform Course Map',
+    desc: 'load map "playground_extended" — side view platforms + coins.',
+    code: `game "Platform Course"
+
+scene "playground"
+score starts at 0
+goal is collect 4 coins
+
+Rafi is player
+load map "playground_extended"
+
+when space is pressed
+    Rafi jump with power 13
+end
+
+every frame
+    if left key is held
+        move Rafi left by 4
+    end
+    if right key is held
+        move Rafi right by 4
+    end
+end
+
+if Rafi touches coin
+    add 15 points
+    remove coin
+end
+`,
+  },
+
+  /* ── Game — Combat (G8) ─────────────────────────────────────────────── */
+  {
+    id: 'game_combat_g8',
+    category: 'Game — Combat (G8)',
+    title: '⚔️ Health & Chase',
+    desc: 'health, damage, hazards, enemy chase, bullets, inventory key.',
+    code: `# G8 combat demo
+game "Arena Combat"
+game view top
+
+load map "arena_coins"
+health starts at 100
+score starts at 0
+
+Rafi is player
+Lion is enemy
+Lion chases Rafi
+
+spawn hazard lava at x 200 y 200 width 60 height 40
+
+every frame
+    if left key is held
+        move Rafi left by 5
+    end
+    if right key is held
+        move Rafi right by 5
+    end
+    if up key is held
+        move Rafi up by 5
+    end
+    if down key is held
+        move Rafi down by 5
+    end
+    if space key is held
+        shoot bullet from Rafi toward right speed 8
+    end
+end
+
+when health is 0
+    show message "Game Over — health reached zero"
+    pause game
+end
+
+if Rafi touches coin
+    add 5 points
+    remove coin
+    give Rafi key
+end
+
+if Rafi has key
+    show message "You have the key — you win!"
+    pause game
+end
+`,
+  },
+
+  /* ── Story — Branching ──────────────────────────────────────────────── */
+  {
+    id: 'story_choose_path',
+    category: 'Story — Branching',
+    title: '🔀 Choose Your Path',
+    desc: 'choose "..." or "..." then if choice equals for branching stories.',
+    code: `# Branching story (E2)
+scene "jungle"
+
+Rafi appears
+Rafi says "Which way should we go?"
+
+choose "Go to the forest" or "Stay at school"
+
+if choice equals "Go to the forest"
+    scene "jungle"
+    Rafi runs
+    Rafi says "The forest is exciting!"
+    Bird flies
+    Bird says "Tweet! Welcome!"
+else
+    scene "school"
+    Rafi waves
+    Rafi says "School is safe and fun!"
+    Teacher appears
+    Teacher says "Good choice!"
+end
+
+narrator says "Every path teaches something new."
+`,
+  },
+
   /* ── Creator — Phase E1 templates ───────────────────────────────────── */
   {
     id: 'creator_survival',

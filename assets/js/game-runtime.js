@@ -112,6 +112,20 @@
       this._addLog('Scene: ' + name);
     },
 
+    loadMap: function (mapName) {
+      if (!this.world) return false;
+      var ok = this.world.loadMapData(mapName);
+      if (ok) {
+        this._addLog('Map: ' + mapName);
+        if (this.world._lastLayoutRef && this.world._lastLayoutRef.view) {
+          this.setView(this.world._lastLayoutRef.view);
+        }
+      } else {
+        this._addLog('⚠️ Unknown map: ' + mapName);
+      }
+      return ok;
+    },
+
     setView: function (view) {
       if (this.world) this.world.setView(view);
       if (this.stage) {
@@ -327,6 +341,7 @@
         parts.push('🪙 ' + gs.collectedCoins + '/' + gs.goalCoins);
       }
       parts.push('Lv ' + gs.level);
+      if (gs.health != null) parts.push('❤️ ' + gs.health + (gs.maxHealth ? '/' + gs.maxHealth : ''));
       if (gs.banner) parts.push(gs.banner);
       this._statsHud.textContent = parts.join('  ');
     },

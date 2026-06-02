@@ -469,6 +469,10 @@
         charEl.appendChild(bubble);
         typingPromise = Promise.resolve();
       }
+      if (window.KiddySpeechPractice && KiddySpeechPractice.addRepeatButton) {
+        var bubbleEl = charEl.querySelector('.kf-bubble, .ss-bubble');
+        if (bubbleEl) KiddySpeechPractice.addRepeatButton(bubbleEl, text);
+      }
 
       var speechPromise = this._speakWithIndicator(text, name);
 
@@ -641,6 +645,58 @@
       } else if (silent) {
         this._inputCallback = null;
       }
+    },
+
+    /* ── Story branching (choose) ───────────────────────────────────────── */
+    showStoryChoice: function (options, onPick) {
+      var old = this.stage.querySelector('.ss-quiz-box');
+      if (old) old.remove();
+      var self = this;
+      var opts = options || [];
+      if (!opts.length) {
+        if (onPick) onPick('');
+        return;
+      }
+
+      var box = document.createElement('div');
+      box.className = 'ss-quiz-box ss-story-choice-box';
+
+      var icon = document.createElement('div');
+      icon.className = 'ss-quiz-icon';
+      icon.textContent = '🔀';
+      box.appendChild(icon);
+
+      var q = document.createElement('div');
+      q.className = 'ss-quiz-question';
+      q.textContent = 'Choose your path:';
+      box.appendChild(q);
+
+      var btnWrap = document.createElement('div');
+      btnWrap.className = 'ss-quiz-choices';
+
+      opts.forEach(function (text) {
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'ss-quiz-btn ss-story-choice-btn';
+        btn.textContent = text;
+        btn.addEventListener('click', function () {
+          btnWrap.querySelectorAll('.ss-quiz-btn').forEach(function (b) { b.disabled = true; });
+          btn.classList.add('ss-quiz-correct');
+          self._addLog('🔀 Choice: ' + text);
+          if (window.KiddyAudio) KiddyAudio.playSound('pop');
+          box.style.transition = 'opacity 0.35s, transform 0.35s';
+          box.style.opacity = '0';
+          box.style.transform = 'translate(-50%, -50%) scale(0.85)';
+          setTimeout(function () {
+            if (box.parentNode) box.remove();
+            if (onPick) onPick(text);
+          }, 380);
+        });
+        btnWrap.appendChild(btn);
+      });
+
+      box.appendChild(btnWrap);
+      this.stage.appendChild(box);
     },
 
     /* ── Quiz ─────────────────────────────────────────────────────────────── */

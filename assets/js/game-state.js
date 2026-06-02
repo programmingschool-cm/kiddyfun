@@ -18,6 +18,41 @@
     this.status = 'playing';
     this.banner = '';
     this.cameraFollow = null;
+    this.maxHealth = null;
+    this.health = null;
+    this.pendingHealth = null;
+    this.inventory = {};
+  };
+
+  GameState.prototype.setHealth = function (n) {
+    this.pendingHealth = Math.max(1, Math.round(n));
+    this.maxHealth = this.pendingHealth;
+    this.health = this.pendingHealth;
+  };
+
+  GameState.prototype.applyHealthToPlayer = function (playerKey) {
+    if (this.pendingHealth != null && playerKey) {
+      this.maxHealth = this.pendingHealth;
+      this.health = this.pendingHealth;
+    }
+  };
+
+  GameState.prototype.damagePlayer = function (playerKey, amount) {
+    if (this.health == null) return;
+    this.health = Math.max(0, this.health - (amount || 1));
+    if (this.health <= 0) this.status = 'lost';
+  };
+
+  GameState.prototype.giveItem = function (playerKey, item) {
+    var k = String(playerKey).toLowerCase();
+    if (!this.inventory[k]) this.inventory[k] = [];
+    var name = String(item).toLowerCase();
+    if (this.inventory[k].indexOf(name) < 0) this.inventory[k].push(name);
+  };
+
+  GameState.prototype.hasItem = function (playerKey, item) {
+    var k = String(playerKey).toLowerCase();
+    return !!(this.inventory[k] && this.inventory[k].indexOf(String(item).toLowerCase()) >= 0);
   };
 
   GameState.prototype.setLives = function (n) {

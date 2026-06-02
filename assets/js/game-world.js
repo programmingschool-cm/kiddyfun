@@ -151,9 +151,58 @@
   GameWorld.prototype.loadSceneData = function (sceneName) {
     var data = window.KiddyGameScenes && window.KiddyGameScenes[sceneName];
     if (!data) return;
+    this._applyLayoutData(data, false);
+  };
+
+  /** Remove map/scene coins, enemies, obstacles — keep player */
+  GameWorld.prototype.clearLayout = function () {
+    var self = this;
+    this.obstacles.forEach(function (o) {
+      if (o.el && o.el.parentNode) o.el.parentNode.removeChild(o.el);
+    });
+    this.obstacles = [];
+    Object.keys(this.entities).forEach(function (key) {
+      if (key === self.playerKey) return;
+      var e = self.entities[key];
+      if (!e) return;
+      var isCoin = e.tags.indexOf('coin') >= 0 || key.indexOf('coin') === 0;
+      var isEnemy = e.tags.indexOf('enemy') >= 0;
+      if (isCoin || isEnemy) {
+        if (e.el && e.el.parentNode) e.el.parentNode.removeChild(e.el);
+        delete self.entities[key];
+      }
+    });
+  };
+
+  GameWorld.prototype.loadMapData = function (mapName) {
+    var key = String(mapName || '').toLowerCase().replace(/[^a-z0-9_]/g, '');
+    var data = null;
+    if (window.KiddyUserMaps && KiddyUserMaps.get) {
+      data = KiddyUserMaps.get(key);
+    }
+    if (!data && window.KiddyGameMaps) {
+      data = window.KiddyGameMaps[key];
+    }
+    if (!data) return false;
+    this.clearLayout();
+    this._applyLayoutData(data, true);
+    return true;
+  };
+
+  GameWorld.prototype._applyLayoutData = function (data, fromMap) {
     var self = this;
     if (data.obstacles) {
-      data.obstacles.forEach(function (o) { self.addObstacle(o); });
+      data.obstacles.forEach(function (o) {
+        self.addObstacle({
+          id: o.id,
+          x: o.x,
+          y: o.y,
+          w: o.w,
+          h: o.h,
+          tag: o.tag,
+          solid: o.solid,
+        });
+      });
     }
     if (data.entities) {
       data.entities.forEach(function (ent) {
@@ -161,6 +210,12 @@
       });
     }
     if (data.view) this.setView(data.view);
+    this._lastLayoutRef = {
+      w: data.refW || 600,
+      h: data.refH || 360,
+      view: data.view,
+      map: fromMap,
+    };
     this.scaleSceneLayout(data.refW || 600, data.refH || 360);
   };
 

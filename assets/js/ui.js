@@ -72,6 +72,13 @@
         {desc:'React after the player picks an answer',
          code:'if answer is correct\n    narrator says "Yes! Great job!"\nelse\n    narrator says "Try again next time."\nend'},
       ]},
+    { icon:'🔀', title:'Story branching (choose)',
+      items:[
+        {desc:'Player picks a path (buttons on stage)',
+         code:'choose "Go to the forest" or "Stay at school"'},
+        {desc:'React with if — use the exact choice text',
+         code:'if choice equals "Go to the forest"\n    narrator says "You found adventure!"\nelse\n    narrator says "You stayed safe at school."\nend'},
+      ]},
     { icon:'📦', title:'Variables & types',
       items:[
         {desc:'Store text, numbers, true/false',
@@ -167,6 +174,8 @@
          code:'add wall at x 200 y 250 width 80 height 40'},
         {desc:'Side view: y ground puts enemy/player on the floor',
          code:'spawn Lion as enemy at x 350 y ground'},
+        {desc:'Load a built-in map (walls + coins) — G7',
+         code:'load map "school_maze"\n# Maps: school_maze, playground_extended, jungle_run, arena_coins'},
       ]},
     { icon:'❤️', title:'Game — lives, timer & win',
       items:[
@@ -236,7 +245,7 @@
     },
 
     showPanel: function(name) {
-      ['guide', 'tutorial', 'missions', 'saved', 'gallery', 'sync'].forEach(function (p) {
+      ['guide', 'lessons', 'tutorial', 'missions', 'saved', 'gallery', 'teacher', 'sync'].forEach(function (p) {
         var el = document.getElementById('panel-' + p);
         if (el) el.classList.toggle('d-none', p !== name);
       });
@@ -248,6 +257,12 @@
       }
       if (name === 'gallery' && window.KiddyGallery && window.KiddyGallery.buildPanel) {
         window.KiddyGallery.buildPanel();
+      }
+      if (name === 'lessons' && window.KiddyCurriculum && window.KiddyCurriculum.buildPanel) {
+        window.KiddyCurriculum.buildPanel();
+      }
+      if (name === 'teacher' && window.KiddyTeacher && window.KiddyTeacher.buildPanel) {
+        window.KiddyTeacher.buildPanel();
       }
       if (name === 'tutorial' && window.KiddyTutorial && window.KiddyTutorial.buildPanel) {
         window.KiddyTutorial.buildPanel();

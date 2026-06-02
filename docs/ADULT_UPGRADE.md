@@ -8,7 +8,7 @@ This document describes how KiddyFun grows from a **kids-first** learning app in
 |-------|----------|------------|
 | **Kid** (default) | 6–12 | Missions, friendly errors, colorful UI, guided examples |
 | **Creator** | 13+, hobbyists | Dark theme, Map Helper, gallery remix, arcade templates |
-| **Studio** (planned) | Adults, teachers | Multi-file IDE, debugger, Python export, assignments |
+| **Studio** | Adults, teachers | Multi-file tabs, debugger, Python export, teacher CSV |
 
 **Principle:** One language, one runtime—experience layers on top.
 
@@ -30,20 +30,22 @@ This document describes how KiddyFun grows from a **kids-first** learning app in
 | Gallery + remix | `assets/js/gallery.js`, **Gallery** panel; `?p=id&remix=1` |
 | Game commands | `pause game`, `resume game`, `level starts at N`, `next level` |
 
-## Phase E2 — Game Pro (next)
+## Phase E2 — Game Pro ✅
 
-1. **G7 Tile maps** — `load map "level1.json"`, layers (bg / collision / objects)
-2. **G8 Combat** — projectiles, chase AI, health bars
-3. **G9 RPG** — inventory, keys/doors, quest goals
-4. **Story branching** — `choose` paths, chapter variables
-5. **Debugger** — pause frame, watch variables (Creator/Studio)
+| Status | Feature |
+|--------|---------|
+| ✅ | **G7 maps** — `load map "school_maze"` etc. (`game-maps.js`) |
+| ✅ | **Story choose** — `choose "A" or "B"`, `if choice equals "A"` |
+| ✅ | **G7b** — Map JSON editor in Creator menu (`game-map-editor.js`, `game-user-maps.js`) |
+| ✅ | **G8 combat** — health, damage, chase, hazards, bullets, inventory (`game-combat.js`) |
+| ✅ | **Debugger** — step frame, watch vars (`game-debugger.js`) |
 
-## Phase E3 — Creator Platform
+## Phase E3 — Creator Platform ✅ (v1)
 
-- Studio layout (tabs, multi-file, `import`)
-- Python / JSON export
-- Teacher dashboard + class assignments
-- Moderated gallery tags and reporting
+- **Studio** — `?mode=studio`, file tabs (`project-files.js`)
+- **Python export** — `python-export.js`, Studio navbar 🐍
+- **Teacher** — class code + progress CSV (`teacher-panel.js`)
+- Moderated gallery tags — planned (E4)
 
 ## Phase E4 — Scale
 

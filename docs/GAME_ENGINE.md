@@ -102,6 +102,25 @@ Or open the app with `?gameDebug=1` in the URL.
 
 Win / lose overlays appear automatically when goal is met, lives hit 0, or timer hits 0.
 
+## G7 — Load map
+
+Load a named layout (walls + coins). Use in game **setup** (before `every frame`):
+
+```text
+load map "school_maze"
+```
+
+Built-in maps (`assets/js/game-maps.js`):
+
+| Map | View | Description |
+|-----|------|-------------|
+| `school_maze` | top | Border + inner walls, 5 coins |
+| `playground_extended` | side | Multi-platform course |
+| `jungle_run` | side | Trees + coins |
+| `arena_coins` | top | Open arena with obstacles |
+
+Tip: use `scene "school"` for background only (no `with walls`), then `load map "…"` for layout.
+
 ## Creator mode (Phase E1)
 
 - Toggle **Kid / Creator** in navbar, or open `?mode=creator`
