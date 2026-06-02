@@ -549,9 +549,8 @@
         '<div class="kf-syntax-header">' +
           '<div class="kf-syntax-header-title">🤖 AI Code Helper</div>' +
           '<div class="kf-syntax-header-desc">' +
-            'Copy the full language reference + prompt template, paste it into ' +
-            '<b>ChatGPT, Claude, Gemini</b>, etc., add your goal, and the AI will generate ' +
-            'a complete program in this language.' +
+            'Copy the full <b>story + game</b> language reference and paste into ' +
+            '<b>ChatGPT, Claude, Gemini</b>, add your goal, and get a complete kiddyFun program.' +
           '</div>' +
           '<button type="button" class="kf-syntax-copy-prompt">' +
             '<span class="kf-syntax-copy-prompt-icon">✨</span>' +
