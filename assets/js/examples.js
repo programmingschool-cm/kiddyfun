@@ -496,6 +496,45 @@ end
 `,
   },
   {
+    id   : 'coin_spawner',
+    title: '🪙 Custom Coin Layout',
+    desc : 'Spawn your own coins with spawn coin at x y (G5.5).',
+    code : `# Place coins yourself — top-down
+game "My Coins"
+game view top
+
+scene "school" with walls
+score starts at 0
+
+Mina is player
+
+spawn coin at x 120 y 120
+spawn coin at x 480 y 200
+spawn coin at x 300 y 300
+
+every frame
+    if left key is held
+        move Mina left by 4
+    end
+    if right key is held
+        move Mina right by 4
+    end
+    if up key is held
+        move Mina up by 4
+    end
+    if down key is held
+        move Mina down by 4
+    end
+end
+
+if Mina touches coin
+    add 10 points
+    play sound "success"
+    remove coin
+end
+`,
+  },
+  {
     id   : 'eid_2026',
     title: '🕌 Eid ul Adha 2026 — Eid Mubarak',
     desc : 'Mostak, Sagor, and Rabiul run with a cow and wish friends Eid Mubarak from Programming School.',

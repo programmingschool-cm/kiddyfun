@@ -22,7 +22,8 @@
     /* game mode */
     'game','player','when','pressed','held','arrow','key','keys',
     'space','every','frame','stop','move','jump','power','touches',
-    'touch','width','height','view','top','side','wall','coin','platform'
+    'touch','width','height','view','top','side','wall','coin','platform',
+    'spawn'
   ]);
 
   const TOKEN_TYPES = {

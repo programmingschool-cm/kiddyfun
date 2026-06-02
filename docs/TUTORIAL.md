@@ -975,6 +975,11 @@ end
 ### Step 5: Make your own level
 - Change scene (`school`, `jungle`, `playground`)
 - Add custom walls with `add wall at x ... y ... width ... height ...`
+- Add extra coins in setup:
+```text
+spawn coin at x 200 y 150
+spawn coin at x 450 y 280
+```
 
 ---
 
@@ -989,6 +994,9 @@ If your game is not running correctly, check in this order:
 5. **Collision format**: Use `if Rafi touches coin` exactly.
 6. **Block closing**: Every `if` / `when` / `every frame` ends with `end`.
 7. **Mobile controls**: Use the on-screen pad at bottom-right in Output panel.
+8. **Top-level movement**: `move …` and `if … key is held` must be **inside** `every frame`, not at the root.
+9. **Double points**: If coins add score too fast, put `if … touches coin` at the **top level** (same indent as `every frame`), not inside `every frame`.
+10. **Debug boxes**: In console run `KiddyGameRuntime.debug = true`, or add `?gameDebug=1` to the page URL, then Run again.
 
 Quick test snippet:
 ```text

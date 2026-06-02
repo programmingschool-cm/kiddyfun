@@ -36,6 +36,8 @@
 | Movement (game mode only) | `move Rafi left by 4` |
 | Jump (game mode only) | `Rafi jump with power 12` |
 | Collision (game mode only) | `if Rafi touches coin` |
+| Spawn coin (game mode only) | `spawn coin at x 200 y 150` |
+| Add wall (game mode only) | `add wall at x 200 y 250 width 80 height 40` |
 | Comment | `# note` |
 
 ---
@@ -78,9 +80,11 @@ end
 
 Game mode tips:
 - Use `game "..."` at the top of the file.
-- Use `if <key> is held` inside `every frame`.
-- Use `if <character> touches <target>` for collisions.
+- Use `if <key> is held` inside `every frame` (not alone at the top level).
+- Use `if <character> touches <target>` for collisions (top level or inside blocks).
+- Use `spawn coin at x … y …` to place extra coins in setup.
 - On mobile, use the on-screen touch pad in Output.
+- Debug: `KiddyGameRuntime.debug = true` in the browser console, or `?gameDebug=1` in the URL.
 
 ---
 

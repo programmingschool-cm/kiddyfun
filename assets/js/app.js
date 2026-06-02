@@ -36,6 +36,10 @@
     Runtime.init($id('ss-stage'), $id('ss-log'), $id('ss-vocab'), $id('ss-score'));
     if (GameRuntime) {
       GameRuntime.init($id('ss-stage'), $id('ss-log'), $id('ss-score'));
+      if (/[?&]gameDebug=1/i.test(location.search)) {
+        GameRuntime.debug = true;
+        console.log('[KiddyFun] Game debug hitboxes ON (?gameDebug=1)');
+      }
     }
 
     if (window.KiddyCloud && window.KiddyCloud.isConfigured()) {

@@ -20,6 +20,8 @@
       ],
     },
     jungle: {
+      refW: 600,
+      refH: 360,
       view: 'side',
       obstacles: [
         { id: 'tree', x: 250, y: 240, w: 50, h: 80, tag: 'wall', solid: true },

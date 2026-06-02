@@ -108,6 +108,7 @@
       if (val === 'add')      return this.parseAdd(lineNum);
       if (val === 'remove')   return this.parseRemoveFromList(lineNum);
       if (val === 'play')     return this.parsePlaySound(lineNum);
+      if (val === 'spawn')    return this.parseSpawn(lineNum);
       if (val === 'end')      { this.advance(); this.restOfLine(lineNum); return null; }
     }
 
@@ -409,10 +410,37 @@
     };
   };
 
+  Parser.prototype.parseSpawn = function (line) {
+    this.advance(); // spawn
+    var kindTok = this.advance();
+    if (!kindTok || kindTok.value !== 'coin') {
+      throw new ParseError('Expected: spawn coin at x 200 y 150', line);
+    }
+    if (!this.peek() || this.peek().value !== 'at') {
+      throw new ParseError('Expected "at" after spawn coin. Example: spawn coin at x 200 y 150', line);
+    }
+    this.advance();
+    if (!this.peek() || this.peek().value !== 'x') {
+      throw new ParseError('Expected x after at. Example: spawn coin at x 200 y 150', line);
+    }
+    this.advance();
+    var xExpr = this.parseExpressionFromHere(line);
+    if (!this.peek() || this.peek().value !== 'y') {
+      throw new ParseError('Expected y after x position', line);
+    }
+    this.advance();
+    var yExpr = this.parseExpressionFromHere(line);
+    this.restOfLine(line);
+    return { type: 'spawn_coin', xExpr: xExpr, yExpr: yExpr, line: line };
+  };
+
   Parser.prototype.parseAddObstacle = function (line) {
     this.advance();
     var tagTok = this.advance();
     var tag = tagTok ? tagTok.value : 'wall';
+    if (tag === 'coin') {
+      throw new ParseError('Use spawn coin at x 200 y 150 to place a collectible coin (not add coin).', line);
+    }
     if (!this.peek() || this.peek().value !== 'at') {
       throw new ParseError('Expected: add wall at x 200 y 300 width 80 height 40', line);
     }
@@ -795,6 +823,24 @@
     return result;
   }
 
+  var GAME_SETUP_INVALID = {
+    if_key_held: 'Put "if … key is held" inside an every frame block (not at the top level).\n✅ Example:\nevery frame\n    if left key is held\n        move Rafi left by 4\n    end\nend',
+    game_move: 'Put "move …" inside every frame or when/while blocks (not at the top level).\n✅ Use every frame … end for smooth movement.',
+    game_jump: 'Put "Rafi jump …" inside when space is pressed … end, not alone at the top level.',
+    if_cond: 'Story-style "if" conditions are not used in game mode yet. Use if answer is correct in story programs.',
+    if_answer: 'Quiz "if answer" does not work in game mode. Use story mode for quizzes.',
+  };
+
+  function validateGameSetup(setup) {
+    for (var i = 0; i < setup.length; i++) {
+      var n = setup[i];
+      var hint = GAME_SETUP_INVALID[n.type];
+      if (hint) {
+        throw new ParseError(hint, n.line || 1);
+      }
+    }
+  }
+
   function buildGameProgram(nodes) {
     var program = {
       mode: 'game',
@@ -835,6 +881,7 @@
       }
       program.setup.push(n);
     }
+    validateGameSetup(program.setup);
     return program;
   }
 

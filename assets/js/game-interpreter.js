@@ -171,20 +171,33 @@
     }
   };
 
+  GameInterpreter.prototype._touchStateId = function (node) {
+    return String(node.actor).toLowerCase() + ':' + String(node.target).toLowerCase() +
+      ':' + (node.line != null ? node.line : 0);
+  };
+
+  GameInterpreter.prototype._execIfTouch = function (node) {
+    var world = this.runtime.world;
+    if (!world) return;
+    var id = this._touchStateId(node);
+    var touching = world.isTouching(node.actor, node.target);
+    if (touching) {
+      if (!this._touchState[id]) {
+        this._touchState[id] = true;
+        this._execBlock(node.trueBranch || node.body || []);
+      }
+    } else {
+      this._touchState[id] = false;
+      if (node.falseBranch && node.falseBranch.length) {
+        this._execBlock(node.falseBranch);
+      }
+    }
+  };
+
   GameInterpreter.prototype._runTouchHandlers = function () {
     var self = this;
-    var world = this.runtime.world;
     (this.handlers.touch || []).forEach(function (h) {
-      var body = h.trueBranch || h.body || [];
-      if (world.isTouching(h.actor, h.target)) {
-        var id = h.actor + ':' + h.target;
-        if (!self._touchState[id]) {
-          self._touchState[id] = true;
-          self._execBlock(body);
-        }
-      } else {
-        self._touchState[h.actor + ':' + h.target] = false;
-      }
+      self._execIfTouch(h);
     });
   };
 
@@ -244,7 +257,10 @@
         if (window.KiddyAudio) KiddyAudio.playSound('success');
         return Promise.resolve();
       case 'spawn_coin':
-        R.spawnCoin(node.x, node.y);
+        R.spawnCoin(
+          this._evalNumber(node.xExpr),
+          this._evalNumber(node.yExpr)
+        );
         return Promise.resolve();
       case 'play_sound':
         if (window.KiddyAudio) KiddyAudio.playSound(node.name);
@@ -265,11 +281,9 @@
         this._execBlock(ok ? (node.trueBranch || []) : (node.falseBranch || []));
         break;
       }
-      case 'if_touch': {
-        var body = node.trueBranch || [];
-        if (R.world.isTouching(node.actor, node.target)) this._execBlock(body);
+      case 'if_touch':
+        this._execIfTouch(node);
         break;
-      }
       case 'game_move':
         R.world.moveEntity(node.actor, node.direction, this._evalNumber(node.amountExpr));
         break;
@@ -290,9 +304,11 @@
         R.addScore(node.value);
         if (window.KiddyAudio) KiddyAudio.playSound('success');
         break;
-      case 'remove_entity':
-        R.world.removeEntity(node.target);
+      case 'remove_entity': {
+        var player = R.world && R.world.playerKey;
+        R.world.removeEntity(node.target, player);
         break;
+      }
       case 'game_stop':
         this.stop();
         if (this._resolveGame) this._resolveGame();

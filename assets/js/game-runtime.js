@@ -39,6 +39,7 @@
     score: 0,
     currentScene: 'default',
     _gameLayer: null,
+    _debugLayer: null,
     _debug: false,
 
     init: function (stageEl, logEl, scoreEl) {
@@ -62,6 +63,7 @@
       if (this.stage) {
         this.stage.innerHTML = '';
         this.stage.classList.remove('kf-game-mode');
+        this._debugLayer = null;
         this._buildStageShell();
       }
     },
@@ -162,11 +164,19 @@
     },
 
     spawnCoin: function (x, y) {
+      var refW = 600;
+      var refH = 360;
+      var bw = this.world.bounds.w || refW;
+      var bh = this.world.bounds.h || refH;
+      var refX = bw ? Math.round((x / bw) * refW) : x;
+      var refY = bh ? Math.round((y / bh) * refH) : y;
       var id = 'coin_' + Date.now() + '_' + Math.floor(Math.random() * 999);
       this.world.addEntity(id, {
         name: 'Coin',
         x: x,
         y: y,
+        refX: refX,
+        refY: refY,
         w: 28,
         h: 28,
         tags: ['coin'],
@@ -210,6 +220,11 @@
         e.el.style.left = Math.round(e.x) + 'px';
         e.el.style.top = Math.round(e.y) + 'px';
 
+        if (e.tags.indexOf('coin') >= 0 || e.key.indexOf('coin') === 0) {
+          e.el.style.width = e.w + 'px';
+          e.el.style.height = e.h + 'px';
+        }
+
         if (window.StageGraphics) {
           StageGraphics.setFacing(e.el, e.facing === 'left' ? 'left' : 'right');
           if (self.world.view === 'side') {
@@ -230,7 +245,28 @@
     },
 
     _renderDebug: function () {
-      /* optional hitbox overlay — toggled via KiddyGameRuntime.debug = true */
+      if (!this._gameLayer || !this.world) return;
+      if (!this._debugLayer) {
+        this._debugLayer = document.createElement('div');
+        this._debugLayer.className = 'kf-game-debug-layer';
+        this._debugLayer.setAttribute('aria-hidden', 'true');
+        this._gameLayer.appendChild(this._debugLayer);
+      }
+      var html = '';
+      var self = this;
+      Object.keys(this.world.entities).forEach(function (key) {
+        var e = self.world.entities[key];
+        if (!e.active) return;
+        html += '<div class="kf-debug-box kf-debug-entity" style="left:' + Math.round(e.x) +
+          'px;top:' + Math.round(e.y) + 'px;width:' + e.w + 'px;height:' + e.h +
+          'px" title="' + key + '"></div>';
+      });
+      this.world.obstacles.forEach(function (o) {
+        html += '<div class="kf-debug-box kf-debug-obstacle" style="left:' + o.x +
+          'px;top:' + o.y + 'px;width:' + o.w + 'px;height:' + o.h +
+          'px" title="' + (o.tag || o.id) + '"></div>';
+      });
+      this._debugLayer.innerHTML = html;
     },
 
     addScore: function (n) {

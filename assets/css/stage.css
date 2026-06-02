@@ -1311,6 +1311,28 @@
 .kf-game-btn-left { grid-column: 1; grid-row: 2; }
 .kf-game-btn-right { grid-column: 3; grid-row: 2; }
 .kf-game-btn-down { grid-column: 2; grid-row: 2; }
+.kf-game-debug-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 15;
+  pointer-events: none;
+}
+.kf-debug-box {
+  position: absolute;
+  box-sizing: border-box;
+  border: 2px dashed;
+  border-radius: 4px;
+  opacity: 0.85;
+}
+.kf-debug-entity {
+  border-color: #22c55e;
+  background: rgba(34, 197, 94, 0.12);
+}
+.kf-debug-obstacle {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.12);
+}
+
 .kf-game-btn-jump {
   grid-column: 3;
   grid-row: 1;

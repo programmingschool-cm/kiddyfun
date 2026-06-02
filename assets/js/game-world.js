@@ -17,8 +17,6 @@
     this.entities = {};
     this.obstacles = [];
     this.playerKey = null;
-    this.touchEvents = [];
-    this._touchCooldown = {};
     this._removed = [];
   }
 
@@ -85,21 +83,51 @@
     if (e) e.speed = speed;
   };
 
-  GameWorld.prototype.removeEntity = function (keyOrTag) {
+  GameWorld.prototype.removeEntity = function (keyOrTag, actorKey) {
     var k = String(keyOrTag).toLowerCase();
     var self = this;
+    var actor = actorKey ? this.getEntity(actorKey) : null;
+
+    if (k === 'coin' && actor && actor.active) {
+      var bestId = null;
+      var bestOverlap = 0;
+      Object.keys(this.entities).forEach(function (id) {
+        var ent = self.entities[id];
+        if (!ent.active) return;
+        if (ent.tags.indexOf('coin') < 0 && id.indexOf('coin') !== 0) return;
+        if (!self._aabb(actor, ent)) return;
+        var overlap = Math.min(actor.x + actor.w - ent.x, ent.x + ent.w - actor.x) *
+          Math.min(actor.y + actor.h - ent.y, ent.y + ent.h - actor.y);
+        if (overlap > bestOverlap) {
+          bestOverlap = overlap;
+          bestId = id;
+        }
+      });
+      if (bestId) {
+        this._deactivateEntity(bestId);
+        return;
+      }
+    }
+
     var keys = Object.keys(this.entities);
     for (var i = 0; i < keys.length; i++) {
       var id = keys[i];
       var ent = self.entities[id];
       if (!ent.active) continue;
       if (id === k || ent.tags.indexOf(k) >= 0) {
-        ent.active = false;
-        if (ent.el && ent.el.parentNode) ent.el.parentNode.removeChild(ent.el);
-        self._removed.push(id);
+        this._deactivateEntity(id);
         break;
       }
     }
+  };
+
+  GameWorld.prototype._deactivateEntity = function (id) {
+    var ent = this.entities[id];
+    if (!ent || !ent.active) return;
+    ent.active = false;
+    if (ent.el && ent.el.parentNode) ent.el.parentNode.removeChild(ent.el);
+    ent.el = null;
+    this._removed.push(id);
   };
 
   GameWorld.prototype.addObstacle = function (obs) {
@@ -243,7 +271,6 @@
       self._clampEntity(e);
     });
 
-    this._detectEntityTouches();
     this._purgeRemoved();
   };
 
@@ -280,45 +307,6 @@
     }
   };
 
-  GameWorld.prototype._detectEntityTouches = function () {
-    var self = this;
-    var keys = Object.keys(this.entities);
-    for (var i = 0; i < keys.length; i++) {
-      var a = this.entities[keys[i]];
-      if (!a.active) continue;
-
-      for (var j = 0; j < this.obstacles.length; j++) {
-        var o = this.obstacles[j];
-        if (this._aabb(a, o)) {
-          self._queueTouch(a.key, o.tag || o.id);
-        }
-      }
-
-      for (var k = i + 1; k < keys.length; k++) {
-        var b = this.entities[keys[k]];
-        if (!b.active) continue;
-        if (!this._aabb(a, b)) continue;
-        self._queueTouch(a.key, b.key);
-        b.tags.forEach(function (t) { self._queueTouch(a.key, t); });
-        a.tags.forEach(function (t) { self._queueTouch(b.key, t); });
-      }
-    }
-  };
-
-  GameWorld.prototype._queueTouch = function (actorKey, target) {
-    var id = actorKey + ':' + target;
-    var now = Date.now();
-    if (this._touchCooldown[id] && now - this._touchCooldown[id] < 400) return;
-    this._touchCooldown[id] = now;
-    this.touchEvents.push({ actor: actorKey, target: String(target).toLowerCase() });
-  };
-
-  GameWorld.prototype.drainTouchEvents = function () {
-    var ev = this.touchEvents.slice();
-    this.touchEvents = [];
-    return ev;
-  };
-
   GameWorld.prototype.isTouching = function (actorKey, target) {
     actorKey = String(actorKey).toLowerCase();
     target = String(target).toLowerCase();
@@ -353,8 +341,6 @@
     this.entities = {};
     this.obstacles = [];
     this.playerKey = null;
-    this.touchEvents = [];
-    this._touchCooldown = {};
     this._removed = [];
     this.view = 'side';
   };

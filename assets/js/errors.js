@@ -56,6 +56,15 @@
     { pattern: /Expression engine/i,
       title: '⚙️ Language module missing',
       tip: 'Refresh the page. Make sure expr.js loads before parser.js.' },
+    { pattern: /inside an every frame block/i,
+      title: '🎮 Game line in the wrong place!',
+      tip: 'Movement and "if key is held" must go inside every frame … end.\nSee TUTORIAL section 31 or Examples → Coin Collector.' },
+    { pattern: /spawn coin at/i,
+      title: '🪙 Use spawn for coins',
+      tip: '✅ spawn coin at x 200 y 150\n❌ add coin at …' },
+    { pattern: /Use spawn coin/i,
+      title: '🪙 Collectible coins use spawn',
+      tip: '✅ spawn coin at x 200 y 150' },
   ];
 
   function friendlyError(err) {

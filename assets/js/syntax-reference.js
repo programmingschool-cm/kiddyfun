@@ -257,6 +257,11 @@
           code: 'add wall at x 200 y 250 width 80 height 40',
         },
         {
+          title: 'Spawn a coin',
+          desc: 'Place a collectible in setup (before every frame). Use x and y in pixels.',
+          code: 'spawn coin at x 200 y 150',
+        },
+        {
           title: 'Ready-to-run mini game',
           desc: 'Copy one block and run. Good first project for new learners.',
           code: 'game "Starter"\nscene "playground" with walls\nscore starts at 0\nRafi is player\n\nwhen space is pressed\n    Rafi jump with power 12\nend\n\nevery frame\n    if left key is held\n        move Rafi left by 4\n    end\n    if right key is held\n        move Rafi right by 4\n    end\nend\n\nif Rafi touches coin\n    add 10 points\n    play sound "success"\n    remove coin\nend',

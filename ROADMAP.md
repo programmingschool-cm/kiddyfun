@@ -90,7 +90,8 @@ Real-time **Game mode** alongside existing **Story mode** (dual mode — story p
 - [x] G3: AABB collision — `if … touches`, `scene … with walls`, `add wall at`, `remove coin`
 - [x] G4: Examples + missions + syntax reference (Game mode group)
 - [x] G5: Top-down — `game view top`, 4-direction movement, Coin Collector example
-- [ ] G6 (future): Scrolling camera, enemy templates, tile editor, block mode mapping
+- [x] G5.5: Polish — touch edge detection everywhere, setup validation errors, `spawn coin at`, debug hitboxes, jungle scene scaling, smarter `remove coin`
+- [ ] G6 (future): Scrolling camera, enemy templates, tile editor, block mode mapping, lives/timer/win
 
 ---
 
