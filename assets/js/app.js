@@ -62,6 +62,14 @@
     if (window.KiddySpeechPractice && KiddySpeechPractice.init) KiddySpeechPractice.init();
     if (window.KiddyProjectFiles && KiddyProjectFiles.init) KiddyProjectFiles.init();
     if (window.KiddyGameDebugger && KiddyGameDebugger.buildPanel) KiddyGameDebugger.buildPanel();
+    if (window.KiddyBlocksMode && KiddyBlocksMode.init) KiddyBlocksMode.init();
+    if (window.KiddyLocale && KiddyLocale.init) KiddyLocale.init();
+    if (window.KiddyAvatarThemes && KiddyAvatarThemes.init) KiddyAvatarThemes.init();
+    if (window.KiddyWordOfDay && KiddyWordOfDay.showInMenu) KiddyWordOfDay.showInMenu();
+    if (window.KiddyBadgesGallery && KiddyBadgesGallery.buildPanel) KiddyBadgesGallery.buildPanel();
+    if (window.KiddyParentSummary && KiddyParentSummary.buildPanel) KiddyParentSummary.buildPanel();
+    if (window.KiddyPythonPanel && KiddyPythonPanel.buildPanel) KiddyPythonPanel.buildPanel();
+    if (window.KiddyAvatarThemes && KiddyAvatarThemes.buildPanel) KiddyAvatarThemes.buildPanel();
     UI.updateProgress();
     UI.showPanel('guide');
 
@@ -416,9 +424,14 @@
       if (pyBtn && window.KiddyPythonExport) {
         pyBtn.addEventListener('click', function () { KiddyPythonExport.exportPython(); });
       }
+      var shareBtn = $id('btn-share-link');
+      if (shareBtn && window.KiddyShareLink) shareBtn.addEventListener('click', KiddyShareLink.copyShareLink);
+      var hintBtn = $id('btn-hint-bot');
+      if (hintBtn && window.KiddyHintBot) hintBtn.addEventListener('click', KiddyHintBot.help);
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js').catch(function () { /* offline optional */ });
       }
+      if (window.KiddyTour && KiddyTour.maybeStart) KiddyTour.maybeStart();
     }
 
     function runProgram() {
@@ -441,7 +454,8 @@
       try {
         ast = Parser.parseProgram(code);
       } catch (err) {
-        UI.showErrors(Errors.renderError(Errors.friendlyError(err)));
+        var fe = Errors.friendlyError(err);
+        UI.showErrors(Errors.renderError(fe), fe.line);
         UI.setRunning(false);
         unlockMobileTab();
         if (window.KiddyAudio) KiddyAudio.playSound('wrong');
@@ -470,7 +484,8 @@
         interpreter.run(ast).then(function () {
           checkMissions(code);
         }).catch(function (err) {
-          UI.showErrors(Errors.renderError(Errors.friendlyError(err)));
+          var fe = Errors.friendlyError(err);
+        UI.showErrors(Errors.renderError(fe), fe.line);
         }).finally(function () {
           UI.setRunning(false);
           interpreter = null;
@@ -482,7 +497,8 @@
       interpreter.run(ast.nodes || ast).then(function () {
         checkMissions(code);
       }).catch(function (err) {
-        UI.showErrors(Errors.renderError(Errors.friendlyError(err)));
+        var fe = Errors.friendlyError(err);
+        UI.showErrors(Errors.renderError(fe), fe.line);
       }).finally(function () {
         UI.setRunning(false);
         interpreter = null;

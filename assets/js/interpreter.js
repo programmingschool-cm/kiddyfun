@@ -303,6 +303,13 @@
         return this._execNodes(branch, env);
       }
 
+      case 'if_choice_equals': {
+        var picked = env.get('choice');
+        var pv = picked && picked.value != null ? picked.value : '';
+        var branch = (pv === node.value) ? node.trueBranch : node.falseBranch;
+        return self._execNodes(branch, env);
+      }
+
       case 'if_cond':
         return this._evalAsync(node.condition, env, line).then(function (cv) {
           var br = E.isTruthy(cv) ? node.trueBranch : node.falseBranch;

@@ -31,11 +31,17 @@
       '<button type="button" class="btn btn-sm btn-primary" id="kf-map-save">💾 Save map</button>' +
       '<button type="button" class="btn btn-sm btn-outline-primary" id="kf-map-insert">Insert load line</button>' +
       '</div>' +
-      '<p class="small text-muted mt-2 mb-0" id="kf-map-status"></p>';
+      '<p class="small text-muted mt-2 mb-0" id="kf-map-status"></p>' +
+      '<div id="kf-tile-painter-host" class="mt-2"></div>';
 
     var jsonEl = document.getElementById('kf-map-json');
     if (jsonEl && !jsonEl.value) {
       jsonEl.value = JSON.stringify(defaultMap('top'), null, 2);
+    }
+
+    if (window.KiddyTilePainter && KiddyTilePainter.buildInto) {
+      var host = document.getElementById('kf-tile-painter-host');
+      if (host) KiddyTilePainter.buildInto(host);
     }
 
     if (!el._bound) {

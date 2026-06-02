@@ -6,6 +6,23 @@
 
   var SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
   var KEY_SPEED = 'kf_tts_speed';
+  var KEY_STATS = 'kf_speech_stats';
+
+  function todayKey() {
+    var d = new Date();
+    return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+  }
+
+  function recordAttempt(success) {
+    try {
+      var s = JSON.parse(localStorage.getItem(KEY_STATS) || '{}');
+      var t = todayKey();
+      if (s.today !== t) { s.today = t; s.attempts = 0; s.success = 0; }
+      s.attempts = (s.attempts || 0) + 1;
+      if (success) s.success = (s.success || 0) + 1;
+      localStorage.setItem(KEY_STATS, JSON.stringify(s));
+    } catch (e) { /* ignore */ }
+  }
 
   function getTtsRate() {
     try {
@@ -65,9 +82,11 @@
       listenOnce(function (heard) {
         var score = fuzzyMatch(expectedText, heard);
         if (score >= 0.6) {
+          recordAttempt(true);
           if (window.UI && UI.showToast) UI.showToast('✅ Great! You said: ' + heard);
           if (window.KiddyGamification) KiddyGamification.addXp(10);
         } else {
+          recordAttempt(false);
           if (window.UI && UI.showToast) UI.showToast('Try again — say: ' + expectedText);
         }
       });

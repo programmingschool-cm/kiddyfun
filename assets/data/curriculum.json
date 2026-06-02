@@ -5,45 +5,65 @@
       "title": "Hello & Scene",
       "lessons": [
         { "id": "L1-1", "title": "First scene", "goal": "Use scene and Rafi appears", "starter": "scene \"school\"\n\nRafi appears\nRafi says \"Hello!\"", "badge": "🌟 Scene Starter" },
-        { "id": "L1-2", "title": "Narrator", "goal": "Add narrator says", "starter": "scene \"school\"\nRafi appears\nRafi says \"Hi!\"\nnarrator says \"A new day begins.\"", "badge": "📖 Narrator" },
-        { "id": "L1-3", "title": "Two friends", "goal": "Two characters greet", "starter": "scene \"playground\"\nRafi appears\nMina appears\nRafi says \"Hi Mina!\"\nMina says \"Hi Rafi!\"", "badge": "👫 Friends" }
+        { "id": "L1-2", "title": "Narrator voice", "goal": "Add narrator says", "starter": "scene \"school\"\nRafi appears\nRafi says \"Hi!\"\nnarrator says \"A new day begins.\"", "badge": "📖 Narrator" },
+        { "id": "L1-3", "title": "Two friends", "goal": "Two characters greet", "starter": "scene \"playground\"\nRafi appears\nMina appears\nRafi says \"Hi Mina!\"\nMina says \"Hi Rafi!\"", "badge": "👫 Friends" },
+        { "id": "L1-4", "title": "Playground scene", "goal": "Try scene playground", "starter": "scene \"playground\"\nRafi appears\nRafi waves\nRafi says \"Let's play!\"", "badge": "🛝 Playground" },
+        { "id": "L1-5", "title": "Jungle scene", "goal": "Change to jungle", "starter": "scene \"jungle\"\nLion appears\nLion says \"Welcome to the jungle!\"", "badge": "🌿 Jungle" }
       ]
     },
     {
       "id": 2,
       "title": "Actions & Movement",
       "lessons": [
-        { "id": "L2-1", "title": "Wave & smile", "goal": "Use waves and smiles", "starter": "scene \"school\"\nRafi appears\nRafi waves\nRafi smiles", "badge": "👋 Wave" },
-        { "id": "L2-2", "title": "Move & jump", "goal": "Use moves and jumps", "starter": "scene \"playground\"\nRafi appears\nRafi jumps\nRafi moves right", "badge": "🏃 Move" }
+        { "id": "L2-1", "title": "Wave & smile", "goal": "waves and smiles", "starter": "scene \"school\"\nRafi appears\nRafi waves\nRafi smiles", "badge": "👋 Wave" },
+        { "id": "L2-2", "title": "Jump & run", "goal": "jumps and runs", "starter": "scene \"playground\"\nRafi appears\nRafi jumps\nRafi runs", "badge": "🏃 Run" },
+        { "id": "L2-3", "title": "Move left/right", "goal": "moves right and left", "starter": "scene \"school\"\nRafi appears\nRafi moves right\nwait 1 second\nRafi moves left", "badge": "↔️ Move" },
+        { "id": "L2-4", "title": "Wait & sound", "goal": "wait and play sound", "starter": "scene \"classroom\"\nTeacher appears\nTeacher says \"Listen!\"\nwait 1 second\nplay sound \"pop\"", "badge": "🔊 Sound" },
+        { "id": "L2-5", "title": "Hide & show", "goal": "hides and shows", "starter": "scene \"home\"\nCat appears\nCat hides\nwait 1 second\nCat shows", "badge": "🐱 Peek" }
       ]
     },
     {
       "id": 3,
       "title": "Quiz & Logic",
       "lessons": [
-        { "id": "L3-1", "title": "Ask a question", "goal": "Use ask and if answer", "starter": "scene \"classroom\"\nTeacher appears\nask \"What is 2 + 2?\" with answers \"3\", \"4\", \"5\"\nif answer equals \"4\"\n    Teacher says \"Correct!\"\nend", "badge": "❓ Quiz" }
+        { "id": "L3-1", "title": "Simple quiz", "goal": "ask with choices", "starter": "scene \"classroom\"\nTeacher appears\nask \"What is 2 + 2?\" with answers \"3\", \"4\", \"5\"\nif answer equals \"4\"\n    Teacher says \"Correct!\"\nend", "badge": "❓ Quiz" },
+        { "id": "L3-2", "title": "Wrong answer", "goal": "else branch", "starter": "scene \"school\"\nask \"Sky colour?\" with answers \"blue\", \"red\"\nif answer equals \"blue\"\n    Rafi says \"Yes!\"\nelse\n    Rafi says \"Try again!\"\nend", "badge": "🧠 Logic" },
+        { "id": "L3-3", "title": "Score + quiz", "goal": "add points on correct", "starter": "scene \"school\"\nscore starts at 0\nask \"1+1?\" with answers \"2\", \"3\"\nif answer equals \"2\"\n    add 10 points\n    Rafi says \"Great!\"\nend", "badge": "⭐ Quiz Score" },
+        { "id": "L3-4", "title": "Choose path", "goal": "choose and if choice", "starter": "scene \"school\"\nRafi appears\nchoose \"Forest\" or \"School\"\nif choice equals \"Forest\"\n    scene \"jungle\"\n    Rafi says \"Adventure!\"\nelse\n    Rafi says \"Safe at school!\"\nend", "badge": "🔀 Branch" },
+        { "id": "L3-5", "title": "Vocabulary", "goal": "show word", "starter": "scene \"classroom\"\nshow word \"brave\" means \"সাহসী\"\nRafi appears\nRafi says \"I am brave!\"", "badge": "📚 Vocab" }
       ]
     },
     {
       "id": 4,
       "title": "Loops",
       "lessons": [
-        { "id": "L4-1", "title": "Repeat", "goal": "repeat 3 times", "starter": "scene \"school\"\nRafi appears\nrepeat 3 times\n    Rafi waves\nend", "badge": "🔁 Loop" }
+        { "id": "L4-1", "title": "Repeat 3 times", "goal": "repeat block", "starter": "scene \"school\"\nRafi appears\nrepeat 3 times\n    Rafi waves\nend", "badge": "🔁 Loop" },
+        { "id": "L4-2", "title": "Repeat with says", "goal": "loop dialogue", "starter": "scene \"playground\"\nMina appears\nrepeat 2 times\n    Mina says \"Hello again!\"\n    wait 1 second\nend", "badge": "💬 Loop Talk" },
+        { "id": "L4-3", "title": "Counter variable", "goal": "set n and repeat while", "starter": "scene \"school\"\nset n to 0\nrepeat while n is less than 3\n    set n to n plus 1\n    narrator says n\nend", "badge": "🔢 Counter" },
+        { "id": "L4-4", "title": "List loop", "goal": "for each in list", "starter": "scene \"school\"\nset fruits to list \"apple\" and \"banana\"\nfor each fruit in fruits\n    narrator says fruit\nend", "badge": "📋 List" },
+        { "id": "L4-5", "title": "Function greet", "goal": "define and call", "starter": "scene \"school\"\ndefine greet\n    Rafi says \"Welcome!\"\nend\ncall greet\ncall greet", "badge": "⚙️ Function" }
       ]
     },
     {
       "id": 5,
       "title": "Score & Sound",
       "lessons": [
-        { "id": "L5-1", "title": "Points", "goal": "add points", "starter": "scene \"school\"\nscore starts at 0\nRafi appears\nadd 10 points", "badge": "⭐ Score" }
+        { "id": "L5-1", "title": "Points", "goal": "add points", "starter": "scene \"school\"\nscore starts at 0\nRafi appears\nadd 10 points\nRafi says \"I earned points!\"", "badge": "⭐ Score" },
+        { "id": "L5-2", "title": "Random dice", "goal": "random number", "starter": "scene \"playground\"\nset roll to random number from 1 to 6\nnarrator says roll", "badge": "🎲 Random" },
+        { "id": "L5-3", "title": "Variables math", "goal": "plus and minus", "starter": "scene \"school\"\nset a to 10 plus 5\nset b to 20 minus 8\nnarrator says a", "badge": "➕ Math" },
+        { "id": "L5-4", "title": "Join text", "goal": "joined with", "starter": "scene \"school\"\nset msg to \"Hello\" joined with \" world\"\nRafi appears\nRafi says msg", "badge": "🔗 Text" },
+        { "id": "L5-5", "title": "Ask user input", "goal": "ask user as variable", "starter": "scene \"school\"\nask user \"Your name?\" as playerName\nRafi appears\nRafi says playerName", "badge": "⌨️ Input" }
       ]
     },
     {
       "id": 6,
       "title": "Mini projects",
       "lessons": [
-        { "id": "L6-1", "title": "Restaurant story", "goal": "scene restaurant + dialogue", "starter": "scene \"restaurant\"\nRafi appears\nRafi says \"One juice please!\"", "badge": "🍽️ Project" },
-        { "id": "L6-2", "title": "First game", "goal": "game view top + player", "starter": "game \"My Game\"\ngame view top\nscene \"school\" with walls\nRafi is player", "badge": "🎮 Game Dev" }
+        { "id": "L6-1", "title": "Restaurant", "goal": "restaurant dialogue", "starter": "scene \"restaurant\"\nRafi appears\nRafi says \"One juice please!\"\nSeller appears\nSeller says \"Here you go!\"", "badge": "🍽️ Restaurant" },
+        { "id": "L6-2", "title": "Space story", "goal": "space scene", "starter": "scene \"space\"\nRobot appears\nRobot says \"Welcome to space!\"\nRobot flies", "badge": "🚀 Space" },
+        { "id": "L6-3", "title": "First game top", "goal": "game view top", "starter": "game \"Coin Walk\"\ngame view top\nscene \"school\" with walls\nRafi is player\nspawn coin at x 200 y 150", "badge": "🎮 Game 1" },
+        { "id": "L6-4", "title": "Game movement", "goal": "every frame keys", "starter": "game \"Move\"\ngame view top\nscene \"school\" with walls\nMina is player\nevery frame\n    if right key is held\n        move Mina right by 5\n    end\nend", "badge": "🕹️ Game 2" },
+        { "id": "L6-5", "title": "Collect coins", "goal": "touch coin + remove", "starter": "game \"Collector\"\ngame view top\nscene \"school\" with walls\nscore starts at 0\nRafi is player\nspawn coin at x 150 y 100\nevery frame\n    if right key is held\n        move Rafi right by 5\n    end\nend\nif Rafi touches coin\n    add 10 points\n    remove coin\nend", "badge": "🪙 Collector" }
       ]
     }
   ]

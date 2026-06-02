@@ -2668,3 +2668,79 @@ body.kf-mode-studio .kf-studio-tabs {
   background: var(--kf-card);
 }
 .kf-lesson-done { opacity: 0.85; border-color: var(--kf-primary); }
+.kf-lesson-locked { opacity: 0.55; }
+
+.kf-hl-line-error,
+.kf-ln-error {
+  background: rgba(239, 68, 68, 0.25) !important;
+  outline: 1px solid var(--kf-danger);
+}
+
+.kf-blocks-wrap {
+  overflow: auto;
+  padding: 8px;
+  background: var(--kf-editor-bg);
+  max-height: 100%;
+}
+.kf-blocks-cat-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--kf-text-muted);
+  margin: 8px 0 4px;
+}
+.kf-blocks-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.kf-block-chip {
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--kf-border);
+  background: var(--kf-card);
+  cursor: pointer;
+}
+.kf-block-chip:hover { border-color: var(--kf-primary); }
+
+.kf-tour-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  z-index: 9999;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 24px;
+}
+.kf-tour-card {
+  background: var(--kf-card);
+  border-radius: 16px;
+  padding: 16px 20px;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: var(--kf-shadow-lg);
+}
+
+.kf-badge-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--kf-border);
+}
+.kf-badge-locked { opacity: 0.5; }
+.kf-python-preview {
+  background: #0d1117;
+  color: #e6edf3;
+  padding: 12px;
+  border-radius: 8px;
+  max-height: 280px;
+  overflow: auto;
+}
+.kf-parent-summary {
+  background: var(--kf-bg);
+  padding: 10px;
+  border-radius: 8px;
+  white-space: pre-wrap;
+}

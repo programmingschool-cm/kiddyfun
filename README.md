@@ -1,22 +1,25 @@
-# KiddyFun Code v1.0
+# KiddyFun Code v1.2
 
-**A magically easy programming language for kids!**
+**A magically easy programming language for kids — stories, games, and spoken English!**
 
-KiddyFun Code allows kids to write simple, English-like code to create animated stories, conversations, quizzes, and vocabulary learning games right in the browser.
+KiddyFun Code lets learners write simple English-like code to create animated stories, keyboard games, quizzes, and vocabulary practice in the browser.
 
-It aims to teach basic logic, sequencing, commands, and loops while building confidence in reading, typing, and **speaking English**.
+> **Roadmap:** [ROADMAP.md](./ROADMAP.md) · **Architecture:** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 
-> **Product roadmap:** see [ROADMAP.md](./ROADMAP.md) for the step-by-step plan to grow this into a full kids coding + English speaking platform. Check off items there as you ship.
+## Features (v1.2)
 
-## Features
-- **No Backend, No Node.js, No Build step**: Pure HTML, CSS, Vanilla JS.
-- **Works completely offline**: Just open `index.html`.
-- **Kid-friendly Parser**: Recognizes simple sentences like `Rafi says "Hello!"`
-- **Helpful Errors**: Friendly, action-oriented error messages instead of technical jargon.
-- **Visual Engine**: Characters animate, scenes change, and speech bubbles appear dynamically.
-- **English voice (TTS)** and synthesized sound effects (no audio files to import)
-- **Built-in Missions & Examples**: Ready-to-load exercises to guide learning.
-- **State Persistence**: Offline-first `localStorage`; optional **Supabase** cloud sync (programs, missions, badges) — see [`docs/SUPABASE_GUIDE.md`](docs/SUPABASE_GUIDE.md) (full setup) or [`docs/BACKEND.md`](docs/BACKEND.md) (quick reference).
+- **Story + Game modes** — scenes, quiz, `choose` branching, arcade games (G6–G8)
+- **Kid / Creator / Studio** — Map editor, debugger, multi-file, Python export
+- **Blocks palette** — Text | Blocks toggle for ages 6–9
+- **30-lesson path** — Menu → Lessons with unlock progression
+- **12 missions** — incl. speaking practice mission
+- **Speech** — TTS, Repeat after me, speech stats
+- **Gamification** — XP, streak, badges gallery, theme unlocks
+- **Teacher & parent** — class code, CSV export, worksheet print, parent summary
+- **Bangla UI** — navbar 🇧🇩 toggles menu labels (code stays English)
+- **PWA** — installable shell + offline cache
+- **Tests** — `npm test` (parser + all examples)
+- **Cloud (optional)** — Supabase sync — [docs/SUPABASE_GUIDE.md](docs/SUPABASE_GUIDE.md)
 
 ## How to Run
 

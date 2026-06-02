@@ -1037,6 +1037,18 @@
       var falseBranch = this.parseElseBranch(line);
       return { type: 'if_answer', condition: c.value, trueBranch: trueBranch, falseBranch: falseBranch, line: line };
     }
+    if (this.peek() && this.peek().value === 'choice') {
+      this.advance();
+      if (!this.peek() || this.peek().value !== 'equals') {
+        throw new ParseError('Expected: if choice equals "…"', line);
+      }
+      this.advance();
+      var choiceStr = this.expectString(line, 'if choice equals "Go left"');
+      this.restOfLine(line);
+      var tChoice = this.parseBlock('if', line, true);
+      var fChoice = this.parseElseBranch(line);
+      return { type: 'if_choice_equals', value: choiceStr, trueBranch: tChoice, falseBranch: fChoice, line: line };
+    }
     if (this.peek() && this.peek().type === TT.IDENTIFIER) {
       var saveHas = this.pos;
       var actTok = this.advance();
@@ -1158,12 +1170,19 @@
 
     if (verb === 'is') {
       this.advance();
-      if (!this.peek() || this.peek().value !== 'player') {
-        throw new ParseError('Expected: ' + actor + ' is player', line);
+      if (!this.peek()) throw new ParseError('Expected: ' + actor + ' is player', line);
+      var role = this.peek().value;
+      if (role === 'player') {
+        this.advance();
+        this.restOfLine(line);
+        return { type: 'set_player', actor: actor, line: line };
       }
-      this.advance();
-      this.restOfLine(line);
-      return { type: 'set_player', actor: actor, line: line };
+      if (role === 'enemy') {
+        this.advance();
+        this.restOfLine(line);
+        return { type: 'spawn_enemy_inline', actor: actor, line: line };
+      }
+      throw new ParseError('Expected: ' + actor + ' is player or is enemy', line);
     }
     if (verb === 'chases') {
       this.advance();
@@ -1377,7 +1396,7 @@
       if (t === 'game_start' || t === 'game_view') return true;
       if (t === 'on_key_down' || t === 'on_key_held' || t === 'every_frame') return true;
       if (t === 'on_game_event' || t === 'lives_set' || t === 'timer_set' || t === 'goal_coins' || t === 'level_set' || t === 'health_set') return true;
-      if (t === 'spawn_enemy' || t === 'camera_follow' || t === 'load_map') return true;
+      if (t === 'spawn_enemy' || t === 'spawn_enemy_inline' || t === 'camera_follow' || t === 'load_map') return true;
     }
     return false;
   }

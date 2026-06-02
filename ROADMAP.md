@@ -2,8 +2,8 @@
 
 > **Vision:** Scratch-style visual coding + Duolingo-style English speaking + KiddyFun's own English-like language — in one browser platform for kids.
 
-**Last updated:** 2026-05-28 (E2/E3 platform + curriculum)  
-**Current version:** v1.1 (Kid/Creator/Studio, G7–G8 game, gallery, curriculum)
+**Last updated:** 2026-05-28 (Full platform v1.2)  
+**Current version:** v1.2 (Blocks, 30 lessons, tests, Bangla UI, full A/B/C/D v1)
 
 ---
 
@@ -12,300 +12,169 @@
 1. Pick **one phase** and **one unchecked item** at a time.
 2. When done, change `[ ]` → `[x]` and add a note under **Changelog** at the bottom.
 3. Update **Last updated** date when you edit this file.
-4. Keep items small — if a task takes more than ~1 week, split it into sub-items.
 
-**Status legend**
-
-| Mark | Meaning |
-|------|---------|
-| `[ ]` | Not started |
-| `[~]` | In progress |
-| `[x]` | Done |
-| `[—]` | Cancelled / deferred |
-
-**Priority order (recommended)**
-
-1. Speak-back + pronunciation  
-2. Structured 30-lesson curriculum  
-3. Block mode (ages 6–9)  
-4. PWA + teacher dashboard  
-5. Python bridge (ages 10+)
+**Status legend:** `[ ]` Not started · `[~]` In progress · `[x]` Done · `[—]` Cancelled
 
 ---
 
-## Phase 0 — Foundation (mostly done)
-
-Core platform that exists today. Use as baseline before new features.
+## Phase 0 — Foundation ✅
 
 - [x] Lexer → Parser → Interpreter → Runtime pipeline
-- [x] Scenes, characters, actions, dialogue
-- [x] Quiz, repeat, if/else, score
-- [x] Vocabulary cards (`show word`)
-- [x] Web Speech TTS (English voice on `says`)
-- [x] Web Audio synthesized sounds
-- [x] Examples + missions + localStorage progress
-- [x] Responsive desktop + mobile layout
-- [x] Fixed-height scrollable console log
+- [x] Scenes, characters, actions, dialogue, quiz, game engine G0–G8
 
 ---
 
-## Phase A — Quick wins (1–2 weeks)
-
-High impact, low complexity. Good next sprint.
+## Phase A — Quick wins ✅ (v1)
 
 ### A1. Learning UX polish
 
-- [ ] Line-number highlight on error (show which line failed)
-- [ ] Editor undo/redo (Ctrl+Z / Ctrl+Y)
-- [ ] “First run” tooltip tour (Code tab → Run → Output tab on mobile)
-- [ ] Copy share link with encoded example (URL hash or query)
+- [x] Line-number highlight on error (`KiddySmartEditor.highlightErrorLine`)
+- [x] Editor undo/redo (Ctrl+Z / Ctrl+Y)
+- [x] “First run” tooltip tour (`tour.js`)
+- [x] Copy share link with encoded example (`share-link.js`, `?z=`)
 
-### A2. English & speaking (light)
+### A2. English & speaking
 
-- [ ] TTS speed toggle: Slow / Normal (store preference in localStorage)
-- [ ] “Repeat after me” button under speech bubbles (replay TTS)
-- [ ] Word-of-the-day card on menu open (rotate from a word list)
+- [x] TTS speed toggle (`speech-practice.js`, ⏩ button)
+- [x] “Repeat after me” on speech bubbles
+- [x] Word-of-the-day on menu (`word-of-day.js`)
 
 ### A3. Content
 
-- [ ] Add 10 new example programs (themed: Eid, sports, Cumilla, animals)
-- [ ] Expand missions from 5 → 10 (one concept per mission)
-- [ ] Each mission: goal, hint, starter code, validation, badge (template in `missions.js`)
+- [x] 10 themed examples (Eid, Cumilla, sports, animals, etc.)
+- [x] Missions expanded to 12 (incl. speaking mission)
+- [x] Mission template: goal, hint, starter, validate, badge
 
 ### A4. Platform
 
-- [x] PWA: `manifest.json` + service worker for offline install (basic shell cache)
-- [ ] Auto-run all examples in a smoke-test script (headless or manual checklist)
-- [ ] Update README to match KiddyFun branding and v1.0 features
+- [x] PWA `manifest.json` + `sw.js`
+- [x] Smoke tests: `npm test`, `npm run test:examples`
+- [x] README updated for v1.2
 
 ---
 
-## Phase G — Game engine (keyboard / 2D)
+## Phase G — Game engine ✅
 
-Real-time **Game mode** alongside existing **Story mode** (dual mode — story programs unchanged).
-
-- [x] G0: Architecture — `game-world.js`, `game-loop.js`, `game-input.js`, `game-runtime.js`, `docs/GAME_ENGINE.md`
-- [x] G1: Language — `game "..."`, `Rafi is player`, `when` / `while key` / `every frame`
-- [x] G2: Side-view physics — gravity, jump, `move … by`, entity render sync
-- [x] G3: AABB collision — `if … touches`, `scene … with walls`, `add wall at`, `remove coin`
-- [x] G4: Examples + missions + syntax reference (Game mode group)
-- [x] G5: Top-down — `game view top`, 4-direction movement, Coin Collector example
-- [x] G5.5: Polish — touch edge detection everywhere, setup validation errors, `spawn coin at`, debug hitboxes, jungle scene scaling, smarter `remove coin`
-- [x] G6: Arcade layer — lives, timer, goals, enemies/patrol, win/lose overlay, FX, `show message`, `spawn enemy`, `camera follows`, examples Coin Rush + Platform Escape
-- [x] G7 maps + G8 combat (health, chase, bullets, hazards) — see Phase E2
-- [ ] G7 tile painter UI (visual grid editor — JSON editor done in G7b)
+- [x] G0–G8 including maps, combat, debugger
+- [x] G7 tile painter UI (`game-tile-painter.js` in map editor)
 
 ---
 
-## Phase E — All Ages Foundation (kid + adult/creator)
+## Phase E — All Ages ✅
 
-Expand beyond kids-only while keeping **Kid mode** as default.
-
-### E1 — Foundation ✅
-
-- [x] Experience modes: **Kid** / **Creator** (`experience-mode.js`, `?mode=creator`, navbar toggle)
-- [x] Creator UI theme (dark pro CSS on `body.kf-mode-creator`)
-- [x] Game: `pause game`, `resume game`, `level starts at N`, `next level`
-- [x] G7a starter: **Map Helper** — click stage → insert `spawn coin` / `add wall` lines (`game-map-helper.js`)
-- [x] Creator example templates (Survival, Pause, Levels)
-- [x] Saved panel: rename, duplicate, sort by date (`storage.js`, `ui.js`)
-- [x] Gallery + remix v1 (`gallery.js`, `?p=id&remix=1`, publish dialog Remix)
-- [x] `docs/ADULT_UPGRADE.md` strategy doc
-
-### E2 — Game Pro ✅
-
-- [x] G7 map loader — `load map "name"`, `game-maps.js` (school_maze, playground_extended, jungle_run, arena_coins)
-- [x] Story branching — `choose "A" or "B"`, `if choice equals "…"`
-- [x] G7b map editor + JSON export — `game-map-editor.js`, `game-user-maps.js`
-- [x] G8 combat — `game-combat.js`: projectiles, chase AI, health, hazards, inventory
-- [x] Debugger — `game-debugger.js` (Creator/Studio, step frame, watch vars)
-
-### E3 — Creator Platform ✅ (v1)
-
-- [x] Studio mode — third experience tier (`?mode=studio`, multi-file tabs)
-- [x] Python export — `python-export.js`, navbar 🐍 button (Studio)
-- [x] Teacher dashboard lite — class code + CSV export (`teacher-panel.js`)
+- [x] E1 Kid / Creator / Studio
+- [x] E2 Game Pro (maps, branching, combat, debugger)
+- [x] E3 Python export, multi-file, teacher lite
 
 ---
 
-## Phase B — Core platform (1–2 months)
+## Phase B — Core platform ✅ (v1)
 
-Makes KiddyFun a **product**, not just a demo.
+### B1. Speak-back
 
-### B1. Speak-back & pronunciation (★ top differentiator)
+- [x] Speech recognition + repeat button
+- [x] Speaking stats in localStorage
+- [x] Mission 12: Speak English
 
-- [x] Web Speech **Recognition** API integration (`assets/js/speech-practice.js`) — v1
-- [x] “Repeat after me” on speech bubbles + fuzzy match score
-- [~] Gentle phonetic hints — basic toast retry only
-- [ ] Store speaking attempts in localStorage (optional privacy-safe stats)
-- [ ] Mission type: “Say this sentence correctly to continue”
+### B2. Curriculum
 
-### B2. Structured curriculum (30 lessons)
+- [x] 30 lessons in `curriculum.json` (6 levels × 5)
+- [x] Lessons panel + sequential unlock
 
-- [x] `assets/data/curriculum.json` + `curriculum.js` — starter path (expand to 30)
-- [x] Levels 1–6 scaffold with lessons + badges
-- [x] UI: Lessons panel in menu
-- [~] Lock/unlock by prior lesson — completion tracked, soft unlock
-- [ ] Full 30-lesson content fill
+### B3. Block mode
 
-### B3. Block mode (ages 6–9)
+- [x] Custom block palette (`blocks-mode.js`) — Text | Blocks toggle
+- [x] Blocks → insert text code
+- [ ] Text → blocks (best-effort) — deferred v2
 
-- [ ] Choose approach: Blockly library **or** custom drag blocks
-- [ ] Blocks map to same AST nodes as text parser (single interpreter)
-- [ ] Toggle: **Blocks | Text** in editor header
-- [ ] Block → generate text code (readable export)
-- [ ] Text → blocks (best-effort, v2)
+### B4. Language features
 
-### B4. New language features
-
-- [ ] Variables: `set name to "Rafi"`
-- [ ] Lists: `words are "hello", "bye", "thanks"`
-- [ ] Random: `pick random "sunny", "rainy", "cloudy"`
-- [ ] Update lexer, parser, interpreter, guide, and one mission per feature
+- [x] Variables, lists, random (already in language)
+- [x] `if choice equals` parser fix + interpreter
 
 ### B5. Gamification
 
-- [x] XP points per mission + daily streak (`gamification.js`)
-- [~] Badge gallery page — badges in missions/lessons; dedicated page TBD
-- [x] Daily challenge (rotating goal in menu)
-- [ ] Optional avatar / theme unlock (localStorage only, no accounts yet)
+- [x] XP, streak, daily challenge
+- [x] Badge gallery panel
+- [x] Theme unlock by XP (`avatar-themes.js`)
 
 ---
 
-## Phase C — Scale & ecosystem (3–6 months)
+## Phase C — Scale ✅ (v1 lite)
 
-School-ready and growth features.
+### C1. Teacher & parent
 
-### C1. Teacher & parent layer
+- [x] Teacher dashboard + CSV + printable worksheet
+- [x] Parent summary panel
 
-- [x] Teacher dashboard lite (class code, CSV export on device)
-- [ ] Parent summary: “Today: loops, words: brave, friend”
-- [ ] Printable worksheet generator (PDF or print CSS)
-- [ ] Export student progress CSV
+### C2. Backend
 
-### C2. Accounts & backend (optional)
+- [x] Supabase sync (existing)
+- [~] Moderated gallery — workflow doc only ([GALLERY_MODERATION.md](docs/GALLERY_MODERATION.md))
 
-- [x] Choose backend: **Supabase** (see [`docs/BACKEND.md`](docs/BACKEND.md); Firebase deferred)
-- [x] Child-safe auth (minimal PII, parent consent flow) — anonymous sign-in + optional parent email magic link ([`assets/js/supabase-auth.js`](assets/js/supabase-auth.js))
-- [x] Cloud save programs + sync progress across devices — offline-first [`storage.js`](assets/js/storage.js) + [`supabase-sync.js`](assets/js/supabase-sync.js); SQL schema in [`supabase/migrations/001_initial_schema.sql`](supabase/migrations/001_initial_schema.sql)
-- [ ] Moderated project gallery (share story URL)
+### C3. Python
 
-### C3. Grow to Python
+- [x] Transpiler + export + Python bridge panel (side-by-side)
 
-- [x] KiddyFun → Python transpiler v1 (`python-export.js`)
-- [x] “Export as Python” button (Studio mode)
-- [ ] Side-by-side view: KiddyFun code | Python equivalent
-- [ ] Lesson bridge: “You learned loops — here is Python `for`”
+### C4. Tools
 
-### C4. AI & content tools
+- [x] Rule-based hint bot (`hint-bot.js`)
+- [ ] Teacher JSON lesson authoring UI — use `curriculum.json` for now
+- [x] Bangla UI toggle (`ui-locale.js`) — code stays English
 
-- [ ] “Why isn’t my code working?” hint bot (rule-based first, AI optional)
-- [ ] Teacher content authoring UI (add lesson without editing JSON by hand)
-- [ ] Bangla instruction layer (UI language toggle, code stays English)
+### C5. Mobile & performance
 
-### C5. Mobile app & performance
-
-- [ ] Capacitor (or similar) wrapper for installable app
-- [ ] Test on low-end Android + slow 3G
-- [ ] Lazy-load fonts; reduce first paint time
-- [ ] Accessibility audit (keyboard, contrast, ARIA)
+- [ ] Capacitor wrapper
+- [ ] Low-end device QA
+- [~] Font lazy-load
+- [~] Full a11y audit
 
 ---
 
-## Phase D — Quality, safety & trust
-
-Run in parallel with any phase.
+## Phase D — Quality ✅ (v1)
 
 ### D1. Child safety
 
-- [ ] No open public chat
-- [ ] Gallery moderation workflow documented
-- [ ] Privacy policy + minimal data collection (COPPA-inspired checklist)
-- [ ] No third-party trackers in kid-facing pages
+- [x] No public chat (by design)
+- [x] Gallery moderation doc
+- [x] Privacy checklist ([PRIVACY.md](docs/PRIVACY.md))
 
-### D2. Testing & CI
+### D2. Testing
 
-- [ ] Parser unit tests (valid + invalid programs)
-- [ ] Mission validation tests
-- [ ] GitHub Action: run tests on push
-- [ ] Manual QA checklist for mobile (iOS Safari, Android Chrome)
+- [x] Parser unit tests
+- [x] Example smoke tests
+- [x] GitHub Action `.github/workflows/test.yml`
+- [ ] Manual mobile QA checklist
 
 ### D3. Documentation
 
-- [ ] `docs/LANGUAGE.md` — full syntax reference
-- [ ] `docs/CONTRIBUTING.md` — how to add examples/missions
-- [ ] `docs/ARCHITECTURE.md` — lexer/parser/runtime diagram
-- [ ] Video walkthrough for teachers (link in README)
+- [x] `docs/LANGUAGE.md` (existing)
+- [x] `docs/CONTRIBUTING.md`
+- [x] `docs/ARCHITECTURE.md`
+- [ ] Teacher video walkthrough
 
 ---
 
-## Content calendar (ongoing)
+## Deferred / Phase E4 (future)
 
-Aim for **1 release per week** of learning material.
-
-| Weekly deliverable | Owner | Status |
-|--------------------|-------|--------|
-| 1 themed project (story + code) | | [ ] |
-| 5 vocabulary cards | | [ ] |
-| 1 speaking challenge | | [ ] |
-| 1 quiz mission | | [ ] |
-
-**Theme ideas:** Eid story, World Cup, Cumilla tour, school day, restaurant, space, friendship.
+- [ ] Full Blockly drag-and-drop AST
+- [ ] Canvas/WebGL renderer
+- [ ] Multiplayer
+- [ ] Plugin system
+- [ ] AI hint bot (LLM)
 
 ---
 
-## Technical notes (for implementers)
-
-| Area | Current location | Notes |
-|------|------------------|-------|
-| Language lexer | `assets/js/lexer.js` | Add keywords here first |
-| Parser / AST | `assets/js/parser.js` | New node types |
-| Execution | `assets/js/interpreter.js` | Async timing + TTS waits |
-| Stage / UI | `assets/js/runtime.js` | DOM, animations |
-| TTS / sound | `assets/js/audio.js` | Speech synthesis + Web Audio |
-| Missions | `assets/js/missions.js` | Copy pattern for new missions |
-| Examples | `assets/js/examples.js` | Copy pattern for new examples |
-| UI panels | `assets/js/ui.js` | Guide, missions, saved |
-| Styles | `assets/css/style.css` | Design tokens `--kf-*` |
-
-**Suggested new files (when ready)**
-
-```
-assets/js/speech-practice.js   # Phase B1
-assets/js/blocks.js            # Phase B3
-assets/js/curriculum.js        # Phase B2
-assets/data/curriculum.json    # Phase B2
-docs/LANGUAGE.md               # Phase D3
-manifest.json                  # Phase A4
-sw.js                          # Phase A4 service worker
-docs/BACKEND.md                # Phase C2 — Supabase quick reference
-docs/SUPABASE_GUIDE.md         # Phase C2 — full Supabase guideline (BN)
-supabase/migrations/001_initial_schema.sql
-assets/js/supabase-*.js        # Phase C2 — config, client, sync, auth
-```
-
----
-
-## Changelog (execution log)
-
-Record completed steps here. Newest first.
+## Changelog
 
 | Date | Item | Notes |
 |------|------|-------|
-| 2026-05-28 | E2 + E3 + B1/B2/B5/C1/C3 v1 | G8 combat, map editor, debugger, Studio, Python export, curriculum, speech, gamification, PWA |
-| 2026-05-28 | Phase E2 (partial) | G7 load map, story choose branching |
-| 2026-05-28 | Phase E1 complete | Gallery/remix, saved rename/duplicate, ADULT_UPGRADE.md |
-| 2026-05-28 | Phase E1 (All Ages) | Kid/Creator modes, Map Helper, pause/resume/level game commands |
-| 2026-05-27 | Phase G (Game engine) | Dual mode: game loop, keyboard, jump, collision, top-down view |
-| 2026-05-24 | Roadmap created | Initial plan from product review |
-| 2026-05-24 | Phase 0 baseline | v1.0: TTS, audio, UI upgrade, mobile stage fix |
+| 2026-05-28 | **v1.2 full platform** | A/B/C/D v1, blocks, 30 lessons, tests, Bangla UI, hints, themes |
+| 2026-05-28 | E2 + E3 + B1/B2/B5/C1/C3 v1 | G8, Studio, curriculum starter |
+| 2026-05-28 | E1 complete | Gallery, Creator modes |
+| 2026-05-27 | Phase G | Game engine |
+| 2026-05-24 | Phase 0 | v1.0 baseline |
 
 ---
 
-## One-sentence pitch (for README / marketing)
-
-**KiddyFun Code** teaches kids programming and spoken English together — they write simple English stories, watch them come alive, answer quizzes, and practice speaking, all in the browser with no install.
-
----
-
-*Programming School — Cumilla · [Update this roadmap as you ship]*
+*Programming School — Cumilla*

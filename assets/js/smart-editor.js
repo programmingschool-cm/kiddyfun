@@ -69,6 +69,11 @@
     dances: '💃', claps: '👏', scene: '🎬', wait: '⏸️',
   };
 
+  var undoStack = [];
+  var redoStack = [];
+  var MAX_UNDO = 80;
+  var lastSnap = '';
+
   var state = {
     editor: null,
     acList: null,
@@ -1272,7 +1277,76 @@
     notifyChange();
   }
 
+  function pushUndo() {
+    var ed = state.editor;
+    if (!ed) return;
+    var v = ed.value;
+    if (v === lastSnap) return;
+    undoStack.push(lastSnap);
+    if (undoStack.length > MAX_UNDO) undoStack.shift();
+    redoStack = [];
+    lastSnap = v;
+  }
+
+  function undo() {
+    if (!undoStack.length || !state.editor) return;
+    redoStack.push(state.editor.value);
+    state.editor.value = undoStack.pop();
+    lastSnap = state.editor.value;
+    notifyChange();
+  }
+
+  function redo() {
+    if (!redoStack.length || !state.editor) return;
+    undoStack.push(state.editor.value);
+    state.editor.value = redoStack.pop();
+    lastSnap = state.editor.value;
+    notifyChange();
+  }
+
+  function highlightErrorLine(lineNo) {
+    if (!lineNo || lineNo === '?' || !state.highlightEl) return;
+    var n = parseInt(lineNo, 10) - 1;
+    if (isNaN(n) || n < 0) return;
+    syncHighlight();
+    var rows = state.highlightEl.querySelectorAll('.kf-hl-line');
+    rows.forEach(function (r, i) {
+      r.classList.toggle('kf-hl-line-error', i === n);
+    });
+    if (state.lineNosEl) {
+      var ln = state.lineNosEl.children[n];
+      if (ln) {
+        ln.classList.add('kf-ln-error');
+        ln.scrollIntoView({ block: 'nearest' });
+      }
+    }
+    state.editor && state.editor.focus();
+  }
+
+  function clearErrorHighlight() {
+    if (!state.highlightEl) return;
+    state.highlightEl.querySelectorAll('.kf-hl-line-error').forEach(function (r) {
+      r.classList.remove('kf-hl-line-error');
+    });
+    if (state.lineNosEl) {
+      state.lineNosEl.querySelectorAll('.kf-ln-error').forEach(function (r) {
+        r.classList.remove('kf-ln-error');
+      });
+    }
+  }
+
   function onKeyDown(e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+      e.preventDefault();
+      undo();
+      return;
+    }
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+      e.preventDefault();
+      redo();
+      return;
+    }
+
     if (!e.ctrlKey && !e.metaKey && !e.altKey) {
       var typing = e.key.length === 1 || e.key === 'Backspace' || e.key === 'Delete';
       if (typing && e.key !== 'Enter') unlockAutocomplete();
@@ -1490,7 +1564,9 @@
     editor.setAttribute('autocorrect', 'off');
     editor.setAttribute('autocapitalize', 'off');
 
+    lastSnap = editor.value;
     editor.addEventListener('input', function () {
+      pushUndo();
       notifyChange();
     });
     editor.addEventListener('scroll', function () {
@@ -1549,5 +1625,9 @@
     expandForRun: expandForRun,
     foldBlockAt: foldBlockAt,
     unfoldBlockAt: unfoldBlockAt,
+    highlightErrorLine: highlightErrorLine,
+    clearErrorHighlight: clearErrorHighlight,
+    undo: undo,
+    redo: redo,
   };
 })();

@@ -397,6 +397,31 @@ end
       return /goal\s+is\s+collect\s+\d+\s+coins/.test(c) && /remove\s+coin/.test(c);
     },
   },
+
+  {
+    id    : 'speak_mission',
+    title : '🎤 Mission 12: Speak English',
+    emoji : '🎤',
+    goal  : 'Write a line to speak, then use Repeat after me on Run.',
+    hint  : 'Rafi says "Good morning!" — after Run, tap Repeat after me under the bubble.',
+    badge : '🎤 Speaker Badge',
+    requiredSyntax: ['says "..."'],
+    starterCode: `# Speaking mission
+scene "school"
+
+Rafi appears
+Rafi says "Good morning!"
+
+narrator says "After Run, tap Repeat after me and say the same sentence."
+`,
+    validate(code) {
+      const c = code.toLowerCase();
+      var hasSays = (c.match(/says\s+"/g) || []).length >= 1;
+      var stats = {};
+      try { stats = JSON.parse(localStorage.getItem('kf_speech_stats') || '{}'); } catch (e) { /* ignore */ }
+      return hasSays && (stats.success >= 1 || stats.attempts >= 1);
+    },
+  },
 ];
 
 window.SpeakMissions = MISSIONS;

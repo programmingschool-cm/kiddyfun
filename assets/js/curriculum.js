@@ -47,13 +47,15 @@
       html += '<p class="small text-muted">Complete lessons to unlock badges and XP.</p>';
       (cur.levels || []).forEach(function (lvl) {
         html += '<div class="kf-lesson-level mb-2"><div class="fw-bold small">Level ' + lvl.id + ': ' + lvl.title + '</div>';
-        (lvl.lessons || []).forEach(function (les) {
+        (lvl.lessons || []).forEach(function (les, li) {
           var done = isDone(les.id);
-          html += '<div class="kf-lesson-card' + (done ? ' kf-lesson-done' : '') + '" data-lesson="' + les.id + '">';
-          html += '<div class="d-flex justify-content-between"><span>' + (done ? '✅ ' : '🔒 ') + les.title + '</span>';
+          var prevId = li > 0 ? lvl.lessons[li - 1].id : (lvl.id > 1 ? null : null);
+          var unlocked = li === 0 || !prevId || isDone(prevId) || isDone(les.id);
+          html += '<div class="kf-lesson-card' + (done ? ' kf-lesson-done' : '') + (!unlocked ? ' kf-lesson-locked' : '') + '" data-lesson="' + les.id + '">';
+          html += '<div class="d-flex justify-content-between"><span>' + (done ? '✅ ' : (unlocked ? '📖 ' : '🔒 ')) + les.title + '</span>';
           html += '<span class="small text-muted">' + (done ? les.badge : '') + '</span></div>';
           html += '<p class="small mb-1">' + les.goal + '</p>';
-          html += '<button type="button" class="btn btn-sm btn-outline-primary kf-lesson-start" data-starter="' + encodeURIComponent(les.starter) + '" data-id="' + les.id + '">Start</button>';
+          html += '<button type="button" class="btn btn-sm btn-outline-primary kf-lesson-start" data-starter="' + encodeURIComponent(les.starter) + '" data-id="' + les.id + '"' + (unlocked ? '' : ' disabled') + '>Start</button>';
           html += '</div>';
         });
         html += '</div>';

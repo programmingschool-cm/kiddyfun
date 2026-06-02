@@ -1,0 +1,25 @@
+/**
+ * Printable worksheet (Teacher panel)
+ */
+@media print {
+  body * { visibility: hidden; }
+  #kf-worksheet-print,
+  #kf-worksheet-print * { visibility: visible; }
+  #kf-worksheet-print {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 20px;
+    font-family: Georgia, serif;
+  }
+  .kf-no-print { display: none !important; }
+}
+
+.kf-worksheet-box {
+  border: 2px dashed var(--kf-border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 12px;
+  background: #fff;
+}

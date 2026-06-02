@@ -481,6 +481,9 @@
           this._evalSpawnY(node.yExpr)
         );
         break;
+      case 'spawn_enemy_inline':
+        R.spawnEnemy(node.actor, 200, R.world ? R.world.groundY : 200);
+        break;
       case 'enemy_patrol':
         R.setEnemyPatrol(
           node.actor,

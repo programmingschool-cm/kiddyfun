@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="assets/css/bootstrap.min.css" />
   <link rel="stylesheet" href="assets/css/style.css" />
   <link rel="stylesheet" href="assets/css/stage.css" />
+  <link rel="stylesheet" href="assets/css/worksheet.css" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -50,6 +51,15 @@
         </button>
         <button class="kf-btn-icon d-none d-md-flex" id="btn-tts-speed" title="TTS speed: Normal / Slow / Fast" aria-label="TTS speed">
           ⏩
+        </button>
+        <button class="btn btn-light kf-pill-btn border shadow-sm d-none d-md-inline-flex align-items-center gap-1" type="button" id="btn-share-link" title="Copy link to this code">
+          🔗 <span class="d-none d-lg-inline">Share</span>
+        </button>
+        <button class="btn btn-light kf-pill-btn border shadow-sm d-none d-md-inline-flex align-items-center gap-1" type="button" id="btn-hint-bot" title="Why isn't my code working?">
+          💡 <span class="d-none d-lg-inline">Hints</span>
+        </button>
+        <button class="btn btn-light kf-pill-btn border shadow-sm d-none d-md-inline-flex align-items-center gap-1" id="btn-ui-lang" title="UI language: English / বাংলা">
+          🇧🇩
         </button>
         <button class="btn btn-light kf-pill-btn border shadow-sm d-none d-md-inline-flex align-items-center gap-1" data-studio-only type="button" id="btn-export-python" title="Export code as Python">
           🐍 <span class="d-none d-lg-inline">Python</span>
@@ -95,7 +105,7 @@
     <div class="kf-progress-wrap" id="kf-progress-wrap">
       <div class="kf-progress-label">
         <span>🎯 Mission Progress</span>
-        <span id="kf-progress-text">0 / 5</span>
+        <span id="kf-progress-text">0 / 12</span>
       </div>
       <div class="kf-progress-bar"><div class="kf-progress-fill" id="kf-progress-fill" style="width: 0%"></div></div>
     </div>
@@ -117,6 +127,10 @@
         <button class="ss-nav-btn" data-panel="missions">🎯 Missions</button>
         <button class="ss-nav-btn" data-panel="saved">💾 Saved</button>
         <button class="ss-nav-btn" data-panel="gallery">🌐 Gallery</button>
+        <button class="ss-nav-btn" data-panel="badges">🏅 Badges</button>
+        <button class="ss-nav-btn" data-panel="parent">👨‍👩‍👧 Parent</button>
+        <button class="ss-nav-btn" data-panel="python">🐍 Python</button>
+        <button class="ss-nav-btn" data-panel="themes">🎨 Themes</button>
         <button class="ss-nav-btn" data-panel="teacher">👩‍🏫 Teacher</button>
         <button class="ss-nav-btn" data-panel="sync">☁️ Sync</button>
       </div>
@@ -125,6 +139,10 @@
         <div id="panel-lessons" class="d-none p-3"></div>
         <div id="panel-tutorial" class="d-none ss-tutorial-panel"></div>
         <div id="panel-missions" class="d-none"></div>
+        <div id="panel-badges" class="d-none p-3"></div>
+        <div id="panel-parent" class="d-none p-3"></div>
+        <div id="panel-python" class="d-none p-3"></div>
+        <div id="panel-themes" class="d-none p-3"></div>
         <div id="panel-teacher" class="d-none p-3"></div>
         <div id="panel-saved" class="d-none"></div>
         <div id="panel-gallery" class="d-none p-3"></div>
@@ -158,6 +176,10 @@
             <span class="fw-bold d-flex align-items-center gap-2 flex-wrap">
               <span class="text-warning">✏️</span> Your Code
               <span class="kf-smart-badge d-none d-sm-inline">Type or click blocks</span>
+              <span class="btn-group btn-group-sm kf-view-toggle" role="group">
+                <button type="button" class="btn btn-outline-secondary btn-sm active" id="btn-view-text">Text</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-view-blocks">Blocks</button>
+              </span>
             </span>
             <div class="d-flex gap-1">
               <button class="kf-toolbar-btn d-sm-none" id="btn-toggle-voice-mobile" title="Voice">🔊</button>
@@ -173,6 +195,7 @@
           <div class="kf-panel-body">
             <div class="kf-editor-wrap flex-grow-1">
               <div class="kf-line-numbers" id="ss-line-numbers" aria-hidden="true"></div>
+              <div id="kf-blocks-wrap" class="kf-blocks-wrap d-none flex-grow-1"></div>
               <div class="kf-editor-stack flex-grow-1" id="kf-editor-stack">
                 <div class="kf-editor-input-area position-relative flex-grow-1">
                   <div class="kf-editor-layer" id="kf-editor-layer">
@@ -332,6 +355,17 @@
   <script src="assets/js/teacher-panel.js"></script>
   <script src="assets/js/python-export.js"></script>
   <script src="assets/js/project-files.js"></script>
+  <script src="assets/js/blocks-mode.js"></script>
+  <script src="assets/js/tour.js"></script>
+  <script src="assets/js/share-link.js"></script>
+  <script src="assets/js/hint-bot.js"></script>
+  <script src="assets/js/word-of-day.js"></script>
+  <script src="assets/js/ui-locale.js"></script>
+  <script src="assets/js/badges-gallery.js"></script>
+  <script src="assets/js/parent-summary.js"></script>
+  <script src="assets/js/python-panel.js"></script>
+  <script src="assets/js/avatar-themes.js"></script>
+  <script src="assets/js/game-tile-painter.js"></script>
   <script src="assets/js/ui.js"></script>
   <script src="assets/js/app.js"></script>
 </html>

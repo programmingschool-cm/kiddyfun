@@ -245,7 +245,7 @@
     },
 
     showPanel: function(name) {
-      ['guide', 'lessons', 'tutorial', 'missions', 'saved', 'gallery', 'teacher', 'sync'].forEach(function (p) {
+      ['guide', 'lessons', 'tutorial', 'missions', 'saved', 'gallery', 'badges', 'parent', 'python', 'themes', 'teacher', 'sync'].forEach(function (p) {
         var el = document.getElementById('panel-' + p);
         if (el) el.classList.toggle('d-none', p !== name);
       });
@@ -263,6 +263,18 @@
       }
       if (name === 'teacher' && window.KiddyTeacher && window.KiddyTeacher.buildPanel) {
         window.KiddyTeacher.buildPanel();
+      }
+      if (name === 'badges' && window.KiddyBadgesGallery && window.KiddyBadgesGallery.buildPanel) {
+        window.KiddyBadgesGallery.buildPanel();
+      }
+      if (name === 'parent' && window.KiddyParentSummary && window.KiddyParentSummary.buildPanel) {
+        window.KiddyParentSummary.buildPanel();
+      }
+      if (name === 'python' && window.KiddyPythonPanel && window.KiddyPythonPanel.buildPanel) {
+        window.KiddyPythonPanel.buildPanel();
+      }
+      if (name === 'themes' && window.KiddyAvatarThemes && window.KiddyAvatarThemes.buildPanel) {
+        window.KiddyAvatarThemes.buildPanel();
       }
       if (name === 'tutorial' && window.KiddyTutorial && window.KiddyTutorial.buildPanel) {
         window.KiddyTutorial.buildPanel();
@@ -938,17 +950,23 @@
     },
 
     /* ── Errors ──────────────────────────────────────────────────────── */
-    showErrors: function(html) {
+    showErrors: function(html, line) {
       var panel = document.getElementById('ss-error-panel');
       if (!panel) return;
       panel.innerHTML = html;
       panel.classList.remove('d-none');
+      if (line && window.KiddySmartEditor && KiddySmartEditor.highlightErrorLine) {
+        KiddySmartEditor.highlightErrorLine(line);
+      }
     },
     clearErrors: function() {
       var panel = document.getElementById('ss-error-panel');
       if (!panel) return;
       panel.innerHTML = '';
       panel.classList.add('d-none');
+      if (window.KiddySmartEditor && KiddySmartEditor.clearErrorHighlight) {
+        KiddySmartEditor.clearErrorHighlight();
+      }
     },
 
     /* ── Run state ───────────────────────────────────────────────────── */

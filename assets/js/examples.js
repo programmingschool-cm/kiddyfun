@@ -1090,8 +1090,8 @@ show value of points
 
 # List & loop
 set items to list "A" and "B"
-for each item in items
-    show value of item
+for each thing in items
+    show value of thing
 end
 
 # Function
@@ -1471,6 +1471,181 @@ end
 when lives is 0
     show message "Game over"
 end
+`,
+  },
+
+  /* ── Themed — Bangladesh & fun ──────────────────────────────────────── */
+  {
+    id: 'theme_eid',
+    category: 'Themed — Bangladesh',
+    title: '🌙 Eid Greeting',
+    desc: 'Eid story with friends and narrator.',
+    code: `scene "home"
+
+Rafi appears
+Rafi says "Eid Mubarak, Mina!"
+
+Mina appears
+Mina smiles
+Mina says "Eid Mubarak! Let's celebrate!"
+
+narrator says "A happy Eid day with friends."
+play sound "success"
+`,
+  },
+  {
+    id: 'theme_cumilla',
+    category: 'Themed — Bangladesh',
+    title: '🏙️ Cumilla Tour',
+    desc: 'School trip story in Cumilla.',
+    code: `scene "school"
+
+Teacher appears
+Teacher says "Today we visit Cumilla city!"
+
+Rafi appears
+Rafi waves
+Rafi says "I love our Programming School trip!"
+
+narrator says "Learning and exploring together."
+`,
+  },
+  {
+    id: 'theme_cricket',
+    category: 'Themed — Sports',
+    title: '🏏 Cricket Match',
+    desc: 'Sports vocabulary and cheering.',
+    code: `scene "playground"
+
+Rafi appears
+Rafi says "We won the match!"
+
+Mina appears
+Mina cheers
+Mina says "Great batting, Rafi!"
+
+add 20 points
+play sound "cheer"
+`,
+  },
+  {
+    id: 'theme_animals_bd',
+    category: 'Themed — Animals',
+    title: '🐯 Bengal Animals',
+    desc: 'Jungle animals with actions.',
+    code: `scene "jungle"
+
+Lion appears
+Lion says "I am the king of the jungle!"
+
+Bird flies
+Bird says "Tweet! I can fly high!"
+
+Monkey appears
+Monkey jumps
+Monkey says "Bananas are yummy!"
+`,
+  },
+  {
+    id: 'theme_friendship',
+    category: 'Themed — Friendship',
+    title: '🤝 Best Friends',
+    desc: 'Sharing and helping friends.',
+    code: `scene "playground"
+
+Rafi appears
+Mina appears
+Rafi handshakes
+Rafi says "You are my best friend!"
+
+Mina smiles
+Mina says "Friends help each other."
+
+show word "friend" means "বন্ধু"
+`,
+  },
+  {
+    id: 'theme_restaurant_bd',
+    category: 'Themed — Food',
+    title: '🍛 Rice & Curry',
+    desc: 'Restaurant order in English.',
+    code: `scene "restaurant"
+
+Rafi appears
+Rafi says "One plate of rice and curry, please!"
+
+Seller appears
+Seller says "Coming right up!"
+
+Rafi says "Thank you!"
+play sound "success"
+`,
+  },
+  {
+    id: 'theme_rainy_day',
+    category: 'Themed — Weather',
+    title: '🌧️ Rainy School Day',
+    desc: 'Weather words and classroom.',
+    code: `scene "classroom"
+
+narrator says "It is a rainy day."
+
+Teacher appears
+Teacher says "Stay inside and read a story."
+
+Rafi appears
+Rafi says "I brought my umbrella!"
+`,
+  },
+  {
+    id: 'theme_space_kids',
+    category: 'Themed — Space',
+    title: '🚀 Kids in Space',
+    desc: 'Space scene with Robot.',
+    code: `scene "space"
+
+Robot appears
+Robot says "Welcome to planet KiddyFun!"
+
+Rafi appears
+Rafi flies
+Rafi says "Wow! Zero gravity!"
+
+play sound "pop"
+`,
+  },
+  {
+    id: 'theme_quiz_animals',
+    category: 'Themed — Quiz',
+    title: '🦁 Animal Quiz',
+    desc: 'Quiz about animals.',
+    code: `scene "jungle"
+
+ask "Which animal says roar?" with answers "Lion", "Bird", "Fish"
+if answer equals "Lion"
+    Lion appears
+    Lion says "Yes! Lions roar!"
+    add 10 points
+else
+    narrator says "Try again — think of the king!"
+end
+`,
+  },
+  {
+    id: 'theme_morning_routine',
+    category: 'Themed — Daily life',
+    title: '☀️ Morning Routine',
+    desc: 'Repeat loop for daily habits.',
+    code: `scene "home"
+
+Rafi appears
+repeat 3 times
+    Rafi says "Brush teeth!"
+    wait 1 second
+    Rafi waves
+end
+
+narrator says "Good habits every morning!"
 `,
   },
 ];

@@ -52,8 +52,14 @@
       '<p class="small text-muted">Share this class code with students. Export progress from this device.</p>' +
       '<div class="alert alert-secondary py-2 small mb-2">Class code: <strong id="kf-class-code">' + getClassCode() + '</strong></div>' +
       '<button type="button" class="btn btn-sm btn-outline-primary w-100 mb-2" id="kf-export-csv">📊 Export progress CSV</button>' +
-      '<p class="small text-muted mb-0">Parent summary: check XP and completed missions in the menu header.</p>';
+      '<button type="button" class="btn btn-sm btn-outline-secondary w-100 mb-2" id="kf-print-worksheet">🖨️ Print worksheet</button>' +
+      '<div id="kf-worksheet-print" class="kf-worksheet-box d-none"><h6>KiddyFun Worksheet</h6><p>1. scene "school" + Rafi appears</p><p>2. Rafi says "Hello!"</p><p>Class: <strong>' + getClassCode() + '</strong></p></div>' +
+      '<p class="small text-muted mb-0">Parent summary: menu → Parent panel.</p>';
     document.getElementById('kf-export-csv').addEventListener('click', exportProgressCsv);
+    document.getElementById('kf-print-worksheet').addEventListener('click', function () {
+      var w = document.getElementById('kf-worksheet-print');
+      if (w) { w.classList.remove('d-none'); window.print(); setTimeout(function () { w.classList.add('d-none'); }, 500); }
+    });
   }
 
   window.KiddyTeacher = { buildPanel: buildPanel, getClassCode: getClassCode };
