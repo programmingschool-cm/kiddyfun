@@ -38,8 +38,12 @@
     input: null,
     score: 0,
     currentScene: 'default',
+    gameState: null,
     _gameLayer: null,
     _debugLayer: null,
+    _overlayEl: null,
+    _statsHud: null,
+    _camX: 0,
     _debug: false,
 
     init: function (stageEl, logEl, scoreEl) {
@@ -49,6 +53,7 @@
       this.world = new window.KiddyGameWorld({ view: 'side' });
       this.loop = new window.KiddyGameLoop();
       this.input = new window.KiddyGameInput();
+      this.gameState = window.KiddyGameState ? new window.KiddyGameState() : null;
     },
 
     reset: function () {
@@ -58,7 +63,9 @@
         this.input.removeTouchPad();
       }
       this.score = 0;
+      this._camX = 0;
       this._updateScore();
+      if (this.gameState) this.gameState.reset();
       if (this.world) this.world.reset();
       if (this.stage) {
         this.stage.innerHTML = '';
@@ -76,9 +83,14 @@
         '<div class="kf-layer-ground kf-layer"></div>' +
         '<div class="kf-stage-floor"></div>' +
         '<div class="kf-layer-mid kf-layer"></div>' +
-        '<div class="kf-game-layer" id="kf-game-layer"></div>' +
-        '<div class="kf-game-hud" id="kf-game-hud"></div>';
+        '<div class="kf-game-world-wrap" id="kf-game-world-wrap">' +
+        '<div class="kf-game-layer" id="kf-game-layer"></div></div>' +
+        '<div class="kf-game-stats" id="kf-game-stats"></div>' +
+        '<div class="kf-game-hud" id="kf-game-hud"></div>' +
+        '<div class="kf-game-overlay" id="kf-game-overlay" hidden></div>';
       this._gameLayer = document.getElementById('kf-game-layer');
+      this._statsHud = document.getElementById('kf-game-stats');
+      this._overlayEl = document.getElementById('kf-game-overlay');
     },
 
     setScene: function (name, withWalls) {
@@ -208,6 +220,8 @@
 
     render: function () {
       if (!this.world) return;
+      this._updateCamera();
+      if (this.gameState) this.updateGameHud();
       var self = this;
       Object.keys(this.world.entities).forEach(function (key) {
         var e = self.world.entities[key];
@@ -269,9 +283,13 @@
       this._debugLayer.innerHTML = html;
     },
 
-    addScore: function (n) {
+    addScore: function (n, opts) {
+      opts = opts || {};
       this.score += n;
       this._updateScore();
+      if (!opts.silent && window.KiddyGameFx && this.stage) {
+        KiddyGameFx.scorePop(this.stage, '+' + n);
+      }
     },
 
     setScore: function (n) {
@@ -288,6 +306,82 @@
     showHud: function (text) {
       var hud = document.getElementById('kf-game-hud');
       if (hud) hud.textContent = text || '';
+    },
+
+    showMessage: function (text) {
+      if (this.gameState) this.gameState.banner = text || '';
+      this.updateGameHud();
+    },
+
+    updateGameHud: function () {
+      if (!this._statsHud || !this.gameState) return;
+      var gs = this.gameState;
+      var parts = [];
+      if (gs.lives != null) {
+        var hearts = '';
+        for (var i = 0; i < gs.lives; i++) hearts += '❤️';
+        parts.push(hearts || '💔');
+      }
+      if (gs.timer != null) parts.push('⏱️ ' + gs.timer);
+      if (gs.goalCoins != null) {
+        parts.push('🪙 ' + gs.collectedCoins + '/' + gs.goalCoins);
+      }
+      parts.push('Lv ' + gs.level);
+      if (gs.banner) parts.push(gs.banner);
+      this._statsHud.textContent = parts.join('  ');
+    },
+
+    showOverlay: function (kind, title, sub) {
+      if (!this._overlayEl) return;
+      this._overlayEl.hidden = false;
+      this._overlayEl.className = 'kf-game-overlay kf-game-overlay-' + (kind || 'win');
+      this._overlayEl.innerHTML =
+        '<div class="kf-game-overlay-card">' +
+        '<div class="kf-game-overlay-title">' + (title || '') + '</div>' +
+        (sub ? '<div class="kf-game-overlay-sub">' + sub + '</div>' : '') +
+        '</div>';
+    },
+
+    hideOverlay: function () {
+      if (this._overlayEl) {
+        this._overlayEl.hidden = true;
+        this._overlayEl.innerHTML = '';
+      }
+    },
+
+    spawnEnemy: function (name, x, y) {
+      if (window.KiddyGameEnemies) {
+        return KiddyGameEnemies.spawn(this, name, x, y, {});
+      }
+      return null;
+    },
+
+    setEnemyPatrol: function (name, minX, maxX) {
+      var e = this.world && this.world.getEntity(name);
+      if (!e) return;
+      e.patrolMin = minX;
+      e.patrolMax = maxX;
+      e.patrolDir = 1;
+      e.patrolSpeed = e.patrolSpeed || 2;
+    },
+
+    _updateCamera: function () {
+      var wrap = document.getElementById('kf-game-world-wrap');
+      if (!wrap || !this.world) return;
+      wrap.style.width = this.world.bounds.w + 'px';
+      wrap.style.height = this.world.bounds.h + 'px';
+      if (!this.gameState || !this.gameState.cameraFollow) {
+        wrap.style.transform = '';
+        return;
+      }
+      var pk = this.gameState.cameraFollow.toLowerCase();
+      var p = this.world.entities[pk];
+      if (!p || !p.active) return;
+      var stageW = this.stage ? this.stage.clientWidth : 600;
+      var target = p.x + p.w / 2 - stageW / 2;
+      var maxCam = Math.max(0, this.world.bounds.w - stageW);
+      this._camX = Math.max(0, Math.min(maxCam, target));
+      wrap.style.transform = 'translate(' + Math.round(-this._camX) + 'px, 0)';
     },
 
     _addLog: function (msg) {

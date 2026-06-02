@@ -96,6 +96,7 @@
         this._tone(660, 0.08, 0.12, 'sine', 0.12);
         break;
       case 'wrong':
+      case 'gameover':
         this._tone(220, 0, 0.3, 'sawtooth', 0.15);
         this._tone(180, 0.15, 0.35, 'sawtooth', 0.12);
         break;

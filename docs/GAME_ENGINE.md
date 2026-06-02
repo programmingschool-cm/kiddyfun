@@ -79,8 +79,28 @@ Or open the app with `?gameDebug=1` in the URL.
 
 `scene "playground" with walls` loads obstacles/coins from `KiddyGameScenes` (playground, jungle, school).
 
+## G6 — Arcade features
+
+| Syntax | Purpose |
+|--------|---------|
+| `lives start at 3` | Heart lives (game over at 0) |
+| `timer starts at 60` | Countdown seconds (top-left HUD) |
+| `goal is collect 5 coins` | Win when 5 coins collected |
+| `when all coins collected` | Run block when no coins left |
+| `when lives is 0` | Game over handler |
+| `when time is 0` | Time up handler |
+| `lose 1 life` | Lose a heart |
+| `show message "Level 2!"` | Banner on HUD |
+| `spawn Lion as enemy at x 400 y ground` | Enemy character |
+| `Lion patrols between x 200 and x 500` | Patrol AI |
+| `camera follows Rafi` | Side-scroll camera |
+| `restart game` | Restart current program |
+
+Win / lose overlays appear automatically when goal is met, lives hit 0, or timer hits 0.
+
 ## Limits (v1)
 
 - No TTS during active game loop (use log / HUD text)
 - Max ~10 entities recommended
 - Story and game do not mix in one program (use dual mode separately)
+- Tile editor and block mode → planned G7

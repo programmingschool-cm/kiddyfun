@@ -1,5 +1,5 @@
 /**
- * KiddyFun Game Interpreter — real-time game mode execution
+ * KiddyFun Game Interpreter — real-time game mode execution (G6)
  */
 (function () {
   'use strict';
@@ -17,6 +17,8 @@
     this.runtime = runtime;
     this._stopped = false;
     this._running = false;
+    this._program = null;
+    this._eventState = {};
     var Env = window.SpeakInterpreter && window.SpeakInterpreter.Environment;
     this.env = Env ? new Env(null) : { vars: {}, get: function () {}, set: function (_, v) { this.vars[_] = v; } };
     this.handlers = {
@@ -24,6 +26,7 @@
       keyHeld: [],
       everyFrame: [],
       touch: [],
+      gameEvent: [],
     };
     this._touchState = {};
   }
@@ -41,8 +44,13 @@
 
   GameInterpreter.prototype.run = function (program) {
     var self = this;
+    this._program = program;
     this._stopped = false;
+    this._eventState = {};
+    this._wonHandled = false;
+    this._lostHandled = false;
     this.runtime.reset();
+    if (this.runtime.gameState) this.runtime.gameState.reset();
     this.runtime.resizeWorld();
 
     if (program.view) this.runtime.setView(program.view);
@@ -52,6 +60,7 @@
       self._registerHandlers(program);
       self._spawnSceneEntities();
       self._layoutGameStage();
+      self.runtime.updateGameHud();
       return self._startLoop();
     });
   };
@@ -122,6 +131,7 @@
     this.handlers.keyHeld = program.onKeyHeld || [];
     this.handlers.everyFrame = program.everyFrame || [];
     this.handlers.touch = program.onTouch || [];
+    this.handlers.gameEvent = program.onGameEvent || [];
   };
 
   GameInterpreter.prototype._startLoop = function () {
@@ -130,17 +140,27 @@
     var input = R.input;
     var loop = R.loop;
     var world = R.world;
+    var gs = R.gameState;
 
     input.start();
     this._running = true;
+    R.hideOverlay();
 
     loop.onUpdate = function (dt) {
       if (self._stopped) return;
+      if (gs && !gs.isPlaying()) {
+        self._runGameEventHandlers(true);
+        return;
+      }
+
       self._runHandlers('keyHeld', input);
       self._runHandlers('keyDown', input, true);
       self._runEveryFrame();
+      if (window.KiddyGameEnemies) KiddyGameEnemies.update(world, dt);
       world.integrate(dt);
       self._runTouchHandlers();
+      if (gs) gs.tickTimer(dt);
+      self._runGameEventHandlers(false);
       input.resetFrame();
     };
 
@@ -154,7 +174,67 @@
     });
   };
 
+  GameInterpreter.prototype._gameEventActive = function (event) {
+    var gs = this.runtime.gameState;
+    var world = this.runtime.world;
+    if (!gs || !world) return false;
+    switch (event) {
+      case 'all_coins_collected':
+        return gs.checkAllCoinsGone(world);
+      case 'lives_zero':
+        return gs.lives != null && gs.lives <= 0;
+      case 'time_zero':
+        return gs.timer != null && gs.timer <= 0;
+      default:
+        return false;
+    }
+  };
+
+  GameInterpreter.prototype._runGameEventHandlers = function (force) {
+    var self = this;
+    var gs = this.runtime.gameState;
+    (this.handlers.gameEvent || []).forEach(function (h) {
+      var active = self._gameEventActive(h.event);
+      var id = h.event + ':' + (h.line || 0);
+      if (active) {
+        if (!self._eventState[id] || force) {
+          if (!self._eventState[id]) {
+            self._eventState[id] = true;
+            self._execBlock(h.body || []);
+          }
+        }
+      } else {
+        self._eventState[id] = false;
+      }
+    });
+    if (gs && gs.status === 'won') self._onGameWon();
+    if (gs && gs.status === 'lost' && !this._lostHandled) self._onGameLost();
+  };
+
+  GameInterpreter.prototype._onGameWon = function () {
+    if (this._wonHandled) return;
+    this._wonHandled = true;
+    var R = this.runtime;
+    R.showOverlay('win', '🏆 You Win!', 'Score: ' + R.score);
+    if (window.KiddyAudio) KiddyAudio.playSound('win');
+    if (window.KiddyGameFx && R.stage) KiddyGameFx.stageShake(R.stage, true);
+    this.stop();
+    if (this._resolveGame) this._resolveGame();
+  };
+
+  GameInterpreter.prototype._onGameLost = function () {
+    if (this._lostHandled) return;
+    this._lostHandled = true;
+    var R = this.runtime;
+    R.showOverlay('lose', '💔 Game Over', 'Try again!');
+    if (window.KiddyAudio) KiddyAudio.playSound('gameover');
+    if (window.KiddyGameFx && R.stage) KiddyGameFx.stageShake(R.stage, false);
+    this.stop();
+    if (this._resolveGame) this._resolveGame();
+  };
+
   GameInterpreter.prototype._runHandlers = function (kind, input, usePressed) {
+    if (!this.runtime.gameState || !this.runtime.gameState.isPlaying()) return;
     var list = this.handlers[kind] || [];
     for (var i = 0; i < list.length; i++) {
       var h = list[i];
@@ -165,6 +245,7 @@
   };
 
   GameInterpreter.prototype._runEveryFrame = function () {
+    if (!this.runtime.gameState || !this.runtime.gameState.isPlaying()) return;
     var list = this.handlers.everyFrame || [];
     for (var i = 0; i < list.length; i++) {
       this._execBlock(list[i].body || []);
@@ -204,40 +285,59 @@
   GameInterpreter.prototype._execBlock = function (nodes) {
     for (var i = 0; i < nodes.length; i++) {
       if (this._stopped) return;
+      if (this.runtime.gameState && !this.runtime.gameState.isPlaying()) return;
       this._execGameNode(nodes[i]);
     }
   };
 
   GameInterpreter.prototype._execSetupNode = function (node) {
+    return Promise.resolve(this._execGameNode(node, true));
+  };
+
+  GameInterpreter.prototype._evalSpawnY = function (yExpr) {
+    if (yExpr && yExpr.valueType === 'ground') {
+      return this.runtime.world ? this.runtime.world.groundY : 0;
+    }
+    if (yExpr && yExpr.type === 'literal' && yExpr.value === 'ground') {
+      return this.runtime.world ? this.runtime.world.groundY : 0;
+    }
+    return this._evalNumber(yExpr);
+  };
+
+  GameInterpreter.prototype._execGameNode = function (node, isSetup) {
     var R = this.runtime;
+    var gs = R.gameState;
     var E = Expr();
+    var input = R.input;
+  if (!node) return;
+
     switch (node.type) {
       case 'scene':
         R.setScene(node.value, node.withWalls);
         R.resizeWorld();
-        return Promise.resolve();
+        break;
       case 'game_view':
         R.setView(node.view);
         if (R.world) R.world.setView(node.view);
-        return Promise.resolve();
+        break;
       case 'character_appears':
         R.entityAppears(node.actor);
-        return Promise.resolve();
+        break;
       case 'set_player':
         R.entityAppears(node.actor);
         R.world.setPlayer(node.actor);
         if (R.world) R.world.layoutPlayer();
         R.render();
-        return Promise.resolve();
+        break;
       case 'set_entity_speed':
         R.world.setEntitySpeed(node.actor, this._evalNumber(node.speedExpr));
-        return Promise.resolve();
+        break;
       case 'set_var':
         if (E) {
           var v = E.evaluate(node.expr, this.env);
           this.env.set(node.name, v, node.line);
         }
-        return Promise.resolve();
+        break;
       case 'add_obstacle': {
         var obs = R.world.addObstacle({
           tag: node.tag,
@@ -247,34 +347,53 @@
           h: this._evalNumber(node.hExpr),
         });
         R.addObstacleVisual(obs);
-        return Promise.resolve();
+        break;
       }
       case 'score_set':
         R.setScore(node.value);
-        return Promise.resolve();
+        break;
+      case 'lives_set':
+        if (gs) gs.setLives(node.value);
+        R.updateGameHud();
+        break;
+      case 'timer_set':
+        if (gs) gs.setTimer(node.value);
+        R.updateGameHud();
+        break;
+      case 'goal_coins':
+        if (gs) gs.setGoalCoins(node.value);
+        R.updateGameHud();
+        break;
+      case 'camera_follow':
+        if (gs) gs.cameraFollow = node.actor;
+        break;
+      case 'spawn_coin':
+        R.spawnCoin(this._evalNumber(node.xExpr), this._evalSpawnY(node.yExpr));
+        break;
+      case 'spawn_enemy':
+        R.spawnEnemy(
+          node.name,
+          this._evalNumber(node.xExpr),
+          this._evalSpawnY(node.yExpr)
+        );
+        break;
+      case 'enemy_patrol':
+        R.setEnemyPatrol(
+          node.actor,
+          this._evalNumber(node.minExpr),
+          this._evalNumber(node.maxExpr)
+        );
+        break;
       case 'score_add':
         R.addScore(node.value);
         if (window.KiddyAudio) KiddyAudio.playSound('success');
-        return Promise.resolve();
-      case 'spawn_coin':
-        R.spawnCoin(
-          this._evalNumber(node.xExpr),
-          this._evalNumber(node.yExpr)
-        );
-        return Promise.resolve();
+        break;
       case 'play_sound':
         if (window.KiddyAudio) KiddyAudio.playSound(node.name);
-        return Promise.resolve();
-      default:
-        return Promise.resolve();
-    }
-  };
-
-  GameInterpreter.prototype._execGameNode = function (node) {
-    var R = this.runtime;
-    var E = Expr();
-    var input = R.input;
-    switch (node.type) {
+        break;
+      case 'show_message':
+        R.showMessage(node.text);
+        break;
       case 'if_key_held': {
         var key = input.matchKey(node.key);
         var ok = input.isHeld(key);
@@ -291,36 +410,52 @@
         R.world.jump(node.actor, node.power != null ? node.power : undefined);
         if (window.KiddyAudio) KiddyAudio.playSound('pop');
         break;
-      case 'set_var':
-        if (E) {
-          var val = E.evaluate(node.expr, this.env);
-          this.env.set(node.name, val, node.line);
-          var ak = node.name.toLowerCase();
-          var ent = R.world.getEntity(ak);
-          if (ent && val.type === 'number' && ak.indexOf('speed') >= 0) ent.speed = val.value;
+      case 'lose_life':
+        if (gs) {
+          gs.loseLife(node.amount || 1);
+          R.updateGameHud();
+          if (window.KiddyGameFx && R.stage) KiddyGameFx.stageShake(R.stage, false);
+          if (gs.lives <= 0) this._onGameLost();
         }
-        break;
-      case 'score_add':
-        R.addScore(node.value);
-        if (window.KiddyAudio) KiddyAudio.playSound('success');
         break;
       case 'remove_entity': {
         var player = R.world && R.world.playerKey;
-        R.world.removeEntity(node.target, player);
+        var target = node.target;
+        var actor = player && R.world.getEntity(player);
+        if (target === 'coin' && actor && window.KiddyGameFx && R._gameLayer) {
+          var cx = actor.x;
+          var cy = actor.y;
+          Object.keys(R.world.entities).forEach(function (id) {
+            var c = R.world.entities[id];
+            if (c && c.active && (c.tags.indexOf('coin') >= 0) && R.world._aabb(actor, c)) {
+              cx = c.x;
+              cy = c.y;
+            }
+          });
+          KiddyGameFx.coinBurst(R._gameLayer, cx, cy);
+        }
+        R.world.removeEntity(target, player);
+        if (target === 'coin' && gs) {
+          gs.addCollectedCoin();
+          R.updateGameHud();
+          if (gs.status === 'won') this._onGameWon();
+        }
         break;
       }
+      case 'restart_game':
+        if (this._program) {
+          var prog = this._program;
+          var self = this;
+          this.stop();
+          setTimeout(function () { self.run(prog); }, 50);
+        }
+        break;
       case 'game_stop':
         this.stop();
         if (this._resolveGame) this._resolveGame();
         break;
-      case 'play_sound':
-        if (window.KiddyAudio) KiddyAudio.playSound(node.name);
-        break;
       case 'say':
         R.log((node.actor === 'narrator' ? '📖 ' : '') + node.text);
-        break;
-      case 'character_appears':
-        R.entityAppears(node.actor);
         break;
       default:
         break;

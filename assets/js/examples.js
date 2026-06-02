@@ -496,6 +496,99 @@ end
 `,
   },
   {
+    id   : 'coin_rush',
+    title: '⏱️ Coin Rush (Timer)',
+    desc : 'Collect coins before time runs out! G6 arcade mode.',
+    code : `game "Coin Rush"
+game view top
+
+scene "school" with walls
+score starts at 0
+timer starts at 45
+goal is collect 5 coins
+
+Mina is player
+set Mina speed to 5
+
+spawn coin at x 120 y 100
+spawn coin at x 480 y 120
+spawn coin at x 300 y 280
+spawn coin at x 150 y 250
+spawn coin at x 450 y 300
+
+every frame
+    if left key is held
+        move Mina left by 5
+    end
+    if right key is held
+        move Mina right by 5
+    end
+    if up key is held
+        move Mina up by 5
+    end
+    if down key is held
+        move Mina down by 5
+    end
+end
+
+if Mina touches coin
+    add 10 points
+    play sound "cheer"
+    remove coin
+end
+
+when time is 0
+    show message "Time's up!"
+    play sound "gameover"
+end
+`,
+  },
+  {
+    id   : 'platform_escape',
+    title: '🦁 Platform Escape (Lives + Enemy)',
+    desc : 'Jump, avoid Lion, collect coins. Three lives!',
+    code : `game "Platform Escape"
+
+scene "playground" with walls
+score starts at 0
+lives start at 3
+goal is collect 3 coins
+
+Rafi is player
+
+spawn Lion as enemy at x 350 y ground
+Lion patrols between x 250 and x 500
+
+when space is pressed
+    Rafi jump with power 13
+end
+
+every frame
+    if left key is held
+        move Rafi left by 4
+    end
+    if right key is held
+        move Rafi right by 4
+    end
+end
+
+if Rafi touches coin
+    add 20 points
+    play sound "success"
+    remove coin
+end
+
+if Rafi touches enemy
+    lose 1 life
+    play sound "wrong"
+end
+
+when lives is 0
+    show message "Try again!"
+end
+`,
+  },
+  {
     id   : 'coin_spawner',
     title: '🪙 Custom Coin Layout',
     desc : 'Spawn your own coins with spawn coin at x y (G5.5).',

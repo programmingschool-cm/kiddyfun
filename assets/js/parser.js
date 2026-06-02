@@ -83,7 +83,13 @@
 
     if (type === TT.KEYWORD) {
       if (val === 'game')     return this.parseGame(lineNum);
-      if (val === 'when')     return this.parseWhenKey(lineNum);
+      if (val === 'when')     return this.parseWhen(lineNum);
+      if (val === 'lives')    return this.parseLives(lineNum);
+      if (val === 'timer')    return this.parseTimer(lineNum);
+      if (val === 'goal')     return this.parseGoal(lineNum);
+      if (val === 'restart')  return this.parseRestart(lineNum);
+      if (val === 'lose')     return this.parseLoseLife(lineNum);
+      if (val === 'camera')   return this.parseCameraFollow(lineNum);
       if (val === 'while')    return this.parseWhileKeyHeld(lineNum);
       if (val === 'every')    return this.parseEveryFrame(lineNum);
       if (val === 'move')     return this.parseGameMove(lineNum);
@@ -141,6 +147,16 @@
       if (e.name === 'ExprError') throw new ParseError(e.message, line);
       throw e;
     }
+  };
+
+  /** Read a numeric coordinate (game x/y positions are plain numbers). */
+  Parser.prototype.parseCoordNumber = function (line) {
+    var tok = this.peek();
+    if (tok && tok.type === TT.NUMBER) {
+      this.advance();
+      return { type: 'literal', valueType: 'number', value: tok.value };
+    }
+    throw new ParseError('Expected a number for position. Example: x 200 y 150', line);
   };
 
   Parser.prototype.parseConst = function (line) {
@@ -326,8 +342,50 @@
     return key || 'left';
   };
 
-  Parser.prototype.parseWhenKey = function (line) {
+  Parser.prototype.parseWhen = function (line) {
     this.advance();
+    if (this.peek() && this.peek().value === 'all') {
+      this.advance();
+      if (!this.peek() || this.peek().value !== 'coins') {
+        throw new ParseError('Expected: when all coins collected', line);
+      }
+      this.advance();
+      if (!this.peek() || this.peek().value !== 'collected') {
+        throw new ParseError('Expected: when all coins collected', line);
+      }
+      this.advance();
+      this.restOfLine(line);
+      var bodyCoins = this.parseBlock('when', line, false);
+      return { type: 'on_game_event', event: 'all_coins_collected', body: bodyCoins, line: line };
+    }
+    if (this.peek() && this.peek().value === 'lives') {
+      this.advance();
+      if (!this.peek() || this.peek().value !== 'is') {
+        throw new ParseError('Expected: when lives is 0', line);
+      }
+      this.advance();
+      var lz = this.advance();
+      if (!lz || lz.type !== TT.NUMBER || lz.value !== 0) {
+        throw new ParseError('Expected: when lives is 0', line);
+      }
+      this.restOfLine(line);
+      var bodyLz = this.parseBlock('when', line, false);
+      return { type: 'on_game_event', event: 'lives_zero', body: bodyLz, line: line };
+    }
+    if (this.peek() && this.peek().value === 'time') {
+      this.advance();
+      if (!this.peek() || this.peek().value !== 'is') {
+        throw new ParseError('Expected: when time is 0', line);
+      }
+      this.advance();
+      var tz = this.advance();
+      if (!tz || tz.type !== TT.NUMBER || tz.value !== 0) {
+        throw new ParseError('Expected: when time is 0', line);
+      }
+      this.restOfLine(line);
+      var bodyTz = this.parseBlock('when', line, false);
+      return { type: 'on_game_event', event: 'time_zero', body: bodyTz, line: line };
+    }
     var key = this.parseKeyName(line);
     if (!this.peek() || this.peek().value !== 'is') {
       throw new ParseError('Expected: when left arrow is pressed', line);
@@ -411,31 +469,171 @@
   };
 
   Parser.prototype.parseSpawn = function (line) {
-    this.advance(); // spawn
-    var kindTok = this.advance();
-    if (!kindTok || kindTok.value !== 'coin') {
-      throw new ParseError('Expected: spawn coin at x 200 y 150', line);
+    this.advance();
+    var first = this.advance();
+    if (!first) throw new ParseError('Expected: spawn coin at x 200 y 150  OR  spawn Lion as enemy at x 400 y 250', line);
+
+    if (first.value === 'coin') {
+      return this._parseSpawnAt(line, 'spawn_coin');
     }
+    if (first.value === 'enemy' && this.peek() && this.peek().type === TT.IDENTIFIER) {
+      var enemyName = this.advance().value;
+      return this._parseSpawnEnemyAt(line, enemyName);
+    }
+    if (first.type === TT.IDENTIFIER) {
+      if (this.peek() && this.peek().value === 'as') {
+        this.advance();
+        if (!this.peek() || this.peek().value !== 'enemy') {
+          throw new ParseError('Expected: spawn Lion as enemy at x 400 y 250', line);
+        }
+        this.advance();
+        return this._parseSpawnEnemyAt(line, first.value);
+      }
+      throw new ParseError('Expected: spawn coin … or spawn Lion as enemy at …', line);
+    }
+    throw new ParseError('Expected: spawn coin at x 200 y 150', line);
+  };
+
+  Parser.prototype._parseSpawnAt = function (line, nodeType) {
     if (!this.peek() || this.peek().value !== 'at') {
-      throw new ParseError('Expected "at" after spawn coin. Example: spawn coin at x 200 y 150', line);
+      throw new ParseError('Expected "at" after spawn. Example: spawn coin at x 200 y 150', line);
     }
     this.advance();
-    if (!this.peek() || this.peek().value !== 'x') {
-      throw new ParseError('Expected x after at. Example: spawn coin at x 200 y 150', line);
-    }
-    this.advance();
-    var xExpr = this.parseExpressionFromHere(line);
-    if (!this.peek() || this.peek().value !== 'y') {
-      throw new ParseError('Expected y after x position', line);
-    }
-    this.advance();
-    var yExpr = this.parseExpressionFromHere(line);
+    var coords = this._parseAtXY(line);
     this.restOfLine(line);
-    return { type: 'spawn_coin', xExpr: xExpr, yExpr: yExpr, line: line };
+    var node = { type: nodeType, xExpr: coords.xExpr, yExpr: coords.yExpr, line: line };
+    return node;
+  };
+
+  Parser.prototype._parseSpawnEnemyAt = function (line, name) {
+    var coords = this._parseSpawnEnemyCoords(line);
+    this.restOfLine(line);
+    return {
+      type: 'spawn_enemy',
+      name: name,
+      xExpr: coords.xExpr,
+      yExpr: coords.yExpr,
+      line: line,
+    };
+  };
+
+  Parser.prototype._parseSpawnEnemyCoords = function (line) {
+    if (!this.peek() || this.peek().value !== 'at') {
+      throw new ParseError('Expected "at" after enemy. Example: spawn Lion as enemy at x 400 y 250', line);
+    }
+    this.advance();
+    return this._parseAtXY(line, true);
+  };
+
+  Parser.prototype._parseAtXY = function (line, allowGround) {
+    if (!this.peek() || this.peek().value !== 'x') {
+      throw new ParseError('Expected x after at. Example: at x 200 y 150', line);
+    }
+    this.advance();
+    var xExpr = this.parseCoordNumber(line);
+    if (!this.peek() || this.peek().value !== 'y') {
+      throw new ParseError('Expected y after x. Example: at x 200 y 150', line);
+    }
+    this.advance();
+    var yExpr;
+    if (allowGround && this.peek() && this.peek().value === 'ground') {
+      this.advance();
+      yExpr = { type: 'literal', value: 'ground', valueType: 'ground' };
+    } else {
+      yExpr = this.parseCoordNumber(line);
+    }
+    return { xExpr: xExpr, yExpr: yExpr };
+  };
+
+  Parser.prototype.parseLives = function (line) {
+    this.advance();
+    if (!this.peek() || (this.peek().value !== 'start' && this.peek().value !== 'starts')) {
+      throw new ParseError('Expected: lives start at 3', line);
+    }
+    this.advance();
+    if (!this.peek() || this.peek().value !== 'at') {
+      throw new ParseError('Expected: lives start at 3', line);
+    }
+    this.advance();
+    var n = this.advance();
+    if (!n || n.type !== TT.NUMBER) throw new ParseError('Expected: lives start at 3', line);
+    this.restOfLine(line);
+    return { type: 'lives_set', value: n.value, line: line };
+  };
+
+  Parser.prototype.parseTimer = function (line) {
+    this.advance();
+    if (!this.peek() || (this.peek().value !== 'start' && this.peek().value !== 'starts')) {
+      throw new ParseError('Expected: timer starts at 60', line);
+    }
+    this.advance();
+    if (!this.peek() || this.peek().value !== 'at') {
+      throw new ParseError('Expected: timer starts at 60', line);
+    }
+    this.advance();
+    var n = this.advance();
+    if (!n || n.type !== TT.NUMBER) throw new ParseError('Expected: timer starts at 60', line);
+    this.restOfLine(line);
+    return { type: 'timer_set', value: n.value, line: line };
+  };
+
+  Parser.prototype.parseGoal = function (line) {
+    this.advance();
+    if (!this.peek() || this.peek().value !== 'is') {
+      throw new ParseError('Expected: goal is collect 5 coins', line);
+    }
+    this.advance();
+    if (!this.peek() || this.peek().value !== 'collect') {
+      throw new ParseError('Expected: goal is collect 5 coins', line);
+    }
+    this.advance();
+    var n = this.advance();
+    if (!n || n.type !== TT.NUMBER) throw new ParseError('Expected a number in goal is collect N coins', line);
+    if (!this.peek() || this.peek().value !== 'coins') {
+      throw new ParseError('Expected "coins" after number. Example: goal is collect 5 coins', line);
+    }
+    this.advance();
+    this.restOfLine(line);
+    return { type: 'goal_coins', value: n.value, line: line };
+  };
+
+  Parser.prototype.parseRestart = function (line) {
+    this.advance();
+    if (!this.peek() || this.peek().value !== 'game') {
+      throw new ParseError('Expected: restart game', line);
+    }
+    this.advance();
+    this.restOfLine(line);
+    return { type: 'restart_game', line: line };
+  };
+
+  Parser.prototype.parseLoseLife = function (line) {
+    this.advance();
+    var n = this.advance();
+    if (!n || n.type !== TT.NUMBER) throw new ParseError('Expected: lose 1 life', line);
+    if (!this.peek() || (this.peek().value !== 'life' && this.peek().value !== 'lives')) {
+      throw new ParseError('Expected: lose 1 life', line);
+    }
+    this.advance();
+    this.restOfLine(line);
+    return { type: 'lose_life', amount: n.value, line: line };
+  };
+
+  Parser.prototype.parseCameraFollow = function (line) {
+    this.advance();
+    if (!this.peek() || this.peek().value !== 'follows' && this.peek().value !== 'follow') {
+      throw new ParseError('Expected: camera follows Rafi', line);
+    }
+    this.advance();
+    var nameTok = this.advance();
+    if (!nameTok || nameTok.type !== TT.IDENTIFIER) {
+      throw new ParseError('Expected: camera follows Rafi', line);
+    }
+    this.restOfLine(line);
+    return { type: 'camera_follow', actor: nameTok.value, line: line };
   };
 
   Parser.prototype.parseAddObstacle = function (line) {
-    this.advance();
     var tagTok = this.advance();
     var tag = tagTok ? tagTok.value : 'wall';
     if (tag === 'coin') {
@@ -447,17 +645,17 @@
     this.advance();
     if (!this.peek() || this.peek().value !== 'x') throw new ParseError('Expected x after at', line);
     this.advance();
-    var xExpr = this.parseExpressionFromHere(line);
+    var xExpr = this.parseCoordNumber(line);
     if (!this.peek() || this.peek().value !== 'y') throw new ParseError('Expected y', line);
     this.advance();
-    var yExpr = this.parseExpressionFromHere(line);
+    var yExpr = this.parseCoordNumber(line);
     var w = 40, h = 40;
     if (this.peek() && this.peek().value === 'width') {
       this.advance();
-      var wExpr = this.parseExpressionFromHere(line);
+      var wExpr = this.parseCoordNumber(line);
       if (this.peek() && this.peek().value === 'height') {
         this.advance();
-        var hExpr = this.parseExpressionFromHere(line);
+        var hExpr = this.parseCoordNumber(line);
         h = hExpr;
       }
       w = wExpr;
@@ -508,6 +706,12 @@
       this.advance(); this.restOfLine(line);
       return { type: 'score_show', line: line };
     }
+    if (next && next.type === TT.KEYWORD && next.value === 'message') {
+      this.advance();
+      var msg = this.expectString(line, 'show message "Level 2!"');
+      this.restOfLine(line);
+      return { type: 'show_message', text: msg, line: line };
+    }
     if (next && next.type === TT.KEYWORD && next.value === 'word') {
       this.advance();
       var word    = this.expectString(line, 'show word "brave" means "সাহসী"');
@@ -517,7 +721,7 @@
       this.restOfLine(line);
       return { type: 'vocab', word: word, meaning: meaning, line: line };
     }
-    throw new ParseError('Unknown "show" command. Try: show word "hello" means "হ্যালো"', line);
+    throw new ParseError('Unknown "show" command. Try: show message "You win!"', line);
   };
 
   Parser.prototype.parseWait = function (line) {
@@ -722,6 +926,29 @@
       this.restOfLine(line);
       return { type: 'set_player', actor: actor, line: line };
     }
+    if (verb === 'patrols') {
+      this.advance();
+      if (!this.peek() || this.peek().value !== 'between') {
+        throw new ParseError('Expected: Lion patrols between x 100 and x 300', line);
+      }
+      this.advance();
+      if (!this.peek() || this.peek().value !== 'x') {
+        throw new ParseError('Expected x after between', line);
+      }
+      this.advance();
+      var minExpr = this.parseCoordNumber(line);
+      if (!this.peek() || this.peek().value !== 'and') {
+        throw new ParseError('Expected "and x …" after first x value', line);
+      }
+      this.advance();
+      if (!this.peek() || this.peek().value !== 'x') {
+        throw new ParseError('Expected second x after and', line);
+      }
+      this.advance();
+      var maxExpr = this.parseCoordNumber(line);
+      this.restOfLine(line);
+      return { type: 'enemy_patrol', actor: actor, minExpr: minExpr, maxExpr: maxExpr, line: line };
+    }
     if (verb === 'jump') {
       this.advance();
       var power = 12;
@@ -851,6 +1078,7 @@
       onKeyHeld: [],
       everyFrame: [],
       onTouch: [],
+      onGameEvent: [],
     };
     for (var i = 0; i < nodes.length; i++) {
       var n = nodes[i];
@@ -879,6 +1107,10 @@
         program.onTouch.push(n);
         continue;
       }
+      if (n.type === 'on_game_event') {
+        program.onGameEvent.push(n);
+        continue;
+      }
       program.setup.push(n);
     }
     validateGameSetup(program.setup);
@@ -887,9 +1119,11 @@
 
   function isGameProgram(nodes) {
     for (var i = 0; i < nodes.length; i++) {
-      if (nodes[i].type === 'game_start' || nodes[i].type === 'game_view') return true;
-      if (nodes[i].type === 'on_key_down' || nodes[i].type === 'on_key_held' ||
-          nodes[i].type === 'every_frame') return true;
+      var t = nodes[i].type;
+      if (t === 'game_start' || t === 'game_view') return true;
+      if (t === 'on_key_down' || t === 'on_key_held' || t === 'every_frame') return true;
+      if (t === 'on_game_event' || t === 'lives_set' || t === 'timer_set' || t === 'goal_coins') return true;
+      if (t === 'spawn_enemy' || t === 'camera_follow') return true;
     }
     return false;
   }

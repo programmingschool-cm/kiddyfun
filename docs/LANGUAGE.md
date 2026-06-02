@@ -37,6 +37,12 @@
 | Jump (game mode only) | `Rafi jump with power 12` |
 | Collision (game mode only) | `if Rafi touches coin` |
 | Spawn coin (game mode only) | `spawn coin at x 200 y 150` |
+| Lives / timer (game mode) | `lives start at 3` / `timer starts at 60` |
+| Win goal (game mode) | `goal is collect 5 coins` |
+| Enemy (game mode) | `spawn Lion as enemy at x 400 y ground` |
+| Game events (game mode) | `when time is 0` / `when lives is 0` |
+| Lose life | `lose 1 life` |
+| HUD message | `show message "You win!"` |
 | Add wall (game mode only) | `add wall at x 200 y 250 width 80 height 40` |
 | Comment | `# note` |
 

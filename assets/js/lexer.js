@@ -23,7 +23,8 @@
     'game','player','when','pressed','held','arrow','key','keys',
     'space','every','frame','stop','move','jump','power','touches',
     'touch','width','height','view','top','side','wall','coin','platform',
-    'spawn'
+    'spawn','lives','life','timer','goal','collect','collected','message','restart',
+    'enemy','patrols','between','camera','follows','follow','lose','ground'
   ]);
 
   const TOKEN_TYPES = {

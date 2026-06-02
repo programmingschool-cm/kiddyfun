@@ -262,6 +262,26 @@
           code: 'spawn coin at x 200 y 150',
         },
         {
+          title: 'Lives & timer',
+          desc: 'Arcade HUD: hearts and countdown. Game ends at 0 lives or 0 time.',
+          code: 'lives start at 3\ntimer starts at 60',
+        },
+        {
+          title: 'Win goal',
+          desc: 'Win automatically when enough coins are collected.',
+          code: 'goal is collect 5 coins',
+        },
+        {
+          title: 'Enemy patrol',
+          desc: 'Spawn an enemy and set patrol path (side or top view).',
+          code: 'spawn Lion as enemy at x 350 y ground\nLion patrols between x 200 and x 500',
+        },
+        {
+          title: 'Game events',
+          desc: 'Top-level handlers for time up, no lives, or all coins gone.',
+          code: 'when time is 0\n    show message "Time up!"\nend\n\nwhen lives is 0\n    show message "Game over"\nend',
+        },
+        {
           title: 'Ready-to-run mini game',
           desc: 'Copy one block and run. Good first project for new learners.',
           code: 'game "Starter"\nscene "playground" with walls\nscore starts at 0\nRafi is player\n\nwhen space is pressed\n    Rafi jump with power 12\nend\n\nevery frame\n    if left key is held\n        move Rafi left by 4\n    end\n    if right key is held\n        move Rafi right by 4\n    end\nend\n\nif Rafi touches coin\n    add 10 points\n    play sound "success"\n    remove coin\nend',

@@ -294,6 +294,109 @@ end
         /remove\s+coin/.test(c);
     },
   },
+
+  {
+    id    : 'game_timer_mission',
+    title : '⏱️ Mission 9: Beat the Clock',
+    emoji : '⏱️',
+    goal  : 'Add a countdown timer to your game.',
+    hint  : 'Use: timer starts at 30',
+    badge : '⏱️ Speed Runner Badge',
+    requiredSyntax: ['timer starts at'],
+    starterCode: `# Beat the Clock
+game "Rush"
+game view top
+
+scene "school" with walls
+timer starts at 30
+score starts at 0
+Mina is player
+
+every frame
+    if right key is held
+        move Mina right by 4
+    end
+    if left key is held
+        move Mina left by 4
+    end
+end
+
+when time is 0
+    show message "Time is up!"
+end
+`,
+    validate(code) {
+      return /timer\s+starts\s+at\s+\d+/i.test(code);
+    },
+  },
+
+  {
+    id    : 'game_lives_mission',
+    title : '❤️ Mission 10: Three Lives',
+    emoji : '❤️',
+    goal  : 'Give the player lives and lose one on danger.',
+    hint  : 'Use: lives start at 3  and  lose 1 life',
+    badge : '❤️ Survivor Badge',
+    requiredSyntax: ['lives start at', 'lose 1 life'],
+    starterCode: `# Three Lives
+game "Survive"
+
+scene "playground" with walls
+lives start at 3
+Rafi is player
+
+every frame
+    if right key is held
+        move Rafi right by 4
+    end
+end
+
+if Rafi touches wall
+    lose 1 life
+end
+`,
+    validate(code) {
+      const c = code.toLowerCase();
+      return /lives\s+start\s+at/.test(c) && /lose\s+1\s+life/.test(c);
+    },
+  },
+
+  {
+    id    : 'game_goal_mission',
+    title : '🏆 Mission 11: Win Goal',
+    emoji : '🏆',
+    goal  : 'Set a coin goal and collect them to win.',
+    hint  : 'Use: goal is collect 3 coins',
+    badge : '🏆 Champion Badge',
+    requiredSyntax: ['goal is collect', 'remove coin'],
+    starterCode: `# Win Goal
+game "Champion"
+game view top
+
+scene "school" with walls
+goal is collect 3 coins
+score starts at 0
+Mina is player
+
+every frame
+    if left key is held
+        move Mina left by 4
+    end
+    if right key is held
+        move Mina right by 4
+    end
+end
+
+if Mina touches coin
+    add 10 points
+    remove coin
+end
+`,
+    validate(code) {
+      const c = code.toLowerCase();
+      return /goal\s+is\s+collect\s+\d+\s+coins/.test(c) && /remove\s+coin/.test(c);
+    },
+  },
 ];
 
 window.SpeakMissions = MISSIONS;

@@ -91,7 +91,8 @@ Real-time **Game mode** alongside existing **Story mode** (dual mode — story p
 - [x] G4: Examples + missions + syntax reference (Game mode group)
 - [x] G5: Top-down — `game view top`, 4-direction movement, Coin Collector example
 - [x] G5.5: Polish — touch edge detection everywhere, setup validation errors, `spawn coin at`, debug hitboxes, jungle scene scaling, smarter `remove coin`
-- [ ] G6 (future): Scrolling camera, enemy templates, tile editor, block mode mapping, lives/timer/win
+- [x] G6: Arcade layer — lives, timer, goals, enemies/patrol, win/lose overlay, FX, `show message`, `spawn enemy`, `camera follows`, examples Coin Rush + Platform Escape
+- [ ] G7 (future): Tile editor, hazards, power-ups, block mode mapping
 
 ---
 
