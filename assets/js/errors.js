@@ -34,7 +34,7 @@
       tip: 'Check the Language Guide for supported commands.\nCommon commands: scene, appears, says, waves, smiles, jumps.' },
     { pattern: /not a known action/i,
       title: '🎭 That action is not supported yet!',
-      tip: 'Known actions: waves, smiles, jumps, flies, hides, shows, moves right, moves left.' },
+      tip: 'Known actions: waves, smiles, jumps, flies, runs, walks, dances, claps, hides, shows, bows, nods, cheers, handshakes, flaps, moves right, moves left.' },
     { pattern: /Expected a quoted string/i,
       title: '✏️ Missing quotation marks!',
       tip: 'Put the text inside double quotes.\n✅ Example: Rafi says "Hello!"' },

@@ -513,7 +513,15 @@
     function buildExampleDropdown() {
       var menu = $id('example-dropdown-menu');
       if (!menu) return;
+      var lastCat = null;
       window.SpeakExamples.forEach(function (ex) {
+        if (ex.category && ex.category !== lastCat) {
+          lastCat = ex.category;
+          var hdr = document.createElement('li');
+          hdr.innerHTML = '<h6 class="dropdown-header text-uppercase small fw-bold px-3 pt-2 pb-1">' +
+            escHtml(ex.category) + '</h6>';
+          menu.appendChild(hdr);
+        }
         var li = document.createElement('li');
         li.innerHTML =
           '<a class="dropdown-item py-2" href="#" data-ex="' + ex.id + '">' +

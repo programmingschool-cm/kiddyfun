@@ -978,14 +978,14 @@
     }
     if (verb === 'moves')   { this.advance(); var dirTok = this.advance(); var dir = dirTok ? dirTok.value : 'right'; this.restOfLine(line); return { type: 'action', actor: actor, action: 'moves_' + dir, line: line }; }
 
-    var simpleActions = ['waves','smiles','jumps','flies','hides','shows','flaps','runs','dances','bows','walks','handshakes','nods','cheers'];
+    var simpleActions = ['waves','smiles','jumps','flies','hides','shows','flaps','runs','dances','claps','bows','walks','handshakes','nods','cheers'];
     if (simpleActions.indexOf(verb) !== -1) {
       this.advance(); this.restOfLine(line);
       return { type: 'action', actor: actor, action: verb, line: line };
     }
 
     this.restOfLine(line);
-    throw new ParseError('"' + verb + '" is not a known action. Try: waves, smiles, jumps, flies, says', line);
+    throw new ParseError('"' + verb + '" is not a known action. Try: waves, smiles, jumps, flies, dances, claps, runs, walks, hides, shows, bows, nods, cheers, handshakes, flaps, says', line);
   };
 
   /* ── Block parser ──────────────────────────────────────────────────── */
