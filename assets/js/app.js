@@ -54,6 +54,7 @@
     UI.buildGuidePanel();
     UI.buildMissionsPanel();
     UI.buildSavedPanel();
+    if (window.KiddyGallery && KiddyGallery.buildPanel) KiddyGallery.buildPanel();
     UI.updateProgress();
     UI.showPanel('guide');
 
@@ -80,6 +81,7 @@
     buildExampleDropdown();
     buildSyntaxDropdown();
     initAudioToggles();
+    initExperienceMode();
 
     var editorEl = $id('ss-editor');
     if (window.KiddySmartEditor && window.KiddySmartEditor.init) {
@@ -371,11 +373,33 @@
           UI.showAlert(res.error, { title: 'Share link', icon: '🔗' });
           return;
         }
-        UI.loadSharedCode(res.code, res.title, params.autoRun);
+        UI.loadSharedCode(res.code, res.title, params.autoRun && !params.remix, {
+          remix: params.remix,
+          shareId: params.shareId,
+        });
       });
     }
 
+    function initExperienceMode() {
+      if (window.KiddyExperience) KiddyExperience.init();
+      var btn = $id('btn-experience-mode');
+      if (btn) {
+        btn.addEventListener('click', function () {
+          if (window.KiddyExperience) {
+            KiddyExperience.toggle();
+            var mode = KiddyExperience.getMode();
+            if (window.UI && UI.showToast) {
+              UI.showToast(mode === 'creator'
+                ? '🎨 Creator mode — Map tool & pro theme enabled'
+                : '🧒 Kid mode — simple learning UI');
+            }
+          }
+        });
+      }
+    }
+
     function runProgram() {
+      if (window.KiddyMapHelper && KiddyMapHelper.stop) KiddyMapHelper.stop();
       var code = editorEl.value.trim();
       if (window.KiddySmartEditor && window.KiddySmartEditor.expandForRun) {
         code = KiddySmartEditor.expandForRun(code).trim();
@@ -447,6 +471,7 @@
     }
 
     function resetStage() {
+      if (window.KiddyMapHelper && KiddyMapHelper.stop) KiddyMapHelper.stop();
       if (interpreter) interpreter.stop();
       interpreter = null;
       Runtime.reset();

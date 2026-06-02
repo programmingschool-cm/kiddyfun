@@ -24,7 +24,8 @@
     'space','every','frame','stop','move','jump','power','touches',
     'touch','width','height','view','top','side','wall','coin','platform',
     'spawn','lives','life','timer','goal','collect','collected','message','restart',
-    'enemy','patrols','between','camera','follows','follow','lose','ground'
+    'enemy','patrols','between','camera','follows','follow','lose','ground',
+    'pause','resume','level','next'
   ]);
 
   const TOKEN_TYPES = {

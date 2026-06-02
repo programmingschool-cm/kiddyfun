@@ -33,6 +33,15 @@
     this.goalCoins = Math.max(1, Math.round(n));
   };
 
+  GameState.prototype.setLevel = function (n) {
+    this.level = Math.max(1, Math.round(n));
+  };
+
+  GameState.prototype.nextLevel = function () {
+    this.level = (this.level || 1) + 1;
+    this.banner = 'Level ' + this.level;
+  };
+
   GameState.prototype.loseLife = function (n) {
     if (this.lives == null) return;
     this.lives = Math.max(0, this.lives - (n || 1));

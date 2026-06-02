@@ -260,7 +260,37 @@
         shareId: params.get(SHARE_PARAM),
         urlCode: params.get(URL_PARAM),
         autoRun: params.get('run') === '1' || params.has(SHARE_PARAM) || params.has(URL_PARAM),
+        remix: params.get('remix') === '1',
       };
+    },
+
+    listRecentPrograms: function (limit) {
+      limit = limit || 24;
+      return (async function () {
+        if (!isCloudConfigured()) {
+          return { ok: false, error: 'Cloud not configured', items: [] };
+        }
+        var client = await getClient();
+        if (!client) {
+          return { ok: false, error: 'Could not connect to cloud', items: [] };
+        }
+        try {
+          var res = await client.from('published_programs')
+            .select('share_id, title, created_at')
+            .order('created_at', { ascending: false })
+            .limit(limit);
+          if (res.error) {
+            return { ok: false, error: res.error.message || 'Gallery load failed', items: [] };
+          }
+          return { ok: true, items: res.data || [] };
+        } catch (e) {
+          return { ok: false, error: e.message || String(e), items: [] };
+        }
+      })();
+    },
+
+    getRemixUrl: function (shareId) {
+      return baseUrl() + '?' + SHARE_PARAM + '=' + encodeURIComponent(shareId) + '&remix=1';
     },
 
     copyToClipboard: function (text) {

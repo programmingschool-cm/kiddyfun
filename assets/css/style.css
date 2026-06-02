@@ -2474,3 +2474,133 @@ body.kf-mobile-mode.kf-tab-output-active .kf-panel-body.kf-waiting-input .kf-bot
 .kf-syntax-menu-portaled .kf-syntax-item-code {
   font-size: 0.82rem;
 }
+
+/* ── Experience modes (Phase E1 — All Ages) ───────────────────────────── */
+body.kf-mode-creator {
+  --kf-primary: #6366f1;
+  --kf-primary-dark: #4f46e5;
+  --kf-primary-light: #e0e7ff;
+  --kf-accent: #22d3ee;
+  --kf-bg: #0f172a;
+  --kf-bg-pattern: radial-gradient(circle at 15% 20%, rgba(99,102,241,0.12) 0%, transparent 45%),
+                   radial-gradient(circle at 85% 75%, rgba(34,211,238,0.08) 0%, transparent 50%);
+  --kf-card: #1e293b;
+  --kf-border: #334155;
+  --kf-text: #e2e8f0;
+  --kf-text-muted: #94a3b8;
+}
+
+body.kf-mode-creator .kf-navbar {
+  background: rgba(15, 23, 42, 0.94);
+  border-bottom-color: var(--kf-border);
+}
+
+body.kf-mode-creator .kf-brand-text {
+  background: linear-gradient(135deg, #e2e8f0 0%, var(--kf-accent) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+body.kf-mode-creator .kf-pill-btn,
+body.kf-mode-creator .kf-btn-icon {
+  background: var(--kf-card);
+  border-color: var(--kf-border);
+  color: var(--kf-text);
+}
+
+body.kf-mode-creator .kf-mode-btn-active {
+  border-color: var(--kf-primary) !important;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.35);
+}
+
+body.kf-mode-creator .ss-workspace-card,
+body.kf-mode-creator .ss-side-panel,
+body.kf-mode-creator .offcanvas {
+  background: var(--kf-card);
+  color: var(--kf-text);
+}
+
+body.kf-mode-creator .text-muted {
+  color: var(--kf-text-muted) !important;
+}
+
+/* Map Helper overlay */
+.kf-map-helper-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  cursor: crosshair;
+  background: rgba(99, 102, 241, 0.12);
+  border: 2px dashed rgba(99, 102, 241, 0.5);
+  border-radius: inherit;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 8px;
+  pointer-events: auto;
+}
+
+.kf-map-helper-hint {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(15, 23, 42, 0.85);
+  padding: 6px 12px;
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+#ss-stage.kf-map-helper-stage {
+  outline: 2px solid var(--kf-primary, #6366f1);
+  outline-offset: 2px;
+}
+
+.kf-creator-panel .btn.active {
+  background: var(--kf-primary, #6366f1);
+  color: #fff;
+  border-color: var(--kf-primary, #6366f1);
+}
+
+/* Saved programs — rename / duplicate */
+.ss-saved-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.ss-saved-date {
+  font-size: 0.7rem;
+  color: var(--kf-text-muted);
+}
+.ss-saved-card .ss-saved-actions {
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+/* Community gallery */
+.kf-gallery-card {
+  border: 1px solid var(--kf-border);
+  border-radius: var(--kf-radius-sm);
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  background: var(--kf-card);
+}
+.kf-gallery-card-title {
+  font-weight: 600;
+  font-size: 0.9rem;
+  line-height: 1.3;
+}
+.kf-gallery-card-meta {
+  font-size: 0.72rem;
+  color: var(--kf-text-muted);
+  margin: 4px 0 8px;
+}
+.kf-gallery-card-actions {
+  display: flex;
+  gap: 6px;
+}
+.kf-gallery-remix-btn {
+  border-color: var(--kf-primary) !important;
+  color: var(--kf-primary-dark, var(--kf-primary)) !important;
+}

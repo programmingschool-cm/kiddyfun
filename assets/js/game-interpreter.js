@@ -148,6 +148,7 @@
 
     loop.onUpdate = function (dt) {
       if (self._stopped) return;
+      if (loop.isPaused && loop.isPaused()) return;
       if (gs && !gs.isPlaying()) {
         self._runGameEventHandlers(true);
         return;
@@ -362,6 +363,25 @@
         break;
       case 'goal_coins':
         if (gs) gs.setGoalCoins(node.value);
+        R.updateGameHud();
+        break;
+      case 'level_set':
+        if (gs) gs.setLevel(node.value);
+        R.updateGameHud();
+        break;
+      case 'next_level':
+        if (gs) {
+          gs.nextLevel();
+          R.updateGameHud();
+        }
+        break;
+      case 'pause_game':
+        if (R.loop) R.loop.pause();
+        R.showMessage('Paused');
+        break;
+      case 'resume_game':
+        if (R.loop) R.loop.resume();
+        if (gs) gs.banner = '';
         R.updateGameHud();
         break;
       case 'camera_follow':

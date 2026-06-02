@@ -95,8 +95,18 @@ Or open the app with `?gameDebug=1` in the URL.
 | `Lion patrols between x 200 and x 500` | Patrol AI |
 | `camera follows Rafi` | Side-scroll camera |
 | `restart game` | Restart current program |
+| `pause game` | Freeze game loop (render continues) |
+| `resume game` | Continue after pause |
+| `level starts at N` | Set level number on HUD |
+| `next level` | Increment level + banner |
 
 Win / lose overlays appear automatically when goal is met, lives hit 0, or timer hits 0.
+
+## Creator mode (Phase E1)
+
+- Toggle **Kid / Creator** in navbar, or open `?mode=creator`
+- **Map Helper** (Creator only): navbar **Map** → click stage → inserts spawn/wall lines into editor
+- Dark pro theme when Creator mode is active
 
 ## Limits (v1)
 

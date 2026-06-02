@@ -87,6 +87,10 @@
       if (val === 'lives')    return this.parseLives(lineNum);
       if (val === 'timer')    return this.parseTimer(lineNum);
       if (val === 'goal')     return this.parseGoal(lineNum);
+      if (val === 'level')    return this.parseLevel(lineNum);
+      if (val === 'pause')    return this.parsePauseGame(lineNum);
+      if (val === 'resume')   return this.parseResumeGame(lineNum);
+      if (val === 'next')     return this.parseNextLevel(lineNum);
       if (val === 'restart')  return this.parseRestart(lineNum);
       if (val === 'lose')     return this.parseLoseLife(lineNum);
       if (val === 'camera')   return this.parseCameraFollow(lineNum);
@@ -595,6 +599,52 @@
     this.advance();
     this.restOfLine(line);
     return { type: 'goal_coins', value: n.value, line: line };
+  };
+
+  Parser.prototype.parseLevel = function (line) {
+    this.advance();
+    if (!this.peek() || (this.peek().value !== 'start' && this.peek().value !== 'starts')) {
+      throw new ParseError('Expected: level starts at 1', line);
+    }
+    this.advance();
+    if (!this.peek() || this.peek().value !== 'at') {
+      throw new ParseError('Expected: level starts at 1', line);
+    }
+    this.advance();
+    var n = this.advance();
+    if (!n || n.type !== TT.NUMBER) throw new ParseError('Expected: level starts at 1', line);
+    this.restOfLine(line);
+    return { type: 'level_set', value: n.value, line: line };
+  };
+
+  Parser.prototype.parseNextLevel = function (line) {
+    this.advance();
+    if (!this.peek() || this.peek().value !== 'level') {
+      throw new ParseError('Expected: next level', line);
+    }
+    this.advance();
+    this.restOfLine(line);
+    return { type: 'next_level', line: line };
+  };
+
+  Parser.prototype.parsePauseGame = function (line) {
+    this.advance();
+    if (!this.peek() || this.peek().value !== 'game') {
+      throw new ParseError('Expected: pause game', line);
+    }
+    this.advance();
+    this.restOfLine(line);
+    return { type: 'pause_game', line: line };
+  };
+
+  Parser.prototype.parseResumeGame = function (line) {
+    this.advance();
+    if (!this.peek() || this.peek().value !== 'game') {
+      throw new ParseError('Expected: resume game', line);
+    }
+    this.advance();
+    this.restOfLine(line);
+    return { type: 'resume_game', line: line };
   };
 
   Parser.prototype.parseRestart = function (line) {
@@ -1122,7 +1172,7 @@
       var t = nodes[i].type;
       if (t === 'game_start' || t === 'game_view') return true;
       if (t === 'on_key_down' || t === 'on_key_held' || t === 'every_frame') return true;
-      if (t === 'on_game_event' || t === 'lives_set' || t === 'timer_set' || t === 'goal_coins') return true;
+      if (t === 'on_game_event' || t === 'lives_set' || t === 'timer_set' || t === 'goal_coins' || t === 'level_set') return true;
       if (t === 'spawn_enemy' || t === 'camera_follow') return true;
     }
     return false;

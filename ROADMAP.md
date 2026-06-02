@@ -96,6 +96,36 @@ Real-time **Game mode** alongside existing **Story mode** (dual mode — story p
 
 ---
 
+## Phase E — All Ages Foundation (kid + adult/creator)
+
+Expand beyond kids-only while keeping **Kid mode** as default.
+
+### E1 — Foundation ✅
+
+- [x] Experience modes: **Kid** / **Creator** (`experience-mode.js`, `?mode=creator`, navbar toggle)
+- [x] Creator UI theme (dark pro CSS on `body.kf-mode-creator`)
+- [x] Game: `pause game`, `resume game`, `level starts at N`, `next level`
+- [x] G7a starter: **Map Helper** — click stage → insert `spawn coin` / `add wall` lines (`game-map-helper.js`)
+- [x] Creator example templates (Survival, Pause, Levels)
+- [x] Saved panel: rename, duplicate, sort by date (`storage.js`, `ui.js`)
+- [x] Gallery + remix v1 (`gallery.js`, `?p=id&remix=1`, publish dialog Remix)
+- [x] `docs/ADULT_UPGRADE.md` strategy doc
+
+### E2 — Game Pro (next)
+
+- [ ] G7 tile map loader + in-browser layer editor
+- [ ] G8 combat: projectiles, chase AI, health bars
+- [ ] Story branching (`choose` paths)
+- [ ] Debugger: pause frame, watch variables
+
+### E3 — Creator Platform
+
+- [ ] Studio mode (IDE layout, multi-file)
+- [ ] Python export
+- [ ] Teacher dashboard assignments
+
+---
+
 ## Phase B — Core platform (1–2 months)
 
 Makes KiddyFun a **product**, not just a demo.
@@ -264,6 +294,8 @@ Record completed steps here. Newest first.
 
 | Date | Item | Notes |
 |------|------|-------|
+| 2026-05-28 | Phase E1 complete | Gallery/remix, saved rename/duplicate, ADULT_UPGRADE.md |
+| 2026-05-28 | Phase E1 (All Ages) | Kid/Creator modes, Map Helper, pause/resume/level game commands |
 | 2026-05-27 | Phase G (Game engine) | Dual mode: game loop, keyboard, jump, collision, top-down view |
 | 2026-05-24 | Roadmap created | Initial plan from product review |
 | 2026-05-24 | Phase 0 baseline | v1.0: TTS, audio, UI upgrade, mobile stage fix |

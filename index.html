@@ -68,6 +68,12 @@
           </button>
           <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-3 mt-2 py-2 kf-syntax-menu" id="syntax-dropdown-menu"></ul>
         </div>
+        <button class="btn btn-light kf-pill-btn border shadow-sm d-none d-md-inline-flex align-items-center gap-1" data-creator-only type="button" id="btn-map-helper" title="Click stage to insert spawn coin or wall lines (Creator mode)">
+          🗺️ <span class="d-none d-lg-inline">Map</span>
+        </button>
+        <button class="btn btn-light kf-pill-btn border shadow-sm d-none d-sm-inline-flex align-items-center gap-1" type="button" id="btn-experience-mode" title="Switch Kid / Creator experience">
+          🧒 <span class="d-none d-sm-inline">Kid</span>
+        </button>
         <button class="btn btn-outline-danger kf-pill-btn d-none d-md-inline-block" id="btn-reset-progress" title="Reset all progress">Reset</button>
       </div>
     </div>
@@ -87,12 +93,21 @@
       <div class="kf-progress-bar"><div class="kf-progress-fill" id="kf-progress-fill" style="width: 0%"></div></div>
     </div>
     <p class="kf-cloud-status small text-muted px-3 py-2 mb-0 border-bottom" id="kf-cloud-status">☁️ Cloud sync</p>
+    <div class="kf-creator-panel px-3 py-3 border-bottom d-none" data-creator-only>
+      <div class="small fw-bold mb-2">🎨 Creator tools</div>
+      <p class="small text-muted mb-2 mb-0">Map Helper: pick a tool, press <strong>Map</strong> in the navbar, then click the stage to insert code.</p>
+      <div class="btn-group btn-group-sm w-100 mt-2" role="group">
+        <button type="button" class="btn btn-outline-secondary active" data-map-tool="coin">🪙 Coin</button>
+        <button type="button" class="btn btn-outline-secondary" data-map-tool="wall">🧱 Wall</button>
+      </div>
+    </div>
     <div class="offcanvas-body p-0 d-flex flex-column">
       <div class="ss-nav-panel">
         <button class="ss-nav-btn active" data-panel="guide">📖 Guide</button>
         <!-- <button class="ss-nav-btn" data-panel="tutorial">📘 Tutorial</button> -->
         <button class="ss-nav-btn" data-panel="missions">🎯 Missions</button>
         <button class="ss-nav-btn" data-panel="saved">💾 Saved</button>
+        <button class="ss-nav-btn" data-panel="gallery">🌐 Gallery</button>
         <button class="ss-nav-btn" data-panel="sync">☁️ Sync</button>
       </div>
       <div class="ss-side-panel flex-grow-1">
@@ -100,6 +115,7 @@
         <div id="panel-tutorial" class="d-none ss-tutorial-panel"></div>
         <div id="panel-missions" class="d-none"></div>
         <div id="panel-saved" class="d-none"></div>
+        <div id="panel-gallery" class="d-none p-3"></div>
         <div id="panel-sync" class="d-none p-3">
           <h6 class="ss-panel-title">☁️ Cloud Sync</h6>
           <p class="ss-empty-msg small text-muted">Loading sign-in…</p>
@@ -263,7 +279,9 @@
   <script src="assets/js/parser.js"></script>
   <script src="assets/js/errors.js"></script>
   <script src="assets/js/storage.js"></script>
+  <script src="assets/js/experience-mode.js"></script>
   <script src="assets/js/publish.js"></script>
+  <script src="assets/js/gallery.js"></script>
   <script src="assets/js/supabase-auth.js"></script>
   <script src="assets/js/examples.js"></script>
   <script src="assets/js/syntax-reference.js"></script>
@@ -289,6 +307,7 @@
   <script src="assets/js/editor-blocks.js"></script>
   <script src="assets/js/editor-linter.js"></script>
   <script src="assets/js/smart-editor.js"></script>
+  <script src="assets/js/game-map-helper.js"></script>
   <script src="assets/js/ui.js"></script>
   <script src="assets/js/app.js"></script>
 </body>

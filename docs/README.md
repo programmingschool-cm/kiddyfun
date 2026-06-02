@@ -8,6 +8,8 @@
 | [SUPABASE_DASHBOARD_SETUP.md](./SUPABASE_DASHBOARD_SETUP.md) | Step-by-step Supabase dashboard |
 | [GITHUB_PAGES.md](./GITHUB_PAGES.md) | Deploy on GitHub Pages |
 | [BACKEND.md](./BACKEND.md) | Backend overview |
+| [ADULT_UPGRADE.md](./ADULT_UPGRADE.md) | All Ages strategy (Kid / Creator / Studio) |
+| [GAME_ENGINE.md](./GAME_ENGINE.md) | Game engine & G6+ syntax |
 
 **শিক্ষকদের জন্য:** সম্পূর্ণ ভাষা শেখানোর গাইড → [TUTORIAL.md](./TUTORIAL.md) (also in app: **☰ Menu → 📘 Tutorial**)
 

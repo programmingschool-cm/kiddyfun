@@ -236,7 +236,7 @@
     },
 
     showPanel: function(name) {
-      ['guide', 'tutorial', 'missions', 'saved', 'sync'].forEach(function (p) {
+      ['guide', 'tutorial', 'missions', 'saved', 'gallery', 'sync'].forEach(function (p) {
         var el = document.getElementById('panel-' + p);
         if (el) el.classList.toggle('d-none', p !== name);
       });
@@ -245,6 +245,9 @@
       });
       if (name === 'sync' && window.KiddyAuth && window.KiddyAuth.buildSyncPanel) {
         window.KiddyAuth.buildSyncPanel();
+      }
+      if (name === 'gallery' && window.KiddyGallery && window.KiddyGallery.buildPanel) {
+        window.KiddyGallery.buildPanel();
       }
       if (name === 'tutorial' && window.KiddyTutorial && window.KiddyTutorial.buildPanel) {
         window.KiddyTutorial.buildPanel();
@@ -421,11 +424,22 @@
         return;
       }
       var html = '<h6 class="ss-panel-title">💾 Saved Programs</h6>';
+      names.sort(function (a, b) {
+        var ta = programs[a].savedAt || '';
+        var tb = programs[b].savedAt || '';
+        return tb.localeCompare(ta);
+      });
       names.forEach(function(name) {
+        var savedAt = programs[name].savedAt;
+        var dateHint = savedAt
+          ? '<span class="ss-saved-date">' + escHtml(savedAt.slice(0, 10)) + '</span>'
+          : '';
         html += '<div class="ss-saved-card">';
-        html += '<span class="ss-saved-name">📄 ' + escHtml(name) + '</span>';
+        html += '<div class="ss-saved-meta"><span class="ss-saved-name">📄 ' + escHtml(name) + '</span>' + dateHint + '</div>';
         html += '<div class="ss-saved-actions">';
-        html += '<button type="button" class="ss-btn-mini ss-btn-load" data-saved-name="' + escHtml(name) + '">Load</button>';
+        html += '<button type="button" class="ss-btn-mini ss-btn-load" data-saved-load="' + escHtml(name) + '">Load</button>';
+        html += '<button type="button" class="ss-btn-mini" data-saved-rename="' + escHtml(name) + '" title="Rename">✏️</button>';
+        html += '<button type="button" class="ss-btn-mini" data-saved-dup="' + escHtml(name) + '" title="Duplicate">📋</button>';
         html += '<button type="button" class="ss-btn-mini ss-btn-del" data-saved-delete="' + escHtml(name) + '">🗑</button>';
         html += '</div></div>';
       });
@@ -433,15 +447,53 @@
       if (!el._kfSavedBound) {
         el._kfSavedBound = true;
         el.addEventListener('click', function (e) {
-          var loadBtn = e.target.closest('[data-saved-name]');
+          var loadBtn = e.target.closest('[data-saved-load]');
           if (loadBtn) {
-            UI.loadSavedProgram(loadBtn.getAttribute('data-saved-name'));
+            UI.loadSavedProgram(loadBtn.getAttribute('data-saved-load'));
+            return;
+          }
+          var renameBtn = e.target.closest('[data-saved-rename]');
+          if (renameBtn) {
+            UI.renameSavedProgram(renameBtn.getAttribute('data-saved-rename'));
+            return;
+          }
+          var dupBtn = e.target.closest('[data-saved-dup]');
+          if (dupBtn) {
+            UI.duplicateSavedProgram(dupBtn.getAttribute('data-saved-dup'));
             return;
           }
           var delBtn = e.target.closest('[data-saved-delete]');
           if (delBtn) UI.deleteSavedProgram(delBtn.getAttribute('data-saved-delete'));
         });
       }
+    },
+
+    renameSavedProgram: function (name) {
+      var self = this;
+      self.showPrompt('New name for this program:', name, {
+        title: 'Rename program',
+        icon: '✏️',
+        okLabel: 'Rename',
+      }).then(function (newName) {
+        if (!newName || !newName.trim()) return;
+        var res = window.SpeakStorage.renameProgram(name, newName.trim());
+        if (!res.ok) {
+          self.showAlert(res.error || 'Could not rename.', { title: 'Rename failed', icon: '⚠️' });
+          return;
+        }
+        self.buildSavedPanel();
+        self.showToast('✏️ Renamed to: ' + res.name);
+      });
+    },
+
+    duplicateSavedProgram: function (name) {
+      var res = window.SpeakStorage.duplicateProgram(name);
+      if (!res.ok) {
+        this.showAlert(res.error || 'Could not duplicate.', { title: 'Duplicate failed', icon: '⚠️' });
+        return;
+      }
+      this.buildSavedPanel();
+      this.showToast('📋 Duplicated as: ' + res.name);
     },
 
     loadSavedProgram: function(name) {
@@ -539,7 +591,7 @@
               ? 'Anyone with this link can open and run your program. Tap Copy link or select the URL below.'
               : 'This link contains your code. Share it with friends.';
             setTimeout(function () {
-              self.showShareLink(res.url, hint);
+              self.showShareLink(res.url, hint, res.shareId);
             }, 80);
           })
           .catch(function (err) {
@@ -552,7 +604,7 @@
       });
     },
 
-    showShareLink: function (url, hint) {
+    showShareLink: function (url, hint, shareId) {
       if (!url) {
         this.showAlert('No link was generated.', { title: 'Publish', icon: '⚠️' });
         return Promise.resolve();
@@ -563,24 +615,56 @@
         message: hint || 'Copy and send this link to friends.',
         icon: '🔗',
         url: url,
+        shareId: shareId,
         okLabel: 'Done',
       });
     },
 
-    loadSharedCode: function (code, title, autoRun) {
+    remixCode: function (code, title, shareId) {
+      var header = '# Remix of "' + (title || 'Shared Program') + '"';
+      if (shareId) header += ' (share: ' + shareId + ')';
+      header += '\n# Edit and make it your own!\n\n';
+      return header + (code || '');
+    },
+
+    loadSharedCode: function (code, title, autoRun, options) {
+      options = options || {};
       var editor = document.getElementById('ss-editor');
       if (!editor || !code) return;
+      var origTitle = title;
+      if (options.remix) {
+        code = this.remixCode(code, title, options.shareId);
+        title = 'Remix of ' + (origTitle || 'Shared Program');
+      }
       editor.value = code;
       if (window.SpeakStorage) SpeakStorage.saveLastCode(code);
       this.syncLineNumbers();
       if (window.KiddySmartEditor && window.KiddySmartEditor.notifyExternalChange) {
         KiddySmartEditor.notifyExternalChange();
       }
-      this.showToast('🔗 Loaded: ' + (title || 'Shared program'));
-      if (window.innerWidth < 992 && window.KiddyApp && window.KiddyApp.setMobileTab) {
-        window.KiddyApp.setMobileTab(autoRun ? 'output' : 'code');
+      this.showToast(options.remix
+        ? '✨ Remix loaded — edit and save your version!'
+        : '🔗 Loaded: ' + (title || 'Shared program'));
+      if (options.remix) {
+        var self = this;
+        setTimeout(function () {
+          self.showPrompt('Save your remix as:', 'Remix of ' + (origTitle || 'Program'), {
+            title: 'Save remix',
+            icon: '✨',
+            okLabel: 'Save',
+            cancelLabel: 'Later',
+          }).then(function (saveName) {
+            if (!saveName || !saveName.trim()) return;
+            window.SpeakStorage.saveProgram(saveName.trim(), editor.value);
+            self.buildSavedPanel();
+            self.showToast('💾 Remix saved: ' + saveName.trim());
+          });
+        }, 600);
       }
-      if (autoRun && window.KiddyApp && window.KiddyApp.runProgram) {
+      if (window.innerWidth < 992 && window.KiddyApp && window.KiddyApp.setMobileTab) {
+        window.KiddyApp.setMobileTab(autoRun && !options.remix ? 'output' : 'code');
+      }
+      if (autoRun && !options.remix && window.KiddyApp && window.KiddyApp.runProgram) {
         setTimeout(function () { window.KiddyApp.runProgram(); }, 450);
       }
     },
@@ -700,6 +784,28 @@
               }
               return;
             }
+            if (config.type === 'share' && value === 'remixlink' && config.shareId) {
+              var remixUrl = window.KiddyPublish.getRemixUrl(config.shareId);
+              if (inputEl) inputEl.value = remixUrl;
+              KiddyPublish.copyToClipboard(remixUrl).then(function (ok) {
+                self.showToast(ok ? '✨ Remix link copied!' : '⚠️ Copy the remix link manually');
+              });
+              return;
+            }
+            if (config.type === 'share' && value === 'remixnow' && config.shareId) {
+              self._closeDialog(true);
+              KiddyPublish.loadFromShareId(config.shareId).then(function (res) {
+                if (!res.ok) {
+                  self.showAlert(res.error, { title: 'Remix failed', icon: '⚠️' });
+                  return;
+                }
+                self.loadSharedCode(res.code, res.title, false, {
+                  remix: true,
+                  shareId: config.shareId,
+                });
+              });
+              return;
+            }
             if (isPrompt && value !== null) {
               self._closeDialog(inputEl ? inputEl.value : '');
             } else {
@@ -719,6 +825,12 @@
           addBtn(config.okLabel || 'Save', 'kf-dialog-btn-primary', true);
         } else if (config.type === 'share') {
           addBtn('Copy link', 'kf-dialog-btn-secondary', 'copy');
+          if (config.shareId && window.KiddyPublish && KiddyPublish.getRemixUrl) {
+            addBtn('Remix link', 'kf-dialog-btn-secondary', 'remixlink');
+          }
+          if (config.shareId) {
+            addBtn('Remix now', 'kf-dialog-btn-secondary', 'remixnow');
+          }
           addBtn(config.okLabel || 'Done', 'kf-dialog-btn-primary', true);
         }
 

@@ -217,9 +217,14 @@
           code: 'when time is 0\n    show message "Time up!"\n    play sound "gameover"\nend\n\nwhen lives is 0\n    show message "Game over!"\nend\n\nwhen all coins collected\n    show message "Nice!"\n    play sound "win"\nend',
         },
         {
-          title: 'Stop / restart game',
-          desc: 'stop game ends the loop. restart game reloads the same program.',
-          code: 'stop game\nrestart game',
+          title: 'Stop / pause / restart',
+          desc: 'stop game ends the loop. pause game freezes updates. resume game continues. restart game reloads.',
+          code: 'pause game\nresume game\nstop game\nrestart game',
+        },
+        {
+          title: 'Levels',
+          desc: 'level starts at N on HUD; next level increments (e.g. after goal).',
+          code: 'level starts at 1\n\nwhen all coins collected\n    next level\n    show message "Level up!"\nend',
         },
       ],
     },

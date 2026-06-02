@@ -10,11 +10,25 @@
   function GameLoop() {
     this._raf = null;
     this._running = false;
+    this._paused = false;
     this._last = 0;
     this._accum = 0;
     this.onUpdate = null;
     this.onRender = null;
   }
+
+  GameLoop.prototype.pause = function () {
+    this._paused = true;
+  };
+
+  GameLoop.prototype.resume = function () {
+    this._paused = false;
+    this._last = performance.now();
+  };
+
+  GameLoop.prototype.isPaused = function () {
+    return !!this._paused;
+  };
 
   GameLoop.prototype.start = function () {
     if (this._running) return;
@@ -28,7 +42,7 @@
       self._last = now;
       self._accum += delta;
       while (self._accum >= STEP_MS) {
-        if (self.onUpdate) {
+        if (!self._paused && self.onUpdate) {
           try { self.onUpdate(STEP_MS); }
           catch (e) { console.error('[KiddyFun][GameLoop] update error:', e); self.stop(); return; }
         }

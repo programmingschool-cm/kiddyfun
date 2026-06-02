@@ -1190,6 +1190,128 @@ end
 # restart game
 `,
   },
+
+  /* ── Creator — Phase E1 templates ───────────────────────────────────── */
+  {
+    id: 'creator_survival',
+    category: 'Creator — Templates',
+    title: '⏱️ Survival Timer',
+    desc: 'Creator template: timer, level HUD, pause on P (when space used for jump use another key in when).',
+    code: `# Survival — collect coins before time runs out
+game "Survival"
+game view top
+
+scene "school" with walls
+score starts at 0
+timer starts at 60
+level starts at 1
+goal is collect 8 coins
+
+Mina is player
+
+spawn coin at x 100 y 100
+spawn coin at x 500 y 120
+spawn coin at x 300 y 280
+
+every frame
+    if left key is held
+        move Mina left by 5
+    end
+    if right key is held
+        move Mina right by 5
+    end
+    if up key is held
+        move Mina up by 5
+    end
+    if down key is held
+        move Mina down by 5
+    end
+end
+
+if Mina touches coin
+    add 10 points
+    remove coin
+end
+
+when all coins collected
+    next level
+    show message "Level cleared!"
+end
+
+when time is 0
+    show message "Time up!"
+end
+`,
+  },
+  {
+    id: 'creator_pause_demo',
+    category: 'Creator — Templates',
+    title: '⏸️ Pause & Resume',
+    desc: 'pause game / resume game — freeze gameplay (use when space is pressed in side view).',
+    code: `# Pause demo — side platformer
+game "Pause Demo"
+
+scene "playground" with walls
+Rafi is player
+
+when space is pressed
+    Rafi jump with power 12
+end
+
+every frame
+    if left key is held
+        move Rafi left by 4
+    end
+    if right key is held
+        move Rafi right by 4
+    end
+end
+
+# Add a second when block in your game for pause key if needed
+# when P is pressed → pause game (extend with custom keys later)
+`,
+  },
+  {
+    id: 'creator_multi_level',
+    category: 'Creator — Templates',
+    title: '📊 Levels & Goals',
+    desc: 'level starts at, next level, goal coins — arcade progression.',
+    code: `game "Level Runner"
+game view top
+
+scene "playground" with walls
+score starts at 0
+level starts at 1
+goal is collect 3 coins
+lives start at 3
+
+Rafi is player
+
+every frame
+    if left key is held
+        move Rafi left by 4
+    end
+    if right key is held
+        move Rafi right by 4
+    end
+end
+
+if Rafi touches coin
+    add 15 points
+    remove coin
+end
+
+when all coins collected
+    next level
+    show message "Next level!"
+    play sound "win"
+end
+
+when lives is 0
+    show message "Game over"
+end
+`,
+  },
 ];
 
 window.SpeakExamples = EXAMPLES;

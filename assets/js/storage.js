@@ -48,6 +48,40 @@
       if (sync) sync.deleteProgram(name);
     },
 
+    renameProgram: function (oldName, newName) {
+      oldName = (oldName || '').trim();
+      newName = (newName || '').trim();
+      if (!oldName || !newName) return { ok: false, error: 'Name cannot be empty' };
+      if (oldName === newName) return { ok: true, name: newName };
+      var p = this.loadAllPrograms();
+      if (!p[oldName]) return { ok: false, error: 'Program not found' };
+      if (p[newName]) return { ok: false, error: 'A program with that name already exists' };
+      p[newName] = p[oldName];
+      delete p[oldName];
+      safeSet(KEYS.SAVED_PROGRAMS, p);
+      var sync = cloudSync();
+      if (sync) {
+        sync.deleteProgram(oldName);
+        sync.syncProgram(newName, p[newName].code, p[newName].savedAt);
+      }
+      return { ok: true, name: newName };
+    },
+
+    duplicateProgram: function (name) {
+      name = (name || '').trim();
+      var p = this.loadAllPrograms();
+      if (!p[name]) return { ok: false, error: 'Program not found' };
+      var base = name + ' (copy)';
+      var candidate = base;
+      var n = 2;
+      while (p[candidate]) {
+        candidate = name + ' (copy ' + n + ')';
+        n++;
+      }
+      this.saveProgram(candidate, p[name].code);
+      return { ok: true, name: candidate };
+    },
+
     completeMission: function (id) {
       var c = this.loadCompletedMissions();
       if (c.indexOf(id) === -1) c.push(id);
