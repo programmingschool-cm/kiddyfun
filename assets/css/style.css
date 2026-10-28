@@ -2958,6 +2958,25 @@ body.kf-mode-studio .kf-studio-tabs {
   font-size: 0.75rem;
   margin: 10px 0 4px;
 }
+.kf-blocks-mode-note {
+  color: #fde68a;
+  font-size: 0.72rem;
+  font-weight: 700;
+  margin: 0 0 6px;
+  line-height: 1.35;
+}
+.kf-blocks-mode-btn {
+  width: 100%;
+  margin-bottom: 8px;
+  border: 1px solid #fde68a;
+  background: transparent;
+  color: #fde68a;
+  border-radius: 8px;
+  min-height: 32px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
 .kf-blocks-cat-title {
   font-size: 0.72rem;
   font-weight: 700;
@@ -3047,6 +3066,17 @@ body.kf-mode-studio .kf-studio-tabs {
   background: #fff;
 }
 .kf-bcard-grow { flex: 1 1 120px; min-width: 90px; }
+.kf-bcard-line { flex: 1 1 220px; min-width: min(100%, 220px); }
+.kf-bcard-pair {
+  display: inline-flex;
+  flex: 0 0 auto;
+  width: max-content;
+  max-width: 100%;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.kf-bcard-pair .kf-bcard-grow { flex: 0 1 160px; width: 160px; }
 .kf-bcard-num { width: 72px; }
 .kf-bcard-check {
   display: inline-flex;
@@ -3054,6 +3084,43 @@ body.kf-mode-studio .kf-studio-tabs {
   gap: 4px;
   font-size: 0.85rem;
 }
+.kf-bcard-kind { max-width: 148px; }
+.kf-bcard-hint {
+  background: #fde68a;
+  color: #78350f;
+  border: 0;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+button.kf-bcard-hint { cursor: pointer; }
+.kf-bcard-del {
+  border: 0;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0 8px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+.kf-bcard-row > button[data-act="add-opt"],
+.kf-bcard-row > button[data-act="add-val"],
+.kf-bcard-row > button[data-act="add-arg"],
+.kf-bcard-row > button[data-act="add-ans"] {
+  border: 0;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+  min-height: 32px;
+  padding: 0 8px;
+  cursor: pointer;
+}
+.kf-bcard-hint-static { background: #fecaca; color: #7f1d1d; }
 .kf-bcard-actions { margin-left: auto; display: inline-flex; gap: 4px; }
 .kf-bcard-actions button {
   min-width: 32px;

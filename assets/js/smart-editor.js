@@ -5,11 +5,14 @@
   'use strict';
 
   var INDENT = '    ';
-  var SCENES = ['school', 'classroom', 'jungle', 'restaurant', 'home', 'playground', 'space', 'default'];
-  var ACTIONS = [
+  var catalog = window.KiddyCatalog;
+  var SCENES = catalog ? catalog.sceneIds.slice() : ['school', 'classroom', 'jungle', 'restaurant', 'home', 'playground', 'space', 'default'];
+  var ACTIONS = catalog ? catalog.editorActions.slice() : [
     'appears', 'says ""', 'waves', 'smiles', 'jumps', 'flies', 'runs', 'walks',
     'moves right', 'moves left', 'hides', 'shows', 'bows', 'nods', 'cheers', 'dances', 'claps', 'flaps'
   ];
+  var SOUNDS = catalog ? catalog.sounds.slice() : ['success', 'clap', 'win', 'cheer', 'pop', 'wrong', 'gameover'];
+  var MAPS = catalog ? catalog.mapIds.slice() : ['school_maze', 'playground_extended', 'jungle_run', 'arena_coins'];
   var SNIPPETS = [
     { k: 'scene', insert: 'scene "school"', label: 'scene "…"', detail: '🎬 Set background', score: 100 },
     { k: 'appears', insert: 'appears', label: 'appears', detail: '🧑 Character on stage', score: 95 },
@@ -293,6 +296,20 @@
       });
     }
 
+    if (/play\s+sound\s+"[^"]*$/i.test(text.slice(info.lineStart, pos))) {
+      SOUNDS.forEach(function (s) {
+        add({ label: 'play sound "' + s + '"', insert: 'play sound "' + s + '"', detail: '🔊 Sound', score: 95,
+          replaceStart: info.lineStart, replaceEnd: pos });
+      });
+    }
+
+    if (/load\s+map\s+"[^"]*$/i.test(text.slice(info.lineStart, pos))) {
+      MAPS.forEach(function (s) {
+        add({ label: 'load map "' + s + '"', insert: 'load map "' + s + '"', detail: '🗺️ Map', score: 95,
+          replaceStart: info.lineStart, replaceEnd: pos });
+      });
+    }
+
     /* Character + space → suggest actions */
     var charSpaceMatch = info.line.slice(0, info.col).match(/^\s*([A-Z][\w]*)\s+$/);
     if (charSpaceMatch) {
@@ -520,6 +537,7 @@
     rows.forEach(function (row) {
       row.classList.remove('kf-ln-error', 'kf-ln-warn', 'kf-ln-info');
       row.removeAttribute('data-lint');
+      row.removeAttribute('title');
       var line = parseInt(row.getAttribute('data-line'), 10);
       var d = byLine[line];
       if (!d) return;

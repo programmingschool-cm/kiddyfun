@@ -14,7 +14,6 @@
     'say': 'says',
     'sayes': 'says',
     'wave': 'waves',
-    'jump': 'jumps',
     'run': 'runs',
     'walk': 'walks',
     'fly': 'flies',
@@ -126,6 +125,8 @@
         blockStack.push({ type: 'define', line: i });
       } else if (/^for\s+each\b/i.test(trimmed)) {
         blockStack.push({ type: 'for', line: i });
+      } else if (/^every\s+frame\b/i.test(trimmed) || /^when\b/i.test(trimmed) || /^while\b/i.test(trimmed)) {
+        blockStack.push({ type: 'block', line: i });
       } else if (/^end\b/i.test(trimmed)) {
         if (!blockStack.length) {
           diagnostics.push({
@@ -149,7 +150,7 @@
       }
 
       var charLine = trimmed.match(/^([a-z][\w]*)\s+(appears|says|waves|smiles|jumps|flies|runs|walks|moves|hides|shows|bows|nods|cheers|dances|claps|flaps)\b/);
-      if (charLine) {
+      if (charLine && charLine[1].toLowerCase() !== 'narrator') {
         var name = charLine[1];
         if (name !== name.toLowerCase() || /^[a-z]/.test(name)) {
           diagnostics.push({
@@ -174,6 +175,18 @@
       });
     });
 
+    if (window.KiddyBlocksScript && KiddyBlocksScript.placementWarnings) {
+      KiddyBlocksScript.placementWarnings(code).forEach(function (hint) {
+        diagnostics.push({
+          line: hint.line,
+          severity: 'warning',
+          title: hint.message,
+          message: hint.message,
+          fix: hint.fix,
+        });
+      });
+    }
+
     return diagnostics;
   }
 
@@ -183,7 +196,7 @@
     var rest = lineText.slice(indent.length);
 
     var charLine = rest.match(/^([a-z][\w]*)(\s+)(appears|says|waves|smiles|jumps|flies|runs|walks|moves|hides|shows|bows|nods|cheers|dances|claps|flaps)\b(.*)$/);
-    if (charLine) {
+    if (charLine && charLine[1].toLowerCase() !== 'narrator') {
       var name = charLine[1].charAt(0).toUpperCase() + charLine[1].slice(1);
       return indent + name + charLine[2] + charLine[3] + charLine[4];
     }
