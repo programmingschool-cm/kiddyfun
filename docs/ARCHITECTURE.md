@@ -45,4 +45,4 @@ npm test
 npm run test:examples
 ```
 
-GitHub Actions: `.github/workflows/test.yml`
+GitHub Actions runs both commands: `.github/workflows/test.yml`

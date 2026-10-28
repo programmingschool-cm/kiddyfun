@@ -7,34 +7,53 @@
   function transpile(code) {
     var lines = (code || '').split('\n');
     var out = ['# Generated from KiddyFun Code', 'import time', ''];
+    var indent = 0;
+
+    function emit(text) {
+      var pad = '';
+      for (var i = 0; i < indent; i++) pad += '    ';
+      out.push(pad + text);
+    }
+
     lines.forEach(function (line) {
       var t = line.trim();
-      if (!t || t.indexOf('#') === 0) {
-        out.push(line.replace(/^(\s*)/, function (m) { return m; }).replace(/#.*/, function (c) { return c; }));
-        if (t.indexOf('#') === 0) out[out.length - 1] = line;
+      if (!t) {
+        out.push('');
+        return;
+      }
+      if (t.indexOf('#') === 0) {
+        emit(t);
+        return;
+      }
+      if (/^end\b/i.test(t)) {
+        if (indent > 0) indent -= 1;
+        return;
+      }
+      if (/^else\b/i.test(t)) {
+        if (indent > 0) indent -= 1;
+        emit('else:');
+        indent += 1;
         return;
       }
       var m;
       if ((m = t.match(/^scene\s+"([^"]+)"/i))) {
-        out.push('print("Scene: ' + m[1] + '")');
-      } else if ((m = t.match(/^(\w+)\s+says\s+"([^"]*)"/i))) {
-        out.push('print("' + m[1] + ': ' + m[2].replace(/"/g, '\\"') + '")');
+        emit('print("Scene: ' + m[1] + '")');
       } else if ((m = t.match(/^narrator\s+says\s+"([^"]*)"/i))) {
-        out.push('print("[Narrator] ' + m[1].replace(/"/g, '\\"') + '")');
+        emit('print("[Narrator] ' + m[1].replace(/"/g, '\\"') + '")');
+      } else if ((m = t.match(/^(\w+)\s+says\s+"([^"]*)"/i))) {
+        emit('print("' + m[1] + ': ' + m[2].replace(/"/g, '\\"') + '")');
       } else if ((m = t.match(/^repeat\s+(\d+)\s+times/i))) {
-        out.push('for _ in range(' + m[1] + '):');
-      } else if (/^end\b/i.test(t)) {
-        out.push('');
+        emit('for _ in range(' + m[1] + '):');
+        indent += 1;
       } else if ((m = t.match(/^set\s+(\w+)\s+to\s+(.+)/i))) {
-        out.push(m[1] + ' = ' + pyExpr(m[2]));
+        emit(m[1] + ' = ' + pyExpr(m[2]));
       } else if ((m = t.match(/^if\s+(.+)/i))) {
-        out.push('if ' + pyCond(m[1]) + ':');
-      } else if (/^else\b/i.test(t)) {
-        out.push('else:');
+        emit('if ' + pyCond(m[1]) + ':');
+        indent += 1;
       } else if ((m = t.match(/^game\s+"([^"]*)"/i))) {
-        out.push('# Game: ' + m[1] + ' (run in kiddyFun game mode)');
+        emit('# Game: ' + m[1] + ' (run in KiddyFun game mode)');
       } else {
-        out.push('# ' + line);
+        emit('# ' + t);
       }
     });
     return out.join('\n');

@@ -11,19 +11,28 @@
       return;
     }
     var code = ed.value;
-    if (window.KiddyPublish && KiddyPublish.encodeForUrl) {
-      var enc = KiddyPublish.encodeForUrl(code);
-      if (!enc) {
-        if (window.UI && UI.showToast) UI.showToast('⚠️ Code too long for link');
+    if (!window.KiddyPublish || !KiddyPublish.encodeForUrl) {
+      if (window.UI && UI.showToast) UI.showToast('⚠️ Share is not ready yet');
+      return;
+    }
+    var enc = KiddyPublish.encodeForUrl(code);
+    if (!enc || enc.length > 12000) {
+      if (window.UI && UI.showToast) UI.showToast('⚠️ Code too long for a link. Publish instead.');
+      return;
+    }
+    var url = window.location.origin + window.location.pathname + '?z=' + encodeURIComponent(enc);
+    var done = function (ok) {
+      if (ok) {
+        if (window.UI && UI.showToast) UI.showToast('🔗 Link copied. The program loads, and your friend presses Run.');
         return;
       }
-      var url = window.location.origin + window.location.pathname + '?z=' + encodeURIComponent(enc) + '&run=1';
-      navigator.clipboard.writeText(url).then(function () {
-        if (window.UI && UI.showToast) UI.showToast('🔗 Link copied! Share with friends');
-      }).catch(function () {
-        if (window.UI && UI.showAlert) UI.showAlert(url, { title: 'Copy this link', icon: '🔗' });
-      });
+      if (window.UI && UI.showAlert) UI.showAlert(url, { title: 'Copy this link', icon: '🔗' });
+    };
+    if (KiddyPublish.copyToClipboard) {
+      KiddyPublish.copyToClipboard(url).then(done);
+      return;
     }
+    done(false);
   }
 
   window.KiddyShareLink = { copyShareLink: copyShareLink };

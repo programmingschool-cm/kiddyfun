@@ -17,12 +17,15 @@
     return g.xp || 0;
   }
 
-  function applyTheme(id) {
+  function applyTheme(id, silent) {
     var th = THEMES.filter(function (t) { return t.id === id; })[0] || THEMES[0];
     try { localStorage.setItem(KEY, th.id); } catch (e) { /* ignore */ }
-    document.documentElement.style.setProperty('--kf-primary', th.primary);
-    document.documentElement.style.setProperty('--kf-primary-dark', th.primary);
-    if (window.UI && UI.showToast) UI.showToast('🎨 Theme: ' + th.name);
+    if (document.documentElement) {
+      document.documentElement.style.setProperty('--kf-primary', th.primary);
+      var dark = th.primary;
+      document.documentElement.style.setProperty('--kf-primary-dark', dark);
+    }
+    if (!silent && window.UI && UI.showToast) UI.showToast('🎨 Theme: ' + th.name);
   }
 
   function buildPanel() {
@@ -49,7 +52,7 @@
   function init() {
     try {
       var id = localStorage.getItem(KEY);
-      if (id) applyTheme(id);
+      if (id) applyTheme(id, true);
     } catch (e) { /* ignore */ }
   }
 

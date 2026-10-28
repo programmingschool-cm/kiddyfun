@@ -15,7 +15,7 @@
     lines.push('Today (' + todayKey() + ')');
     lines.push('⭐ XP: ' + (g.xp || 0) + ' · 🔥 Streak: ' + (g.streak || 0) + ' days');
     try {
-      var missions = JSON.parse(localStorage.getItem('ss_missions_done') || '[]');
+      var missions = JSON.parse(localStorage.getItem('ss_completed_missions') || '[]');
       if (missions.length) lines.push('🎯 Missions done: ' + missions.length);
     } catch (e) { /* ignore */ }
     try {

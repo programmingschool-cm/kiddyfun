@@ -1,5 +1,5 @@
 /**
- * KiddyFun Storage v1.1 — localStorage (offline-first) + optional Supabase sync.
+ * KiddyFun Storage v1.2 — localStorage (offline-first) + optional Supabase sync.
  */
 (function () {
   'use strict';
@@ -10,6 +10,20 @@
     COMPLETED_MISSIONS: 'ss_completed_missions',
     BADGES            : 'ss_badges',
   };
+
+  var EXTRA_RESET_KEYS = [
+    'ss_sync_pending',
+    'ss_missions_done',
+    'kf_curriculum_done',
+    'kf_gamification',
+    'kf_speech_stats',
+    'kf_theme',
+    'kf_studio_project',
+    'kf_user_maps',
+    'kf_teacher_class',
+    'kf_my_shares',
+    'kf_lesson_pending',
+  ];
 
   function safeGet(key, fallback) {
     try { return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback)); }
@@ -106,6 +120,10 @@
     resetAll: function () {
       Object.keys(KEYS).forEach(function (k) {
         try { localStorage.removeItem(KEYS[k]); } catch (e) {}
+      });
+      EXTRA_RESET_KEYS.forEach(function (key) {
+        try { localStorage.removeItem(key); } catch (e) {}
+        try { sessionStorage.removeItem(key); } catch (e2) {}
       });
     },
 

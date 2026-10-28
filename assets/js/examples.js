@@ -1621,8 +1621,11 @@ play sound "pop"
     desc: 'Quiz about animals.',
     code: `scene "jungle"
 
-ask "Which animal says roar?" with answers "Lion", "Bird", "Fish"
-if answer equals "Lion"
+ask "Which animal says roar?"
+choice "Lion" correct
+choice "Bird" wrong
+choice "Fish" wrong
+if answer is correct
     Lion appears
     Lion says "Yes! Lions roar!"
     add 10 points

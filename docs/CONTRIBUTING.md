@@ -30,7 +30,7 @@ Thank you for helping kids learn programming and English!
 
 ## Pull requests
 
-- Run `npm test` before submitting
+- Run `npm test` and `npm run test:examples` before submitting
 - One feature per PR when possible
 - Do not commit secrets (`.env`, Supabase keys)
 

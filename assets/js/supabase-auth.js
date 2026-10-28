@@ -4,12 +4,15 @@
 (function () {
   'use strict';
 
+  var OWNER_KEY = 'kf_cloud_owner';
   var state = {
     signedIn: false,
     displayName: '',
     email: '',
     isAnonymous: true,
   };
+  var signInFlight = null;
+  var signInFlightUid = '';
 
   function sb() {
     return window.KiddyCloud && window.KiddyCloud.getClient();
@@ -114,7 +117,9 @@
       html += '<button type="button" class="btn btn-outline-secondary" id="kf-btn-join-class">Join</button>';
       html += '</div>';
       html += '<button type="button" class="btn btn-sm btn-outline-secondary w-100 mb-2" id="kf-btn-sync-now">↻ Sync now</button>';
-      html += '<button type="button" class="btn btn-sm btn-outline-danger w-100" id="kf-btn-sign-out">Sign out</button>';
+      html += '<button type="button" class="btn btn-sm btn-outline-danger w-100 mb-2" id="kf-btn-sign-out">Sign out</button>';
+      html += '<button type="button" class="btn btn-sm btn-outline-danger w-100" id="kf-btn-sign-out-clear">Sign out and clear this device</button>';
+      html += '<p class="small text-muted mt-2 mb-0">On a shared computer, clear this device so the next child does not see these programs.</p>';
       if (state.isAnonymous) {
         html += '<hr class="my-3"/><p class="small fw-semibold">Parent: link email (optional)</p>';
         html += '<input type="email" class="form-control form-control-sm mb-2" id="kf-sync-parent-email" placeholder="parent@email.com"/>';
@@ -152,7 +157,9 @@
         signInAnonymous(name);
       });
     }
-    if (signOutBtn) signOutBtn.addEventListener('click', signOut);
+    if (signOutBtn) signOutBtn.addEventListener('click', function () { signOut(false); });
+    var clearBtn = document.getElementById('kf-btn-sign-out-clear');
+    if (clearBtn) clearBtn.addEventListener('click', function () { signOut(true); });
     if (syncBtn) syncBtn.addEventListener('click', runFullSync);
     if (nickBtn) nickBtn.addEventListener('click', saveNickname);
     if (joinBtn) joinBtn.addEventListener('click', joinClassFromInput);
@@ -172,7 +179,7 @@
     }
     try {
       var res = await client.auth.signInAnonymously({
-        options: { data: { display_name: displayName, role: 'student' } },
+        options: { data: { display_name: displayName } },
       });
       if (res.error) throw res.error;
       await updateProfileFields({ display_name: displayName });
@@ -196,8 +203,7 @@
       var res = await client.auth.signInWithOtp({
         email: email,
         options: {
-          emailRedirectTo: window.location.href,
-          data: { role: 'parent' },
+          emailRedirectTo: window.location.origin + window.location.pathname,
         },
       });
       if (res.error) throw res.error;
@@ -208,11 +214,47 @@
     }
   }
 
-  async function signOut() {
+  function readOwner() {
+    try { return localStorage.getItem(OWNER_KEY) || ''; } catch (e) { return ''; }
+  }
+
+  function writeOwner(id) {
+    try {
+      if (id) localStorage.setItem(OWNER_KEY, id);
+      else localStorage.removeItem(OWNER_KEY);
+    } catch (e) { /* ignore */ }
+  }
+
+  function clearEditor() {
+    var ed = document.getElementById('ss-editor');
+    if (ed) ed.value = '';
+    if (window.UI && UI.syncLineNumbers) UI.syncLineNumbers();
+  }
+
+  function refreshLearningUi() {
+    if (window.UI) {
+      if (UI.buildSavedPanel) UI.buildSavedPanel();
+      if (UI.buildMissionsPanel) UI.buildMissionsPanel();
+      if (UI.updateProgress) UI.updateProgress();
+    }
+    if (window.KiddyCurriculum && KiddyCurriculum.buildPanel) KiddyCurriculum.buildPanel();
+    if (window.KiddyGamification && KiddyGamification.updateHud) KiddyGamification.updateHud();
+  }
+
+  async function signOut(clearDevice) {
+    if (window.KiddySync && KiddySync.clearPending) KiddySync.clearPending();
+    if (clearDevice && window.SpeakStorage && SpeakStorage.resetAll) {
+      SpeakStorage.resetAll();
+      clearEditor();
+      writeOwner('');
+      refreshLearningUi();
+    }
     var client = sb();
     if (client) await client.auth.signOut();
     applyState(null, null);
-    toast('Signed out — local saves remain on this device');
+    toast(clearDevice
+      ? 'Signed out and cleared this device'
+      : 'Signed out — programs stay on this device and are not uploaded to the next account');
   }
 
   async function saveNickname() {
@@ -254,17 +296,32 @@
 
   async function afterSignIn(session) {
     if (!session || !session.user) return;
-    var profile = await loadProfile(session.user.id);
+    if (signInFlight && signInFlightUid === session.user.id) return signInFlight;
+    signInFlightUid = session.user.id;
+    signInFlight = applySignedInSession(session).finally(function () {
+      signInFlight = null;
+    });
+    return signInFlight;
+  }
+
+  async function applySignedInSession(session) {
+    var uid = session.user.id;
+    var owner = readOwner();
+    var switched = !!(owner && owner !== uid);
+    if (switched) {
+      if (window.KiddySync && KiddySync.clearPending) KiddySync.clearPending();
+      if (window.SpeakStorage && SpeakStorage.resetAll) SpeakStorage.resetAll();
+      clearEditor();
+      toast('This device had another account. Those programs were not uploaded.');
+    }
+    var profile = await loadProfile(uid);
     applyState(session, profile);
     if (window.KiddySync) {
-      await window.KiddySync.pushAllLocal();
+      if (!switched) await window.KiddySync.pushAllLocal();
       var result = await window.KiddySync.pullFromCloud();
-      if (result.merged && window.UI) {
-        window.UI.buildSavedPanel();
-        window.UI.buildMissionsPanel();
-        window.UI.updateProgress();
-      }
+      if ((result && result.merged) || switched) refreshLearningUi();
     }
+    writeOwner(uid);
   }
 
   function openSyncPanel() {

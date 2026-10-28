@@ -29,31 +29,43 @@
     } catch (e) { /* ignore */ }
   }
 
+  function assertOk(res) {
+    if (res && res.error) {
+      throw new Error(res.error.message || 'Sync failed');
+    }
+  }
+
+  function toastSyncFail() {
+    var msg = '☁️ Cloud did not save yet. Your work stays on this device and will retry.';
+    if (window.KiddyLocale && KiddyLocale.text) msg = KiddyLocale.text('syncRetry', msg);
+    if (window.UI && UI.showToast) UI.showToast(msg);
+  }
+
   async function runOp(op, uid) {
     var sb = client();
-    if (!sb || !uid) return;
+    if (!sb || !uid) throw new Error('Not signed in');
     if (op.type === 'program') {
-      await sb.from('programs').upsert({
+      assertOk(await sb.from('programs').upsert({
         user_id: uid,
         name: op.name,
         code: op.code,
         saved_at: op.savedAt,
         updated_at: new Date().toISOString(),
-      }, { onConflict: 'user_id,name' });
+      }, { onConflict: 'user_id,name' }));
     } else if (op.type === 'delete_program') {
-      await sb.from('programs').delete().eq('user_id', uid).eq('name', op.name);
+      assertOk(await sb.from('programs').delete().eq('user_id', uid).eq('name', op.name));
     } else if (op.type === 'mission') {
-      await sb.from('mission_progress').upsert({
+      assertOk(await sb.from('mission_progress').upsert({
         user_id: uid,
         mission_id: op.missionId,
         completed_at: op.completedAt || new Date().toISOString(),
-      }, { onConflict: 'user_id,mission_id' });
+      }, { onConflict: 'user_id,mission_id' }));
     } else if (op.type === 'badge') {
-      await sb.from('badges').upsert({
+      assertOk(await sb.from('badges').upsert({
         user_id: uid,
         badge_id: op.badgeId,
         awarded_at: op.awardedAt || new Date().toISOString(),
-      }, { onConflict: 'user_id,badge_id' });
+      }, { onConflict: 'user_id,badge_id' }));
     }
   }
 
@@ -79,6 +91,11 @@
     try {
       localStorage.setItem(SYNC_KEY, JSON.stringify(remaining));
     } catch (e) { /* ignore */ }
+    if (remaining.length) toastSyncFail();
+  }
+
+  function clearPending() {
+    try { localStorage.removeItem(SYNC_KEY); } catch (e) { /* ignore */ }
   }
 
   async function runWhenSignedIn(op, runner) {
@@ -95,6 +112,7 @@
     } catch (e) {
       console.warn('[KiddyCloud] sync error', e);
       if (op) queueOp(op);
+      toastSyncFail();
     }
   }
 
@@ -222,6 +240,17 @@
       var sb = client();
       var res = await sb.rpc('join_class_by_code', { p_class_code: classCode });
       if (res.error) throw res.error;
+    },
+
+    clearPending: clearPending,
+
+    deleteAllCloud: async function () {
+      var uid = await currentUserId();
+      if (!uid) throw new Error('Not signed in');
+      var sb = client();
+      assertOk(await sb.from('programs').delete().eq('user_id', uid));
+      assertOk(await sb.from('mission_progress').delete().eq('user_id', uid));
+      assertOk(await sb.from('badges').delete().eq('user_id', uid));
     },
 
     flushQueue: flushQueue,

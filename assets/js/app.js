@@ -1,10 +1,11 @@
 /**
- * KiddyFun Main App v1.0
+ * KiddyFun Main App v1.2
  */
 (function () {
   'use strict';
 
   var interpreter = null;
+  var runSeq = 0;
 
   document.addEventListener('DOMContentLoaded', function () {
 
@@ -371,7 +372,7 @@
 
     tryLoadSharedFromUrl();
 
-    console.log('✅ KiddyFun Code v1.0 ready');
+    console.log('✅ KiddyFun Code v1.2 ready');
 
     function tryLoadSharedFromUrl() {
       if (!window.KiddyPublish) return;
@@ -471,6 +472,25 @@
         interpreter = null;
       }
 
+      runSeq += 1;
+      var myRun = runSeq;
+
+      function finishRun() {
+        if (myRun !== runSeq) return;
+        UI.setRunning(false);
+        interpreter = null;
+      }
+
+      function onRunSuccess() {
+        if (myRun !== runSeq) return;
+        checkMissions(code);
+        if (window.KiddyCurriculum && KiddyCurriculum.completeIfMatches) {
+          if (KiddyCurriculum.completeIfMatches(code) && KiddyCurriculum.buildPanel) {
+            KiddyCurriculum.buildPanel();
+          }
+        }
+      }
+
       if (ast.mode === 'game') {
         if (!GameRuntime || !GameInterpreter) {
           UI.showErrors('Game mode is not loaded. Check game-*.js scripts in index.html.');
@@ -481,28 +501,20 @@
         if (editorEl && editorEl.blur) editorEl.blur();
         Runtime.reset();
         interpreter = new GameInterpreter(GameRuntime);
-        interpreter.run(ast).then(function () {
-          checkMissions(code);
-        }).catch(function (err) {
+        interpreter.run(ast).then(onRunSuccess).catch(function (err) {
+          if (myRun !== runSeq) return;
           var fe = Errors.friendlyError(err);
-        UI.showErrors(Errors.renderError(fe), fe.line);
-        }).finally(function () {
-          UI.setRunning(false);
-          interpreter = null;
-        });
+          UI.showErrors(Errors.renderError(fe), fe.line);
+        }).finally(finishRun);
         return;
       }
 
       interpreter = new Interpreter(Runtime);
-      interpreter.run(ast.nodes || ast).then(function () {
-        checkMissions(code);
-      }).catch(function (err) {
+      interpreter.run(ast.nodes || ast).then(onRunSuccess).catch(function (err) {
+        if (myRun !== runSeq) return;
         var fe = Errors.friendlyError(err);
         UI.showErrors(Errors.renderError(fe), fe.line);
-      }).finally(function () {
-        UI.setRunning(false);
-        interpreter = null;
-      });
+      }).finally(finishRun);
     }
 
     function stopProgram() {
@@ -517,8 +529,10 @@
       if (window.KiddyMapHelper && KiddyMapHelper.stop) KiddyMapHelper.stop();
       if (interpreter) interpreter.stop();
       interpreter = null;
+      runSeq += 1;
+      if (GameRuntime && GameRuntime.clearShell) GameRuntime.clearShell();
+      else if (GameRuntime && GameRuntime.loop) GameRuntime.loop.stop();
       Runtime.reset();
-      if (GameRuntime) GameRuntime.reset();
       UI.clearErrors();
       UI.setRunning(false);
     }
@@ -542,22 +556,42 @@
     }
 
     function resetProgress() {
-      UI.showConfirm('Reset ALL progress and saved programs? This cannot be undone.', {
-        title: 'Reset everything?',
-        okLabel: 'Reset all',
+      UI.showConfirm('Reset programs, lessons, and badges on this device? Cloud copies stay until you delete them.', {
+        title: 'Reset this device?',
+        okLabel: 'Reset device',
         danger: true,
       }).then(function (ok) {
         if (!ok) return;
         resetProgressApply();
+        var signedIn = window.KiddyAuth && KiddyAuth.isSignedIn && KiddyAuth.isSignedIn();
+        if (!signedIn || !window.KiddySync || !KiddySync.deleteAllCloud) return;
+        UI.showConfirm('Also delete saved programs, missions, and badges from your cloud account?', {
+          title: 'Delete cloud copies?',
+          okLabel: 'Delete cloud',
+          cancelLabel: 'Keep cloud',
+          danger: true,
+        }).then(function (cloud) {
+          if (!cloud) return;
+          KiddySync.deleteAllCloud().then(function () {
+            UI.showToast('☁️ Cloud copies deleted');
+          }).catch(function () {
+            UI.showToast('☁️ Could not delete cloud copies');
+          });
+        });
       });
     }
 
     function resetProgressApply() {
       Storage.resetAll();
+      if (editorEl) editorEl.value = '';
+      UI.syncLineNumbers();
       UI.buildMissionsPanel();
       UI.buildSavedPanel();
       UI.updateProgress();
-      UI.showToast('🔄 Progress reset!');
+      if (window.KiddyCurriculum && KiddyCurriculum.buildPanel) KiddyCurriculum.buildPanel();
+      if (window.KiddyGamification && KiddyGamification.updateHud) KiddyGamification.updateHud();
+      if (window.KiddyAvatarThemes && KiddyAvatarThemes.init) KiddyAvatarThemes.init();
+      UI.showToast('🔄 This device was reset');
     }
 
     function checkMissions(code) {

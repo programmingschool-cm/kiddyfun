@@ -56,7 +56,7 @@
       this.gameState = window.KiddyGameState ? new window.KiddyGameState() : null;
     },
 
-    reset: function () {
+    clearShell: function () {
       if (this.loop) this.loop.stop();
       if (this.input) {
         this.input.stop();
@@ -64,15 +64,19 @@
       }
       this.score = 0;
       this._camX = 0;
-      this._updateScore();
-      if (this.gameState) this.gameState.reset();
-      if (this.world) this.world.reset();
+      if (this.gameState && this.gameState.reset) this.gameState.reset();
+      if (this.world && this.world.reset) this.world.reset();
       if (this.stage) {
         this.stage.innerHTML = '';
-        this.stage.classList.remove('kf-game-mode');
+        this.stage.classList.remove('kf-game-mode', 'kf-game-view-top', 'kf-game-view-side');
         this._debugLayer = null;
-        this._buildStageShell();
+        this._gameLayer = null;
       }
+    },
+
+    reset: function () {
+      this.clearShell();
+      if (this.stage) this._buildStageShell();
     },
 
     _buildStageShell: function () {

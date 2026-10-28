@@ -6,21 +6,22 @@
   <meta name="theme-color" content="#10b981"/>
   <meta name="description" content="KiddyFun Code — A fun English programming language for kids. Write simple code, watch stories come alive, learn vocabulary and logic!"/>
   <title>KiddyFun Code — Learn Programming &amp; English</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; media-src 'self' blob:; worker-src 'self'; frame-ancestors 'self'; base-uri 'self'; object-src 'none'; form-action 'self'" />
 
+  <link rel="icon" href="assets/icons/icon-192.png" type="image/png" />
+  <link rel="apple-touch-icon" href="assets/icons/icon-192.png" />
   <link rel="stylesheet" href="assets/css/bootstrap.min.css" />
   <link rel="stylesheet" href="assets/css/style.css" />
   <link rel="stylesheet" href="assets/css/stage.css" />
   <link rel="stylesheet" href="assets/css/worksheet.css" />
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/fonts.css" />
 
   <meta property="og:title" content="KiddyFun Code — by Programming School" />
   <meta property="og:description" content="A magically easy programming language for kids! Write simple English code, watch your story come alive." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://programmingschool-cm.github.io/kiddyfun/" />
-  <meta property="og:image" content="https://placehold.co/1200x630/0f172a/eab308.png?text=KiddyFun+Code" />
+  <meta property="og:image" content="https://programmingschool-cm.github.io/kiddyfun/assets/icons/icon-512.png" />
   <meta name="twitter:card" content="summary_large_image" />
   <link rel="manifest" href="manifest.json" />
 </head>
@@ -46,73 +47,65 @@
       </div>
 
       <div class="d-flex align-items-center gap-1 gap-md-2">
-        <button class="kf-btn-icon d-none d-sm-flex" id="btn-toggle-voice" title="English Voice (Text-to-Speech)" aria-label="Toggle voice">
-          🔊
-        </button>
-        <button class="kf-btn-icon d-none d-md-flex" id="btn-tts-speed" title="TTS speed: Normal / Slow / Fast" aria-label="TTS speed">
-          ⏩
-        </button>
-        <button class="btn btn-light kf-pill-btn border shadow-sm d-none d-md-inline-flex align-items-center gap-1" type="button" id="btn-share-link" title="Copy link to this code">
-          🔗 <span class="d-none d-lg-inline">Share</span>
-        </button>
-        <button class="btn btn-light kf-pill-btn border shadow-sm d-none d-md-inline-flex align-items-center gap-1" type="button" id="btn-hint-bot" title="Why isn't my code working?">
-          💡 <span class="d-none d-lg-inline">Hints</span>
-        </button>
-        <button class="btn btn-light kf-pill-btn border shadow-sm d-none d-md-inline-flex align-items-center gap-1" id="btn-ui-lang" title="UI language: English / বাংলা">
-          🇧🇩
-        </button>
-        <button class="btn btn-light kf-pill-btn border shadow-sm d-none d-md-inline-flex align-items-center gap-1" data-studio-only type="button" id="btn-export-python" title="Export code as Python">
-          🐍 <span class="d-none d-lg-inline">Python</span>
-        </button>
-        <button class="kf-btn-icon d-none d-sm-flex" id="btn-toggle-sound" title="Sound Effects" aria-label="Toggle sound">
-          🎵
-        </button>
-        <button class="btn btn-light kf-pill-btn border shadow-sm d-none d-md-inline-flex align-items-center gap-1" type="button" id="btn-open-sync" title="Cloud sync and sign in">
-          ☁️ <span class="d-none d-lg-inline">Sync</span>
-        </button>
-        <!-- <button class="btn btn-light kf-pill-btn border shadow-sm d-none d-md-inline-flex align-items-center gap-1" type="button" id="btn-open-tutorial" title="Full language tutorial">
-          📘 Tutorial
-        </button> -->
         <div class="dropdown kf-examples-dropdown">
           <button class="btn btn-light kf-pill-btn dropdown-toggle border shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-            📚 Examples
+            📚 <span class="d-none d-sm-inline">Examples</span>
           </button>
           <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-3 mt-2 py-2 kf-examples-menu" id="example-dropdown-menu"></ul>
         </div>
-        <div class="dropdown kf-syntax-dropdown">
-          <button class="btn btn-light kf-pill-btn dropdown-toggle border shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Story & game cheat sheet + AI prompt for ChatGPT / Claude">
-            🤖 <span class="d-none d-sm-inline">AI Helper</span>
-          </button>
-          <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-3 mt-2 py-2 kf-syntax-menu" id="syntax-dropdown-menu"></ul>
-        </div>
-        <button class="btn btn-light kf-pill-btn border shadow-sm d-none d-md-inline-flex align-items-center gap-1" data-creator-only type="button" id="btn-map-helper" title="Click stage to insert spawn coin or wall lines (Creator mode)">
-          🗺️ <span class="d-none d-lg-inline">Map</span>
+        <button class="btn btn-light kf-pill-btn border shadow-sm d-inline-flex align-items-center" id="btn-ui-lang" type="button" title="UI language: English / বাংলা" aria-label="Switch language">
+          🇧🇩
         </button>
-        <button class="btn btn-light kf-pill-btn border shadow-sm d-none d-sm-inline-flex align-items-center gap-1" type="button" id="btn-experience-mode" title="Switch Kid / Creator / Studio">
-          🧒 <span class="d-none d-sm-inline">Kid</span>
+        <button class="btn btn-light kf-pill-btn border shadow-sm d-inline-flex align-items-center" type="button" id="btn-experience-mode" title="Switch Kid / Creator / Studio" aria-label="Switch mode">
+          🧒
         </button>
-        <button class="btn btn-outline-danger kf-pill-btn d-none d-md-inline-block" id="btn-reset-progress" title="Reset all progress">Reset</button>
       </div>
     </div>
   </nav>
 
   <!-- OFFCANVAS MENU -->
-  <div class="offcanvas offcanvas-start border-0 shadow-lg" tabindex="-1" id="leftMenu" style="width: min(340px, 92vw);">
-    <div class="offcanvas-header border-bottom py-3">
-      <h5 class="offcanvas-title fw-bold m-0">📚 KiddyFun Menu</h5>
+  <div class="offcanvas offcanvas-start border-0 shadow-lg kf-drawer" tabindex="-1" id="leftMenu">
+    <div class="offcanvas-header kf-drawer-head">
+      <div class="kf-drawer-brand">
+        <span class="kf-drawer-mark" aria-hidden="true">📚</span>
+        <div>
+          <h5 class="offcanvas-title">KiddyFun</h5>
+          <p class="kf-drawer-sub">Menu</p>
+        </div>
+      </div>
       <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
-    <div class="kf-progress-wrap" id="kf-progress-wrap">
-      <div class="kf-progress-label">
-        <span>🎯 Mission Progress</span>
-        <span id="kf-progress-text">0 / 12</span>
+    <div class="kf-drawer-meta">
+      <div class="kf-progress-wrap" id="kf-progress-wrap">
+        <div class="kf-progress-label">
+          <span>Mission progress</span>
+          <span id="kf-progress-text">0 / 12</span>
+        </div>
+        <div class="kf-progress-bar"><div class="kf-progress-fill" id="kf-progress-fill" style="width: 0%"></div></div>
       </div>
-      <div class="kf-progress-bar"><div class="kf-progress-fill" id="kf-progress-fill" style="width: 0%"></div></div>
+      <p class="kf-cloud-status" id="kf-cloud-status">☁️ Cloud sync</p>
     </div>
-    <p class="kf-cloud-status small text-muted px-3 py-2 mb-0 border-bottom" id="kf-cloud-status">☁️ Cloud sync</p>
+    <div class="kf-menu-tools" role="toolbar" aria-label="Quick actions">
+      <button class="kf-tool-btn" type="button" id="btn-toggle-voice" title="English Voice (Text-to-Speech)" aria-label="Toggle voice"><span class="kf-tool-ico" aria-hidden="true">🔊</span><span class="kf-tool-label">Voice</span></button>
+      <button class="kf-tool-btn" type="button" id="btn-tts-speed" title="TTS speed: Normal / Slow / Fast" aria-label="TTS speed"><span class="kf-tool-ico" aria-hidden="true">⏩</span><span class="kf-tool-label">Speed</span></button>
+      <button class="kf-tool-btn" type="button" id="btn-toggle-sound" title="Sound Effects" aria-label="Toggle sound"><span class="kf-tool-ico" aria-hidden="true">🎵</span><span class="kf-tool-label">Sound</span></button>
+      <button class="kf-tool-btn" type="button" id="btn-share-link" title="Copy link to this code" aria-label="Copy share link"><span class="kf-tool-ico" aria-hidden="true">🔗</span><span class="kf-tool-label">Share</span></button>
+      <button class="kf-tool-btn" type="button" id="btn-hint-bot" title="Why isn't my code working?" aria-label="Hints"><span class="kf-tool-ico" aria-hidden="true">💡</span><span class="kf-tool-label">Hints</span></button>
+      <button class="kf-tool-btn" type="button" id="btn-open-sync" title="Cloud sync and sign in" aria-label="Cloud sync"><span class="kf-tool-ico" aria-hidden="true">☁️</span><span class="kf-tool-label">Sync</span></button>
+      <button class="kf-tool-btn" type="button" id="btn-open-tutorial" title="Full language tutorial" aria-label="Tutorial"><span class="kf-tool-ico" aria-hidden="true">📘</span><span class="kf-tool-label">Tutorial</span></button>
+      <div class="dropdown kf-tool-drop">
+        <button class="kf-tool-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false" title="Story and game cheat sheet">
+          <span class="kf-tool-ico" aria-hidden="true">🤖</span><span class="kf-tool-label">Helper</span>
+        </button>
+        <ul class="dropdown-menu shadow-lg border-0 rounded-3 py-2 kf-syntax-menu" id="syntax-dropdown-menu"></ul>
+      </div>
+      <button class="kf-tool-btn" data-studio-only type="button" id="btn-export-python" title="Export code as Python" aria-label="Export Python"><span class="kf-tool-ico" aria-hidden="true">🐍</span><span class="kf-tool-label">Python</span></button>
+      <button class="kf-tool-btn" data-creator-only type="button" id="btn-map-helper" title="Click the stage to insert a coin or wall"><span class="kf-tool-ico" aria-hidden="true">🗺️</span><span class="kf-tool-label">Map</span></button>
+      <button class="kf-tool-btn kf-tool-btn-danger" type="button" id="btn-reset-progress" title="Reset progress on this device"><span class="kf-tool-ico" aria-hidden="true">↺</span><span class="kf-tool-label">Reset</span></button>
+    </div>
     <div class="kf-creator-panel px-3 py-3 border-bottom d-none" data-creator-only>
       <div class="small fw-bold mb-2">🎨 Creator tools</div>
-      <p class="small text-muted mb-2 mb-0">Map Helper: pick a tool, press <strong>Map</strong> in the navbar, then click the stage to insert code.</p>
+      <p class="small text-muted mb-0">Pick Coin or Wall, press <strong>Map</strong>, then click the stage.</p>
       <div class="btn-group btn-group-sm w-100 mt-2" role="group">
         <button type="button" class="btn btn-outline-secondary active" data-map-tool="coin">🪙 Coin</button>
         <button type="button" class="btn btn-outline-secondary" data-map-tool="wall">🧱 Wall</button>
@@ -120,19 +113,22 @@
       <div id="panel-map-editor" class="mt-3" data-creator-only></div>
     </div>
     <div class="offcanvas-body p-0 d-flex flex-column">
-      <div class="ss-nav-panel">
-        <button class="ss-nav-btn active" data-panel="guide">📖 Guide</button>
-        <button class="ss-nav-btn" data-panel="lessons">📚 Lessons</button>
-        <!-- <button class="ss-nav-btn" data-panel="tutorial">📘 Tutorial</button> -->
-        <button class="ss-nav-btn" data-panel="missions">🎯 Missions</button>
-        <button class="ss-nav-btn" data-panel="saved">💾 Saved</button>
-        <button class="ss-nav-btn" data-panel="gallery">🌐 Gallery</button>
-        <button class="ss-nav-btn" data-panel="badges">🏅 Badges</button>
-        <button class="ss-nav-btn" data-panel="parent">👨‍👩‍👧 Parent</button>
-        <button class="ss-nav-btn" data-panel="python">🐍 Python</button>
-        <button class="ss-nav-btn" data-panel="themes">🎨 Themes</button>
-        <button class="ss-nav-btn" data-panel="teacher">👩‍🏫 Teacher</button>
-        <button class="ss-nav-btn" data-panel="sync">☁️ Sync</button>
+      <div class="ss-nav-scroll">
+      <div class="ss-nav-panel" role="tablist" aria-label="Menu sections">
+        <button class="ss-nav-btn active" type="button" data-panel="guide"><span class="ss-nav-ico" aria-hidden="true">📖</span><span class="ss-nav-label">Guide</span></button>
+        <button class="ss-nav-btn" type="button" data-panel="lessons"><span class="ss-nav-ico" aria-hidden="true">📚</span><span class="ss-nav-label">Lessons</span></button>
+        <button class="ss-nav-btn" type="button" data-panel="tutorial"><span class="ss-nav-ico" aria-hidden="true">📘</span><span class="ss-nav-label">Tutorial</span></button>
+        <button class="ss-nav-btn" type="button" data-panel="missions"><span class="ss-nav-ico" aria-hidden="true">🎯</span><span class="ss-nav-label">Missions</span></button>
+        <button class="ss-nav-btn" type="button" data-panel="saved"><span class="ss-nav-ico" aria-hidden="true">💾</span><span class="ss-nav-label">Saved</span></button>
+        <button class="ss-nav-btn" type="button" data-panel="gallery"><span class="ss-nav-ico" aria-hidden="true">🌐</span><span class="ss-nav-label">Gallery</span></button>
+        <button class="ss-nav-btn" type="button" data-panel="badges"><span class="ss-nav-ico" aria-hidden="true">🏅</span><span class="ss-nav-label">Badges</span></button>
+        <button class="ss-nav-btn" type="button" data-panel="parent"><span class="ss-nav-ico" aria-hidden="true">👨‍👩‍👧</span><span class="ss-nav-label">Parent</span></button>
+        <button class="ss-nav-btn" type="button" data-panel="privacy"><span class="ss-nav-ico" aria-hidden="true">🔒</span><span class="ss-nav-label">Privacy</span></button>
+        <button class="ss-nav-btn" type="button" data-panel="python"><span class="ss-nav-ico" aria-hidden="true">🐍</span><span class="ss-nav-label">Python</span></button>
+        <button class="ss-nav-btn" type="button" data-panel="themes"><span class="ss-nav-ico" aria-hidden="true">🎨</span><span class="ss-nav-label">Themes</span></button>
+        <button class="ss-nav-btn" type="button" data-panel="teacher"><span class="ss-nav-ico" aria-hidden="true">👩‍🏫</span><span class="ss-nav-label">Teacher</span></button>
+        <button class="ss-nav-btn" type="button" data-panel="sync"><span class="ss-nav-ico" aria-hidden="true">☁️</span><span class="ss-nav-label">Sync</span></button>
+      </div>
       </div>
       <div class="ss-side-panel flex-grow-1">
         <div id="panel-guide"></div>
@@ -141,6 +137,17 @@
         <div id="panel-missions" class="d-none"></div>
         <div id="panel-badges" class="d-none p-3"></div>
         <div id="panel-parent" class="d-none p-3"></div>
+        <div id="panel-privacy" class="d-none p-3">
+          <h6 class="ss-panel-title">🔒 Privacy</h6>
+          <ul class="small mb-2">
+            <li>Programs, lessons, and badges stay on this device until you sign in.</li>
+            <li>Gallery posts are public. Sign in to publish, and you can unpublish your own.</li>
+            <li>Share links load code into the editor. Press Run yourself. They do not start automatically.</li>
+            <li>Repeat-after-me may send your voice to the browser speech service. This app does not store the audio.</li>
+            <li>There is no public chat. Reset can clear this device, and a separate step can delete cloud copies of programs.</li>
+          </ul>
+          <p class="small text-muted mb-0">On a shared computer, use Sync → Sign out and clear this device.</p>
+        </div>
         <div id="panel-python" class="d-none p-3"></div>
         <div id="panel-themes" class="d-none p-3"></div>
         <div id="panel-teacher" class="d-none p-3"></div>
@@ -150,11 +157,6 @@
           <h6 class="ss-panel-title">☁️ Cloud Sync</h6>
           <p class="ss-empty-msg small text-muted">Loading sign-in…</p>
         </div>
-      </div>
-      <div class="p-3 border-top d-flex flex-column gap-2 d-md-none">
-        <!-- <button class="btn btn-primary btn-sm w-100" type="button" id="btn-open-tutorial-mobile">📘 Language Tutorial</button> -->
-        <button class="btn btn-success btn-sm w-100" type="button" id="btn-open-sync-mobile">☁️ Sign in / Cloud Sync</button>
-        <button class="btn btn-outline-danger btn-sm w-100" id="btn-reset-progress-mobile">🔄 Reset Progress</button>
       </div>
     </div>
   </div>
@@ -182,20 +184,31 @@
               </span>
             </span>
             <div class="d-flex gap-1">
-              <button class="kf-toolbar-btn d-sm-none" id="btn-toggle-voice-mobile" title="Voice">🔊</button>
-              <button class="kf-toolbar-btn d-sm-none" id="btn-toggle-sound-mobile" title="Sound">🎵</button>
-              <button class="kf-toolbar-btn d-none d-lg-inline-block" id="btn-max-editor" title="Maximize editor" aria-pressed="false">🗖</button>
-              <button class="kf-toolbar-btn" id="btn-clear" title="Clear">🗑️ <span class="d-none d-md-inline">Clear</span></button>
-              <button class="kf-toolbar-btn" id="btn-save" title="Save">💾 <span class="d-none d-md-inline">Save</span></button>
-              <button class="kf-toolbar-btn" id="btn-publish" title="Publish and get a shareable link">🔗 <span class="d-none d-md-inline">Publish</span></button>
-              <button class="kf-toolbar-btn d-none d-sm-inline-block" id="btn-download" title="Download">📥</button>
+              <button class="kf-toolbar-btn d-sm-none" id="btn-toggle-voice-mobile" title="Voice" aria-label="Toggle voice">🔊</button>
+              <button class="kf-toolbar-btn d-sm-none" id="btn-toggle-sound-mobile" title="Sound" aria-label="Toggle sound">🎵</button>
+              <button class="kf-toolbar-btn d-none d-lg-inline-block" id="btn-max-editor" title="Maximize editor" aria-label="Maximize editor" aria-pressed="false">🗖</button>
+              <button class="kf-toolbar-btn" id="btn-clear" title="Clear" aria-label="Clear editor">🗑️ <span class="d-none d-md-inline">Clear</span></button>
+              <button class="kf-toolbar-btn" id="btn-save" title="Save" aria-label="Save program">💾 <span class="d-none d-md-inline">Save</span></button>
+              <button class="kf-toolbar-btn" id="btn-publish" title="Publish and get a shareable link" aria-label="Publish">🔗 <span class="d-none d-md-inline">Publish</span></button>
+              <button class="kf-toolbar-btn d-none d-sm-inline-block" id="btn-download" title="Download" aria-label="Download">📥</button>
             </div>
           </div>
 
           <div class="kf-panel-body">
             <div class="kf-editor-wrap flex-grow-1">
               <div class="kf-line-numbers" id="ss-line-numbers" aria-hidden="true"></div>
-              <div id="kf-blocks-wrap" class="kf-blocks-wrap d-none flex-grow-1"></div>
+              <div id="kf-blocks-wrap" class="kf-blocks-wrap d-none flex-grow-1">
+                <div class="kf-blocks-workspace">
+                  <div class="kf-blocks-palette" id="kf-blocks-palette"></div>
+                  <div class="kf-blocks-script">
+                    <div class="kf-blocks-script-head">
+                      <span>My story</span>
+                      <span class="kf-blocks-target" id="kf-blocks-target">New blocks go at the end</span>
+                    </div>
+                    <div class="kf-blocks-canvas" id="kf-blocks-canvas" aria-label="Your story blocks"></div>
+                  </div>
+                </div>
+              </div>
               <div class="kf-editor-stack flex-grow-1" id="kf-editor-stack">
                 <div class="kf-editor-input-area position-relative flex-grow-1">
                   <div class="kf-editor-layer" id="kf-editor-layer">
@@ -237,7 +250,7 @@
             <h2 class="kf-panel-title"><span>📺</span> Live Output</h2>
             <div class="d-flex gap-2">
               <button class="btn btn-sm btn-outline-primary kf-pill-btn d-none d-lg-inline-block" id="btn-toggle-code">🔲 Full Screen</button>
-              <button class="btn btn-sm btn-light kf-pill-btn border" id="btn-reset">🔄 Reset</button>
+              <button class="btn btn-sm btn-light kf-pill-btn border" id="btn-reset" aria-label="Reset stage">🔄 Reset</button>
             </div>
           </div>
 
@@ -304,7 +317,7 @@
   <div id="ss-toast" class="ss-toast d-none" role="status" aria-live="polite">Saved!</div>
 
   <script src="assets/js/bootstrap.bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8/dist/umd/supabase.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8/dist/umd/supabase.min.js" integrity="sha384-z2hqtpr/vSDZ8zSjLOiNgnR/mpU799AD93s6rvkNJLI6Hl0YlKXEhDtREzNT749S" crossorigin="anonymous"></script>
   <!-- Optional: <script src="assets/js/supabase-config.local.js"></script> -->
   <script src="assets/js/supabase-config.js"></script>
   <script src="assets/js/supabase-client.js"></script>
@@ -349,12 +362,14 @@
   <script src="assets/js/game-map-helper.js"></script>
   <script src="assets/js/game-map-editor.js"></script>
   <script src="assets/js/game-debugger.js"></script>
+  <script src="assets/js/curriculum-data.js"></script>
   <script src="assets/js/curriculum.js"></script>
   <script src="assets/js/speech-practice.js"></script>
   <script src="assets/js/gamification.js"></script>
   <script src="assets/js/teacher-panel.js"></script>
   <script src="assets/js/python-export.js"></script>
   <script src="assets/js/project-files.js"></script>
+  <script src="assets/js/blocks-script.js"></script>
   <script src="assets/js/blocks-mode.js"></script>
   <script src="assets/js/tour.js"></script>
   <script src="assets/js/share-link.js"></script>

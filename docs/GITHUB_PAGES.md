@@ -54,8 +54,8 @@ Save. After 1–3 minutes the site is live.
 
 ### 3. Configure Supabase for your `github.io` URL
 
-1. Create project + run [`supabase/migrations/001_initial_schema.sql`](../supabase/migrations/001_initial_schema.sql)  
-   (see [`SUPABASE_GUIDE.md`](SUPABASE_GUIDE.md))
+1. Create project + run migrations `001` through `005` in order  
+   (see [`BACKEND.md`](BACKEND.md))
 
 2. **Authentication** → **URL Configuration**:
    - **Site URL:** `https://programmingschool-cm.github.io/kiddyfun/`

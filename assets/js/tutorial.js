@@ -178,37 +178,43 @@
     var toc = buildToc(md);
     var bodyHtml = mdToHtml(md);
 
-    var tocHtml = '<nav class="ss-tutorial-toc" aria-label="Tutorial sections">';
-    tocHtml += '<div class="ss-tutorial-toc-title">Contents</div>';
+    var jumpHtml = '<label class="ss-tutorial-jump-wrap">';
+    jumpHtml += '<span class="ss-tutorial-jump-label">Contents</span>';
+    jumpHtml += '<select class="ss-tutorial-jump" aria-label="Tutorial sections">';
+    jumpHtml += '<option value="">Jump to a section</option>';
     toc.forEach(function (item) {
-      tocHtml += '<a class="ss-tutorial-toc-link" href="#' + item.id + '" data-tut-anchor="' + item.id + '">' + escHtml(item.title) + '</a>';
+      jumpHtml += '<option value="' + escHtml(item.id) + '">' + escHtml(item.title) + '</option>';
     });
-    tocHtml += '</nav>';
+    jumpHtml += '</select></label>';
 
     el.innerHTML =
       '<div class="ss-tutorial-header">' +
-        '<h6 class="ss-panel-title mb-1">📘 Language Tutorial</h6>' +
-        '<p class="ss-tutorial-sub small text-muted mb-0">Complete syntax, keywords, and rules (v2.2)</p>' +
+        '<h6 class="ss-panel-title mb-1">Language Tutorial</h6>' +
+        '<p class="ss-tutorial-sub small text-muted mb-0">Syntax, keywords, and rules (v2.2)</p>' +
+        jumpHtml +
       '</div>' +
       '<div class="ss-tutorial-layout">' +
-        tocHtml +
         '<div class="ss-tutorial-article" id="ss-tutorial-article">' + bodyHtml + '</div>' +
       '</div>';
 
-    el.querySelectorAll('.ss-tutorial-toc-link').forEach(function (link) {
-      link.addEventListener('click', function (e) {
-        e.preventDefault();
-        var id = link.getAttribute('data-tut-anchor');
-        var target = document.getElementById(id);
+    var jump = el.querySelector('.ss-tutorial-jump');
+    if (jump) {
+      jump.addEventListener('change', function () {
+        var id = jump.value;
+        var target = id ? document.getElementById(id) : null;
         var article = document.getElementById('ss-tutorial-article');
-        if (target && article) {
+        var drawer = document.getElementById('leftMenu');
+        if (!target) return;
+        if (article && article.scrollHeight > article.clientHeight + 24) {
           article.scrollTo({ top: target.offsetTop - 8, behavior: 'smooth' });
+          return;
         }
-        el.querySelectorAll('.ss-tutorial-toc-link').forEach(function (l) {
-          l.classList.toggle('active', l === link);
-        });
+        if (drawer) {
+          var top = target.getBoundingClientRect().top - drawer.getBoundingClientRect().top + drawer.scrollTop - 72;
+          drawer.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+        }
       });
-    });
+    }
 
     _loaded = true;
   }

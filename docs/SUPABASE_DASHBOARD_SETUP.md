@@ -15,6 +15,9 @@
 |------|------------|------------|
 | [`001_initial_schema.sql`](../supabase/migrations/001_initial_schema.sql) | **১ম** | ৬ টেবিল, RLS, `handle_new_user`, `join_class_by_code` |
 | [`002_security_hardening.sql`](../supabase/migrations/002_security_hardening.sql) | **২য়** | `role` পরিবর্তন API থেকে বন্ধ, ইনডেক্স |
+| [`003_published_programs.sql`](../supabase/migrations/003_published_programs.sql) | **৩য়** | গ্যালারি টেবিল ও `publish_program` |
+| [`004_published_insert_policy.sql`](../supabase/migrations/004_published_insert_policy.sql) | **৪র্থ** | পুরনো পাবলিক insert (005 এটা বন্ধ করে) |
+| [`005_production_safety.sql`](../supabase/migrations/005_production_safety.sql) | **৫ম** | শুধু সাইন-ইন করা লেখক পাবলিশ করতে পারে, নতুন অ্যাকাউন্ট `student`, ক্লাস শুধু teacher |
 
 ### টেবিল ↔ অ্যাপ ম্যাপিং
 

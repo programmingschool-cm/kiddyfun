@@ -72,19 +72,21 @@
     var el = document.getElementById('kf-gamification-hud');
     if (!el) return;
     var g = load();
-    el.innerHTML = '⭐ ' + g.xp + ' XP · 🔥 ' + g.streak + ' day streak';
+    el.innerHTML =
+      '<span class="kf-stat"><span aria-hidden="true">⭐</span><span><strong>' + g.xp + '</strong> XP</span></span>' +
+      '<span class="kf-stat"><span aria-hidden="true">🔥</span><span><strong>' + g.streak + '</strong> day streak</span></span>';
     var dc = document.getElementById('kf-daily-challenge');
-    if (dc) dc.textContent = '🎯 Today: ' + dailyChallenge();
+    if (dc) dc.textContent = 'Today: ' + dailyChallenge();
   }
 
   function buildMenuBlock() {
     var wrap = document.getElementById('kf-progress-wrap');
     if (!wrap || document.getElementById('kf-gamification-hud')) return;
     var div = document.createElement('div');
-    div.className = 'px-3 py-2 border-bottom small';
+    div.className = 'kf-hud';
     div.innerHTML =
-      '<div id="kf-gamification-hud" class="fw-bold mb-1">⭐ 0 XP · 🔥 0 day streak</div>' +
-      '<div id="kf-daily-challenge" class="text-muted">🎯 Today: …</div>';
+      '<div id="kf-gamification-hud" class="kf-hud-stats"></div>' +
+      '<div id="kf-daily-challenge" class="kf-hud-today"></div>';
     wrap.parentNode.insertBefore(div, wrap.nextSibling);
     updateHud();
   }

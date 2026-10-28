@@ -21,7 +21,7 @@
   function exportProgressCsv() {
     var rows = [['type', 'key', 'value']];
     try {
-      var missions = JSON.parse(localStorage.getItem('ss_missions_done') || '[]');
+      var missions = JSON.parse(localStorage.getItem('ss_completed_missions') || '[]');
       missions.forEach(function (m) { rows.push(['mission', m, 'done']); });
     } catch (e) { /* ignore */ }
     try {
@@ -49,7 +49,7 @@
     if (!el) return;
     el.innerHTML =
       '<h6 class="ss-panel-title">👩‍🏫 Teacher</h6>' +
-      '<p class="small text-muted">Share this class code with students. Export progress from this device.</p>' +
+      '<p class="small text-muted">This code lives on this device. A cloud class is created only for a teacher account in the Supabase dashboard.</p>' +
       '<div class="alert alert-secondary py-2 small mb-2">Class code: <strong id="kf-class-code">' + getClassCode() + '</strong></div>' +
       '<button type="button" class="btn btn-sm btn-outline-primary w-100 mb-2" id="kf-export-csv">📊 Export progress CSV</button>' +
       '<button type="button" class="btn btn-sm btn-outline-secondary w-100 mb-2" id="kf-print-worksheet">🖨️ Print worksheet</button>' +

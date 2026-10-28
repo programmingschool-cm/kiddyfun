@@ -245,12 +245,18 @@
     },
 
     showPanel: function(name) {
-      ['guide', 'lessons', 'tutorial', 'missions', 'saved', 'gallery', 'badges', 'parent', 'python', 'themes', 'teacher', 'sync'].forEach(function (p) {
+      ['guide', 'lessons', 'tutorial', 'missions', 'saved', 'gallery', 'badges', 'parent', 'privacy', 'python', 'themes', 'teacher', 'sync'].forEach(function (p) {
         var el = document.getElementById('panel-' + p);
         if (el) el.classList.toggle('d-none', p !== name);
       });
       document.querySelectorAll('.ss-nav-btn').forEach(function (btn) {
-        btn.classList.toggle('active', btn.dataset.panel === name);
+        var on = btn.dataset.panel === name;
+        btn.classList.toggle('active', on);
+        if (on && btn.parentElement) {
+          var scroller = btn.parentElement;
+          var left = btn.offsetLeft - (scroller.clientWidth - btn.offsetWidth) / 2;
+          scroller.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
+        }
       });
       if (name === 'sync' && window.KiddyAuth && window.KiddyAuth.buildSyncPanel) {
         window.KiddyAuth.buildSyncPanel();

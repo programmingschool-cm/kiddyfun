@@ -35,9 +35,21 @@
     { pattern: /not a known action/i,
       title: '🎭 That action is not supported yet!',
       tip: 'Known actions: waves, smiles, jumps, flies, runs, walks, dances, claps, hides, shows, bows, nods, cheers, handshakes, flaps, moves right, moves left.' },
+    { pattern: /Unexpected "/i,
+      title: '✏️ Extra words on this line',
+      tip: 'An ask line is only the question. Put each choice on its own line.\n✅ ask "What is 2 + 2?"\nchoice "4" correct',
+      bnTitle: '✏️ এই লাইনে অতিরিক্ত কথা আছে',
+      bnTip: 'ask লাইনে শুধু প্রশ্ন থাকবে। প্রতিটি উত্তর আলাদা লাইনে।\n✅ ask "What is 2 + 2?"\nchoice "4" correct' },
+    { pattern: /no choices/i,
+      title: '📋 This question needs choices',
+      tip: 'After ask, add choice lines.\n✅ choice "Banana" correct\nchoice "Apple" wrong',
+      bnTitle: '📋 প্রশ্নের উত্তরের বোতাম লাগবে',
+      bnTip: 'ask-এর পর choice লাইন যোগ করুন।\n✅ choice "Banana" correct' },
     { pattern: /Expected a quoted string/i,
       title: '✏️ Missing quotation marks!',
-      tip: 'Put the text inside double quotes.\n✅ Example: Rafi says "Hello!"' },
+      tip: 'Put the text inside double quotes.\n✅ Example: Rafi says "Hello!"',
+      bnTitle: '✏️ উদ্ধৃতি চিহ্ন লাগবে',
+      bnTip: 'লেখাকে ডবল কোটের ভিতরে রাখুন।\n✅ Rafi says "Hello!"' },
     { pattern: /Lexer not loaded/i,
       title: '⚙️ Script loading error',
       tip: 'Try refreshing the page (F5). If the problem persists, check the browser console.' },
@@ -74,7 +86,14 @@
     for (var i = 0; i < ERROR_HINTS.length; i++) {
       var hint = ERROR_HINTS[i];
       if (hint.pattern.test(raw)) {
-        return { title: hint.title, message: 'Line ' + line + ': ' + raw, line: line, tip: hint.tip, raw: raw };
+        var bn = window.KiddyLocale && KiddyLocale.getLang && KiddyLocale.getLang() === 'bn';
+        return {
+          title: bn && hint.bnTitle ? hint.bnTitle : hint.title,
+          message: 'Line ' + line + ': ' + raw,
+          line: line,
+          tip: bn && hint.bnTip ? hint.bnTip : hint.tip,
+          raw: raw,
+        };
       }
     }
     return {

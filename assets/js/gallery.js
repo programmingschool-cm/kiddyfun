@@ -51,7 +51,10 @@
         var remixBtn = e.target.closest('[data-gallery-remix]');
         if (remixBtn) {
           openProgram(remixBtn.getAttribute('data-gallery-remix'), true);
+          return;
         }
+        var dropBtn = e.target.closest('[data-gallery-unpublish]');
+        if (dropBtn) unpublish(dropBtn.getAttribute('data-gallery-unpublish'));
       });
     }
 
@@ -99,6 +102,9 @@
         html += '<div class="kf-gallery-card-actions">';
         html += '<button type="button" class="ss-btn-mini" data-gallery-open="' + escHtml(sid) + '">Open</button>';
         html += '<button type="button" class="ss-btn-mini kf-gallery-remix-btn" data-gallery-remix="' + escHtml(sid) + '">✨ Remix</button>';
+        if (window.KiddyPublish && KiddyPublish.isMine && KiddyPublish.isMine(sid)) {
+          html += '<button type="button" class="ss-btn-mini" data-gallery-unpublish="' + escHtml(sid) + '">Unpublish</button>';
+        }
         html += '</div></div>';
       });
       setListHtml(html);
@@ -121,12 +127,24 @@
         return;
       }
       if (window.UI && UI.loadSharedCode) {
-        UI.loadSharedCode(res.code, res.title, !asRemix, {
+        UI.loadSharedCode(res.code, res.title, false, {
           remix: asRemix,
           shareId: shareId,
         });
         if (window.UI.closeLeftMenu) UI.closeLeftMenu();
       }
+    });
+  }
+
+  function unpublish(shareId) {
+    if (!shareId || !window.KiddyPublish || !KiddyPublish.deletePublished) return;
+    KiddyPublish.deletePublished(shareId).then(function (res) {
+      if (!res.ok) {
+        if (window.UI && UI.showAlert) UI.showAlert(res.error || 'Could not unpublish', { title: 'Gallery', icon: '⚠️' });
+        return;
+      }
+      if (window.UI && UI.showToast) UI.showToast('🗑️ Removed from the gallery');
+      loadGallery(false);
     });
   }
 

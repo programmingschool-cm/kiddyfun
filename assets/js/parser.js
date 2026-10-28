@@ -44,6 +44,17 @@
     if (!this.isEOF() && this.peek().type === TT.EOL) this.advance();
   };
 
+  Parser.prototype.expectEndOfLine = function (line, hint) {
+    var t = this.peek();
+    if (t && t.type !== TT.EOL && t.type !== TT.EOF) {
+      throw new ParseError(
+        'Unexpected "' + t.value + '" on this line. ' + (hint || 'Remove the extra words.'),
+        line
+      );
+    }
+    this.restOfLine(line);
+  };
+
   Parser.prototype.skipEOL = function () {
     while (!this.isEOF() && this.peek().type === TT.EOL) this.advance();
   };
@@ -959,11 +970,11 @@
         this.advance();
         storeAs = this.readVarName(line, 'Expected: ask user "?" as name');
       }
-      this.restOfLine(line);
+      this.expectEndOfLine(line, 'Try: ask user "What is your name?" as name');
       return { type: 'ask_user_stmt', question: q, storeAs: storeAs, line: line };
     }
     var question = this.expectString(line, 'ask "What colour is the sky?"');
-    this.restOfLine(line);
+    this.expectEndOfLine(line, 'Put each choice on its own line: choice "Banana" correct');
     this.hasQuiz = true;
     return { type: 'quiz_start', question: question, line: line };
   };
@@ -1289,7 +1300,7 @@
     for (var i = 0; i < nodes.length; i++) {
       var node = nodes[i];
       if (node.type === 'quiz_start') {
-        if (activeQuiz) result.push(activeQuiz);
+        if (activeQuiz) pushQuiz(activeQuiz);
         activeQuiz = { type: 'quiz', question: node.question, choices: [], line: node.line };
         continue;
       }
@@ -1298,7 +1309,7 @@
         activeQuiz.choices.push({ text: node.text, result: node.result });
         continue;
       }
-      if (activeQuiz) { result.push(activeQuiz); activeQuiz = null; }
+      if (activeQuiz) { pushQuiz(activeQuiz); activeQuiz = null; }
       if (node.type === 'repeat')       node.body = groupQuizNodes(node.body);
       if (node.type === 'repeat_while') node.body = groupQuizNodes(node.body);
       if (node.type === 'if_answer') {
@@ -1313,8 +1324,18 @@
       if (node.type === 'for_each') node.body = groupQuizNodes(node.body);
       result.push(node);
     }
-    if (activeQuiz) result.push(activeQuiz);
+    if (activeQuiz) pushQuiz(activeQuiz);
     return result;
+
+    function pushQuiz(quiz) {
+      if (!quiz.choices.length) {
+        throw new ParseError(
+          'This question has no choices. Add lines like: choice "Banana" correct',
+          quiz.line
+        );
+      }
+      result.push(quiz);
+    }
   }
 
   var GAME_SETUP_INVALID = {

@@ -26,9 +26,9 @@
       "id": 3,
       "title": "Quiz & Logic",
       "lessons": [
-        { "id": "L3-1", "title": "Simple quiz", "goal": "ask with choices", "starter": "scene \"classroom\"\nTeacher appears\nask \"What is 2 + 2?\" with answers \"3\", \"4\", \"5\"\nif answer equals \"4\"\n    Teacher says \"Correct!\"\nend", "badge": "❓ Quiz" },
-        { "id": "L3-2", "title": "Wrong answer", "goal": "else branch", "starter": "scene \"school\"\nask \"Sky colour?\" with answers \"blue\", \"red\"\nif answer equals \"blue\"\n    Rafi says \"Yes!\"\nelse\n    Rafi says \"Try again!\"\nend", "badge": "🧠 Logic" },
-        { "id": "L3-3", "title": "Score + quiz", "goal": "add points on correct", "starter": "scene \"school\"\nscore starts at 0\nask \"1+1?\" with answers \"2\", \"3\"\nif answer equals \"2\"\n    add 10 points\n    Rafi says \"Great!\"\nend", "badge": "⭐ Quiz Score" },
+        { "id": "L3-1", "title": "Simple quiz", "goal": "ask with choices", "starter": "scene \"classroom\"\nTeacher appears\nask \"What is 2 + 2?\"\nchoice \"3\" wrong\nchoice \"4\" correct\nchoice \"5\" wrong\nif answer is correct\n    Teacher says \"Correct!\"\nend", "badge": "❓ Quiz" },
+        { "id": "L3-2", "title": "Wrong answer", "goal": "else branch", "starter": "scene \"school\"\nask \"Sky colour?\"\nchoice \"blue\" correct\nchoice \"red\" wrong\nif answer is correct\n    Rafi says \"Yes!\"\nelse\n    Rafi says \"Try again!\"\nend", "badge": "🧠 Logic" },
+        { "id": "L3-3", "title": "Score + quiz", "goal": "add points on correct", "starter": "scene \"school\"\nscore starts at 0\nask \"1+1?\"\nchoice \"2\" correct\nchoice \"3\" wrong\nif answer is correct\n    add 10 points\n    Rafi says \"Great!\"\nend", "badge": "⭐ Quiz Score" },
         { "id": "L3-4", "title": "Choose path", "goal": "choose and if choice", "starter": "scene \"school\"\nRafi appears\nchoose \"Forest\" or \"School\"\nif choice equals \"Forest\"\n    scene \"jungle\"\n    Rafi says \"Adventure!\"\nelse\n    Rafi says \"Safe at school!\"\nend", "badge": "🔀 Branch" },
         { "id": "L3-5", "title": "Vocabulary", "goal": "show word", "starter": "scene \"classroom\"\nshow word \"brave\" means \"সাহসী\"\nRafi appears\nRafi says \"I am brave!\"", "badge": "📚 Vocab" }
       ]

@@ -1,0 +1,5 @@
+/* Local UI fonts. The page does not load Google Fonts. */
+:root {
+  --kf-font: "Segoe UI", "Nirmala UI", system-ui, sans-serif;
+  --kf-code: "Cascadia Code", Consolas, ui-monospace, monospace;
+}

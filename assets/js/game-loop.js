@@ -30,11 +30,30 @@
     return !!this._paused;
   };
 
+  GameLoop.prototype._bindVisibility = function () {
+    if (this._onVis || typeof document === 'undefined') return;
+    var self = this;
+    this._onVis = function () {
+      if (document.hidden) {
+        if (!self._paused) {
+          self._pausedByHide = true;
+          self.pause();
+        }
+      } else if (self._pausedByHide) {
+        self._pausedByHide = false;
+        self.resume();
+      }
+    };
+    document.addEventListener('visibilitychange', this._onVis);
+  };
+
   GameLoop.prototype.start = function () {
     if (this._running) return;
     this._running = true;
+    this._pausedByHide = false;
     this._last = performance.now();
     this._accum = 0;
+    this._bindVisibility();
     var self = this;
     function frame(now) {
       if (!self._running) return;
@@ -48,7 +67,7 @@
         }
         self._accum -= STEP_MS;
       }
-      if (self.onRender) {
+      if (!self._paused && self.onRender) {
         try { self.onRender(); }
         catch (e2) { console.error('[KiddyFun][GameLoop] render error:', e2); self.stop(); return; }
       }
@@ -59,9 +78,14 @@
 
   GameLoop.prototype.stop = function () {
     this._running = false;
+    this._pausedByHide = false;
     if (this._raf) {
       cancelAnimationFrame(this._raf);
       this._raf = null;
+    }
+    if (this._onVis && typeof document !== 'undefined') {
+      document.removeEventListener('visibilitychange', this._onVis);
+      this._onVis = null;
     }
   };
 

@@ -18,7 +18,7 @@ KiddyFun Code lets learners write simple English-like code to create animated st
 - **Teacher & parent** — class code, CSV export, worksheet print, parent summary
 - **Bangla UI** — navbar 🇧🇩 toggles menu labels (code stays English)
 - **PWA** — installable shell + offline cache
-- **Tests** — `npm test` (parser + all examples)
+- **Tests** — `npm test` (parser) and `npm run test:examples` (every example)
 - **Cloud (optional)** — Supabase sync — [docs/SUPABASE_GUIDE.md](docs/SUPABASE_GUIDE.md)
 
 ## How to Run
@@ -36,33 +36,20 @@ python -m http.server 5500
 ## Folder Structure
 
 ```
-SmartScript/
-├── index.html          # Main UI layout
-├── README.md           # This documentation
-├── docs/
-│   ├── TUTORIAL.md     # Complete language tutorial & reference
-│   └── LANGUAGE.md     # Quick syntax summary
-└── assets/
-    ├── css/
-    │   ├── bootstrap.min.css  # Layout framework
-    │   └── style.css          # Core UI & animation styles
-    └── js/
-        ├── bootstrap.bundle.min.js
-        ├── app.js         # Bootstrap and UI event binding
-        ├── lexer.js       # Converts text string to token array
-        ├── expr.js        # English-like expressions (math, logic, variables)
-        ├── parser.js      # Converts tokens to AST commands
-        ├── runtime.js     # DOM Manipulation / Visual Stage
-        ├── interpreter.js # Walks AST, sequences runtime with async timing
-        ├── errors.js      # Kid-friendly error handling
-        ├── storage.js          # localStorage + cloud sync hooks
-        ├── supabase-config.js  # Supabase URL + anon key
-        ├── supabase-client.js  # Supabase client wrapper
-        ├── supabase-sync.js    # Push/pull merge with cloud
-        ├── supabase-auth.js    # Sign-in UI (anonymous + parent email)
-        ├── examples.js    # Built-in example snippets
-        ├── missions.js    # Learning validation missions
-        └── ui.js          # DOM Panels and dynamic UI logic
+kiddy/
+├── index.html                 # App shell
+├── manifest.json              # PWA manifest
+├── sw.js                      # Offline cache (network first)
+├── package.json               # npm test / npm run test:examples
+├── assets/
+│   ├── css/                   # style, stage, worksheet, local fonts
+│   ├── data/curriculum.json   # 30 lessons
+│   ├── icons/                 # PWA icons
+│   └── js/                    # lexer, parser, interpreter, runtime,
+│                              # game engine, lessons, gallery, Supabase
+├── supabase/migrations/       # 001–005, run in order
+├── tests/                     # parser tests and example smoke tests
+└── docs/                      # language, backend, privacy, tutorial
 ```
 
 ## Supported Commands
@@ -175,9 +162,16 @@ Load **💻 Programming 101**, **⌨️ Input, for-each, const**, and **🎲 Lis
 3. **Interpreter (`interpreter.js`)**: An asynchronous walker that takes the AST array. It `await`s between DOM actions so that stories play out sequentially rather than all at once.
 4. **Runtime (`runtime.js`)**: Handles all DOM manipulation on the stage. Generates CSS keyframe classes and inline styles to render avatars and scenes.
 
-## Future Roadmap
+## Already in the app
 
-- **Block Mode**: Toggle between text typing and visual drag-and-drop blocks.
-- **Audio Output**: Text-To-Speech integration for pronunciation.
-- **Custom Assets**: Allow uploading custom `.png` files for characters.
-- **Python Converter**: "Eject" SpeakScript to basic Python as the child grows.
+- **Blocks** — Text | Blocks inserts English-like code (`blocks-mode.js`). Turning code back into blocks is still a later step.
+- **Voice** — Text-to-speech and optional repeat-after-me. Speech audio is not stored in the app.
+- **Python export** — Downloads a small Python file (`python-export.js`). Loops and `if` blocks are indented. Commands outside that subset stay as comments.
+
+## Later
+
+- Custom character images
+- Phone app wrapper
+- Teacher lesson editor
+
+See [ROADMAP.md](./ROADMAP.md).

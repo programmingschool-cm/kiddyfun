@@ -8,7 +8,7 @@
     var list = [];
     if (window.SpeakMissions) {
       var done = [];
-      try { done = JSON.parse(localStorage.getItem('ss_missions_done') || '[]'); } catch (e) { /* ignore */ }
+      try { done = JSON.parse(localStorage.getItem('ss_completed_missions') || '[]'); } catch (e) { /* ignore */ }
       SpeakMissions.forEach(function (m) {
         list.push({ name: m.badge, title: m.title, earned: done.indexOf(m.id) >= 0 });
       });

@@ -26,8 +26,11 @@
     var w = todayWord();
     var box = document.createElement('div');
     box.id = 'kf-word-of-day';
-    box.className = 'px-3 py-2 border-bottom small';
-    box.innerHTML = '<strong>📚 Word of the day:</strong> <span class="text-primary">' + w.w + '</span> — ' + w.m;
+    box.className = 'kf-wotd';
+    box.innerHTML =
+      '<div class="kf-wotd-kicker">Word of the day</div>' +
+      '<div class="kf-wotd-word">' + w.w + '</div>' +
+      '<div class="kf-wotd-mean">' + w.m + '</div>';
     var progress = document.getElementById('kf-progress-wrap');
     if (progress && progress.parentNode) progress.parentNode.insertBefore(box, progress);
   }
