@@ -119,8 +119,8 @@
   bottom: -6px;
   left: 50%;
   transform: translateX(-50%);
-  width: 56px;
-  height: 12px;
+  width: 78px;
+  height: 14px;
   background: radial-gradient(ellipse, rgba(0, 0, 0, 0.35) 0%, transparent 70%);
   border-radius: 50%;
   z-index: 0;
@@ -135,7 +135,7 @@
 }
 
 .kf-char-svg {
-  width: 88px;
+  width: 120px;
   height: auto;
   display: block;
   overflow: visible;
@@ -204,36 +204,7 @@
   100% { transform: scale(1.8) translateY(-28px); opacity: 0; }
 }
 
-/* ── Idle breathe ──────────────────────────────────────────────────── */
-.kf-act-idle .kf-char-root {
-  animation: kf-idle-breathe 2.8s ease-in-out infinite;
-}
-@keyframes kf-idle-breathe {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-3px); }
-}
-.kf-act-idle .kf-head {
-  animation: kf-head-sway 4s ease-in-out infinite;
-}
-@keyframes kf-head-sway {
-  0%, 100% { transform: rotate(0deg); }
-  50% { transform: rotate(2deg); }
-}
-
-/* JS sprite drives walk/run — disable conflicting CSS limb anims */
-.kf-sprite-active.kf-act-walk .kf-leg-l,
-.kf-sprite-active.kf-act-walk .kf-leg-r,
-.kf-sprite-active.kf-act-walk .kf-arm-l,
-.kf-sprite-active.kf-act-walk .kf-arm-r,
-.kf-sprite-active.kf-act-walk .kf-char-root,
-.kf-sprite-active.kf-act-run .kf-leg-l,
-.kf-sprite-active.kf-act-run .kf-leg-r,
-.kf-sprite-active.kf-act-run .kf-arm-l,
-.kf-sprite-active.kf-act-run .kf-arm-r,
-.kf-sprite-active.kf-act-run .kf-char-root,
-.kf-sprite-active.kf-act-run .kf-torso {
-  animation: none !important;
-}
+/* Joint motion is owned by StageAnimator. CSS does not transform limbs. */
 
 .kf-char-pro.kf-moving .kf-char-shadow {
   transition: transform 0.08s ease-out, opacity 0.08s ease-out;
@@ -306,51 +277,6 @@
   50% { transform: translateX(-50%) scale(0.55); }
 }
 
-/* ── Wave / jump / bow / fly ───────────────────────────────────────── */
-.kf-act-wave .kf-arm-r {
-  animation: kf-arm-wave 0.45s ease-in-out 3;
-  transform-origin: 78px 78px;
-}
-@keyframes kf-arm-wave {
-  0%, 100% { transform: rotate(0deg); }
-  50% { transform: rotate(-55deg); }
-}
-
-.kf-act-jump .kf-char-root {
-  animation: kf-jump-body 0.65s cubic-bezier(0.34, 1.4, 0.64, 1);
-}
-@keyframes kf-jump-body {
-  0%, 100% { transform: translateY(0); }
-  45% { transform: translateY(-42px); }
-}
-
-.kf-act-bow .kf-head,
-.kf-act-bow .kf-torso {
-  animation: kf-bow-body 0.75s ease;
-}
-@keyframes kf-bow-body {
-  0%, 100% { transform: rotate(0deg); }
-  50% { transform: rotate(18deg); }
-}
-
-.kf-act-fly .kf-char-root {
-  animation: kf-fly-body 1.1s ease-in-out;
-}
-@keyframes kf-fly-body {
-  0%, 100% { transform: translateY(0); }
-  30%, 70% { transform: translateY(-50px); }
-}
-.kf-act-fly .kf-wing-l {
-  animation: kf-wing-flap 0.2s ease-in-out infinite;
-}
-.kf-act-fly .kf-wing-r {
-  animation: kf-wing-flap 0.2s ease-in-out infinite 0.1s;
-}
-@keyframes kf-wing-flap {
-  0%, 100% { transform: rotate(-15deg); }
-  50% { transform: rotate(20deg); }
-}
-
 .kf-act-hide .kf-char-body-wrap {
   animation: kf-hide-char 0.55s ease forwards;
 }
@@ -358,54 +284,7 @@
   to { opacity: 0; transform: scale(0.3) translateY(20px); }
 }
 
-.kf-act-smile .kf-mouth {
-  animation: kf-smile-mouth 0.5s ease;
-}
-@keyframes kf-smile-mouth {
-  50% { transform: scale(1.4); }
-}
-
-.kf-act-nod .kf-head {
-  animation: kf-nod-head 0.4s ease 3;
-}
-@keyframes kf-nod-head {
-  0%, 100% { transform: rotate(0deg); }
-  40% { transform: rotate(12deg); }
-  70% { transform: rotate(-8deg); }
-}
-
-.kf-act-cheer .kf-char-root {
-  animation: kf-cheer 0.5s ease 2;
-}
-@keyframes kf-cheer {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-20px) scale(1.05); }
-}
-
-.kf-act-dance .kf-char-root {
-  animation: kf-dance 0.6s ease infinite;
-}
-@keyframes kf-dance {
-  0%, 100% { transform: rotate(-5deg); }
-  50% { transform: rotate(5deg); }
-}
-
-/* ── Talking (mouth + eyes) ────────────────────────────────────────── */
-.kf-char-pro.kf-talking .kf-mouth {
-  animation: kf-mouth-talk 0.12s ease-in-out infinite;
-  transform-origin: center;
-}
-@keyframes kf-mouth-talk {
-  0%, 100% { transform: scaleY(1); }
-  50% { transform: scaleY(1.6) scaleX(1.1); }
-}
-.kf-char-pro.kf-talking .kf-eye {
-  animation: kf-blink 3.5s ease infinite;
-}
-@keyframes kf-blink {
-  0%, 48%, 52%, 100% { transform: scaleY(1); }
-  50% { transform: scaleY(0.1); }
-}
+/* ── Talking (mouth shapes live in the SVG; eyes blink via the lid) ── */
 .kf-char-pro.kf-talking .kf-led {
   animation: kf-led-pulse 0.3s ease infinite;
 }
@@ -617,18 +496,8 @@
   50% { transform: translate(-1px, 0); }
 }
 
-.kf-act-jump.kf-sprite-active .kf-char-body-wrap {
-  animation: kf-jump-squash 0.65s cubic-bezier(0.33, 1, 0.68, 1);
-}
-@keyframes kf-jump-squash {
-  0%, 100% { transform: scale(1, 1); }
-  15% { transform: scale(1.08, 0.92); }
-  45% { transform: scale(0.95, 1.05); }
-  70% { transform: scale(1.05, 0.95); }
-}
-
 @media (max-width: 576px) {
-  .kf-char-svg { width: 72px; }
+  .kf-char-svg { width: 100px; }
   .kf-char-pro { bottom: 52px; }
   .kf-action-hud { top: 8px; right: 8px; max-width: calc(60% - 16px); }
   .kf-action-hud-inner { padding: 5px 10px 5px 8px; gap: 6px; }
@@ -651,7 +520,7 @@
   --bub-shift: 0px;
   --bub-lift: 0px;
   position: absolute;
-  bottom: 132px;
+  bottom: 188px;
   left: 50%;
   transform: translate(calc(-50% + var(--bub-shift)), 12px) scale(0.85);
   opacity: 0;
@@ -1193,7 +1062,7 @@
   .kf-pro-bubble {
     max-width: 220px;
     min-width: 80px;
-    bottom: 120px;
+    bottom: 158px;
   }
   .kf-pro-bubble-inner {
     font-size: 0.92rem;
@@ -1506,19 +1375,36 @@
 
 .kf-char-svg .kf-ink {
   stroke: #1e293b;
-  stroke-width: 2.4;
+  stroke-width: 2.2;
   stroke-linejoin: round;
   paint-order: stroke fill;
 }
-.kf-lid {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: kf-blink 4.6s infinite;
+.kf-char-svg .kf-ink-soft {
+  stroke: #1e293b;
+  stroke-width: 1.4;
+  stroke-linejoin: round;
+  paint-order: stroke fill;
 }
-.kf-lid-r { animation-delay: 0.05s; }
-@keyframes kf-blink {
-  0%, 90%, 100% { transform: scaleY(0.08); }
-  94% { transform: scaleY(1); }
+.kf-char-svg .kf-mouth-smile,
+.kf-char-svg .kf-mouth-talk,
+.kf-char-svg .kf-mouth-open { display: none; }
+.kf-char-svg[data-face="smile"] .kf-mouth-rest,
+.kf-char-svg[data-face="happy"] .kf-mouth-rest { display: none; }
+.kf-char-svg[data-face="smile"] .kf-mouth-smile,
+.kf-char-svg[data-face="happy"] .kf-mouth-smile { display: block; }
+.kf-char-svg[data-face="open"] .kf-mouth-rest { display: none; }
+.kf-char-svg[data-face="open"] .kf-mouth-open { display: block; }
+.kf-char-pro.kf-talking .kf-mouth-rest,
+.kf-char-pro.kf-talking .kf-mouth-smile,
+.kf-char-pro.kf-talking .kf-mouth-open { display: none; }
+.kf-char-pro.kf-talking .kf-mouth-talk { display: block; }
+.kf-mouth-talk .kf-mouth-b { opacity: 0; }
+.kf-char-pro.kf-talking .kf-mouth-talk .kf-mouth-a { animation: kf-talk-a 0.24s ease-in-out infinite; }
+.kf-char-pro.kf-talking .kf-mouth-talk .kf-mouth-b { animation: kf-talk-b 0.24s ease-in-out infinite; }
+@keyframes kf-talk-a { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+@keyframes kf-talk-b { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
+.kf-lid {
+  pointer-events: none;
 }
 .kf-hair {
   transform-box: fill-box;
@@ -1529,14 +1415,8 @@
   0%, 100% { transform: rotate(-2deg); }
   50% { transform: rotate(3deg); }
 }
-.kf-talking .kf-mouth {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: kf-talk 0.26s ease-in-out infinite;
-}
-@keyframes kf-talk {
-  0%, 100% { transform: scaleY(0.55); }
-  50% { transform: scaleY(1.35); }
+.kf-sprite-active [data-joint] {
+  transition: none;
 }
 .kf-hit-squash .kf-char-body-wrap {
   animation: kf-hit-squash 0.32s ease;

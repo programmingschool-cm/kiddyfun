@@ -563,26 +563,18 @@
   /*  Anti-overlap placement                                            */
   /* ------------------------------------------------------------------ */
 
-  function placeCharacter(stage, charEl, existingChars) {
+  function placeCharacter(stage, charEl) {
     if (!stage || !charEl) return;
-    var slots = [12, 32, 52, 72, 22, 42, 62, 82];
-    var used = [];
-    var existing = stage.querySelectorAll('.ss-character');
-    existing.forEach(function (e) {
-      if (e === charEl) return;
-      var l = parseFloat(e.style.left) || 0;
-      used.push(l);
-    });
-    var chosen = slots[0];
-    for (var i = 0; i < slots.length; i++) {
-      var s = slots[i];
-      var ok = true;
-      for (var j = 0; j < used.length; j++) {
-        if (Math.abs(used[j] - s) < 14) { ok = false; break; }
-      }
-      if (ok) { chosen = s; break; }
+    var all = stage.querySelectorAll('.ss-character');
+    var n = all.length;
+    if (!n) return;
+    var span = n === 1 ? 0 : Math.min(86, 16 + (n - 1) * 14);
+    var start = (100 - span) / 2;
+    for (var i = 0; i < n; i++) {
+      var pct = n === 1 ? 42 : start + (i * span / (n - 1));
+      all[i].style.left = pct + '%';
+      if (!all[i].dataset.baseLeftPct) all[i].dataset.baseLeftPct = String(Math.round(pct));
     }
-    charEl.style.left = chosen + '%';
   }
 
   /* ------------------------------------------------------------------ */

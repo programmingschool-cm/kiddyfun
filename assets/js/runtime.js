@@ -374,6 +374,26 @@
       }, dur * 1000 + 80);
     },
 
+    _nearestOther: function (key) {
+      var el = this.characters[key] && this.characters[key].el;
+      if (!el) return null;
+      var r = el.getBoundingClientRect();
+      var cx = r.left + r.width / 2;
+      var best = null;
+      var bestD = Infinity;
+      var self = this;
+      Object.keys(this.characters).forEach(function (k) {
+        if (k === key) return;
+        var other = self.characters[k] && self.characters[k].el;
+        if (!other) return;
+        var rr = other.getBoundingClientRect();
+        if (!rr.width) return;
+        var d = Math.abs((rr.left + rr.width / 2) - cx);
+        if (d < bestD) { bestD = d; best = other; }
+      });
+      return best;
+    },
+
     _animateChar: function (key, action) {
       var el = this.characters[key] && this.characters[key].el;
       if (!el) return;
@@ -388,11 +408,23 @@
       }
 
       if (window.StageGraphics) {
-        StageGraphics.setMotion(el, action);
-        var dur = { hides: 600, flies: 1200, jumps: 700, bows: 800 }[action] || 1100;
+        var partner = null;
+        if (action === 'handshakes' && StageGraphics.playHandshake) {
+          partner = this._nearestOther(key);
+          StageGraphics.playHandshake(el, partner);
+        } else {
+          StageGraphics.setMotion(el, action);
+        }
+        var dur = {
+          hides: 600, flies: 1200, jumps: 980, bows: 860,
+          waves: 1200, handshakes: 1700, claps: 1000,
+          dances: 1600, cheers: 1100, nods: 900,
+        }[action] || 1100;
         var self = this;
         setTimeout(function () {
-          if (action !== 'hides' && window.StageGraphics) StageGraphics.setMotion(el, 'idle');
+          if (action === 'hides' || !window.StageGraphics) return;
+          StageGraphics.setMotion(el, 'idle');
+          if (partner) StageGraphics.setMotion(partner, 'idle');
         }, dur);
         return;
       }
