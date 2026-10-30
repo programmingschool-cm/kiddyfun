@@ -2,7 +2,7 @@
  * PWA service worker — network first, versioned cache.
  * Offline fallback is the app shell for navigations only.
  */
-var CACHE = 'kiddyfun-v4';
+var CACHE = 'kiddyfun-v5';
 var ASSETS = [
   './',
   './index.html',
@@ -13,6 +13,7 @@ var ASSETS = [
   './assets/css/fonts.css',
   './assets/css/bootstrap.min.css',
   './assets/data/curriculum.json',
+  './assets/brand/mostak.jpg',
   './assets/icons/icon-192.png',
   './assets/icons/icon-512.png',
   './assets/js/bootstrap.bundle.min.js',

@@ -233,8 +233,15 @@
   /*  Ambient stage life                                                */
   /* ------------------------------------------------------------------ */
 
+  var studioPointer = null;
+
   function clearAmbient(stage) {
     if (!stage) return;
+    if (studioPointer && studioPointer.stage === stage) {
+      stage.removeEventListener('pointermove', studioPointer.move);
+      stage.removeEventListener('pointerleave', studioPointer.leave);
+      studioPointer = null;
+    }
     var amb = stage.querySelector('.kf-stage-ambient');
     if (amb) amb.remove();
   }
@@ -303,10 +310,199 @@
       near.appendChild(svgMount(svgLamp(), 'kf-svg-prop kf-prop-lamp', 'left:16%;top:0;width:36px;height:78px;'));
       far.appendChild(svgMount(svgCounter(), 'kf-svg-prop kf-prop-counter'));
     } else {
-      buildDriftClouds(sky, 3);
-      buildSunRays(sky, '#e0e7ff');
-      far.appendChild(svgMount(svgHills('#c7d2fe', '#94a3b8'), 'kf-svg-prop kf-prop-hills'));
+      buildStudio(stage, sky, far);
     }
+  }
+
+  function htmlMount(html, className) {
+    var d = document.createElement('div');
+    d.className = className;
+    d.innerHTML = html;
+    return d;
+  }
+
+  function buildStudio(stage, sky) {
+    var amb = sky.parentNode;
+    if (amb) amb.removeAttribute('aria-hidden');
+    var motion = document.createElement('div');
+    motion.className = 'kf-studio-sky-motion';
+    sky.appendChild(motion);
+
+    var story = document.createElement('div');
+    story.className = 'kf-studio-story';
+    motion.appendChild(story);
+
+    var bench = svgMount(svgStoryBench(), 'kf-story-bench');
+    bench.setAttribute('aria-hidden', 'true');
+    story.appendChild(bench);
+
+    var walk = document.createElement('div');
+    walk.className = 'kf-story-walk';
+    story.appendChild(walk);
+
+    var robot = svgMount(svgStudioRobot(), 'kf-svg-prop kf-studio-robot');
+    robot.tabIndex = 0;
+    robot.setAttribute('role', 'button');
+    robot.setAttribute('aria-label', 'Studio robot. Your code moves me');
+    var cap = document.createElement('span');
+    cap.className = 'kf-studio-caption';
+    cap.textContent = 'Your code moves me';
+    robot.appendChild(cap);
+    walk.appendChild(robot);
+
+    var lock = htmlMount(studioLockup(), 'kf-studio-lockup');
+    lock.setAttribute('aria-hidden', 'true');
+    sky.appendChild(lock);
+    var credit = htmlMount(studioCredit(), 'kf-studio-credit');
+    credit.setAttribute('aria-hidden', 'true');
+    sky.appendChild(credit);
+    bindStudioPointer(stage, amb, robot);
+  }
+
+  function bindStudioPointer(stage, amb, robot) {
+    if (!stage || !amb) return;
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function poke(e) {
+      if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return;
+      e.stopPropagation();
+      if (e.type === 'keydown') e.preventDefault();
+      if (!robot) return;
+      robot.classList.remove('kf-studio-wave');
+      void robot.offsetWidth;
+      robot.classList.add('kf-studio-wave');
+      clearTimeout(robot._waveTimer);
+      robot._waveTimer = setTimeout(function () {
+        robot.classList.remove('kf-studio-wave');
+      }, 1600);
+    }
+    if (robot) {
+      robot.addEventListener('pointerdown', poke);
+      robot.addEventListener('keydown', poke);
+    }
+    if (reduce) return;
+    function move(e) {
+      var r = stage.getBoundingClientRect();
+      if (!r.width || !r.height) return;
+      var nx = ((e.clientX - r.left) / r.width - 0.5) * 2;
+      var ny = ((e.clientY - r.top) / r.height - 0.5) * 2;
+      amb.style.setProperty('--kf-mx', (nx * 14).toFixed(1) + 'px');
+      amb.style.setProperty('--kf-my', (ny * 8).toFixed(1) + 'px');
+      amb.style.setProperty('--kf-hx', nx.toFixed(3));
+      amb.style.setProperty('--kf-hy', ny.toFixed(3));
+    }
+    function leave() {
+      amb.style.setProperty('--kf-mx', '0px');
+      amb.style.setProperty('--kf-my', '0px');
+      amb.style.setProperty('--kf-hx', '0');
+      amb.style.setProperty('--kf-hy', '0');
+    }
+    stage.addEventListener('pointermove', move);
+    stage.addEventListener('pointerleave', leave);
+    studioPointer = { stage: stage, move: move, leave: leave };
+  }
+
+  function studioLockup() {
+    return '<div class="kf-studio-mark">' + svgMark() + '</div>' +
+      '<div class="kf-studio-copy">' +
+      '<div class="kf-studio-title">KiddyFun Code</div>' +
+      '<div class="kf-studio-by">by Programming School</div>' +
+      '<div class="kf-studio-rule"></div>' +
+      '<div class="kf-studio-lamps">' +
+      '<span class="kf-studio-lamp"><i></i>Learn</span>' +
+      '<span class="kf-studio-lamp"><i></i>Code</span>' +
+      '<span class="kf-studio-lamp"><i></i>Build</span>' +
+      '</div>' +
+      '</div>';
+  }
+
+  function studioCredit() {
+    return '<img class="kf-studio-avatar" src="assets/brand/mostak.jpg" alt="" width="32" height="32">' +
+      '<span class="kf-studio-credit-name">Developed by Mostak Ahmad</span>';
+  }
+
+  function svgMark() {
+    return '<svg viewBox="0 0 64 72" aria-hidden="true">' +
+      '<path fill="#1B3A6B" d="M6 4h12v64H6z"/>' +
+      '<path fill="#1B3A6B" d="M18 4h16c13 0 22 8 22 19 0 8-5 15-13 17l9 24H38L29 42H18V4z"/>' +
+      '<path fill="none" stroke="#C4A35A" stroke-width="7" stroke-linecap="round" d="M50 16c0-6-7-10-15-9-8 1-12 6-10 12 2 6 14 8 18 12 5 4 7 9 4 14-4 7-16 9-24 6"/>' +
+      '<path fill="#C4A35A" d="M12 56c8-6 14-6 20 0 6-6 12-6 20 0v6c-8-5-14-4-20 2-6-6-12-7-20-2z"/>' +
+      '<text x="27" y="29" fill="#1B3A6B" font-size="8" font-family="Consolas,ui-monospace,monospace" font-weight="700">&lt;/&gt;</text>' +
+      '</svg>';
+  }
+
+  function svgStoryKid(cls, x, skin, shirt, hair) {
+    return '<g class="kf-story-kid ' + cls + '" transform="translate(' + x + ',84)">' +
+      '<rect x="-16" y="2" width="32" height="34" rx="10" fill="' + shirt + '"/>' +
+      '<g class="kf-story-arm kf-story-arm-a"><rect x="-18" y="18" width="8" height="28" rx="4" fill="' + skin + '"/></g>' +
+      '<g class="kf-story-arm kf-story-arm-b"><rect x="10" y="18" width="8" height="28" rx="4" fill="' + skin + '"/></g>' +
+      '<circle cx="0" cy="-18" r="14" fill="' + skin + '"/>' +
+      '<path d="M-13 -24c2-12 24-12 26 0-2-6-8-8-13-8s-11 2-13 8z" fill="' + hair + '"/>' +
+      '<circle cx="-5" cy="-18" r="1.6" fill="#1B3A6B"/>' +
+      '<circle cx="5" cy="-18" r="1.6" fill="#1B3A6B"/>' +
+      '<path d="M-4 -11q4 4 8 0" fill="none" stroke="#1B3A6B" stroke-width="1.4" stroke-linecap="round"/>' +
+      '</g>';
+  }
+
+  function svgStoryBench() {
+    return '<svg viewBox="0 0 420 150" preserveAspectRatio="xMidYMax meet">' +
+      '<rect x="16" y="118" width="388" height="8" rx="3" fill="#1B3A6B"/>' +
+      '<rect x="24" y="126" width="372" height="14" rx="3" fill="#243e78"/>' +
+      svgStoryKid('kf-story-kid-1', 58, '#F1C27D', '#1B3A6B', '#2C1810') +
+      svgStoryKid('kf-story-kid-2', 168, '#E0AC69', '#0f766e', '#1a1a1a') +
+      svgStoryKid('kf-story-kid-3', 336, '#C68642', '#8a6d32', '#4A3728') +
+      '<g class="kf-story-laptop">' +
+      '<rect x="228" y="112" width="70" height="8" rx="2" fill="#0f172a"/>' +
+      '<rect x="236" y="64" width="54" height="50" rx="4" fill="#1B3A6B"/>' +
+      '<rect x="240" y="68" width="46" height="40" rx="2" fill="#f8fafc"/>' +
+      '<rect class="kf-story-line" x="244" y="74" width="22" height="3.2" rx="1" fill="#1B3A6B"/>' +
+      '<rect class="kf-story-line kf-story-line-2" x="244" y="81" width="34" height="3.2" rx="1" fill="#334e82"/>' +
+      '<rect class="kf-story-line kf-story-line-3" x="244" y="88" width="16" height="3.2" rx="1" fill="#C4A35A"/>' +
+      '</g>' +
+      '<g class="kf-story-out">' +
+      '<rect x="214" y="42" width="78" height="16" rx="8" fill="#1B3A6B"/>' +
+      '<text x="253" y="53" text-anchor="middle" font-size="8" font-family="Consolas,ui-monospace,monospace" font-weight="700" fill="#ffffff">Robot ready</text>' +
+      '</g>' +
+      '</svg>';
+  }
+
+  function svgShoulderGear() {
+    var teeth = '';
+    for (var i = 0; i < 8; i++) {
+      teeth += '<rect x="6.6" y="0.2" width="1.8" height="3.4" rx="0.4" fill="#1B3A6B" transform="rotate(' + (i * 45) + ' 8 8)"/>';
+    }
+    return '<g transform="translate(52,38)">' +
+      '<g class="kf-studio-gear-spin">' + teeth +
+      '<circle cx="8" cy="8" r="3.8" fill="#1B3A6B"/>' +
+      '<circle cx="8" cy="8" r="1.6" fill="#C4A35A"/>' +
+      '</g></g>';
+  }
+
+  function svgStudioRobot() {
+    return '<svg viewBox="0 0 88 96" aria-hidden="true">' +
+      '<g class="kf-story-part kf-story-part-legs">' +
+      '<g class="kf-studio-leg"><rect x="32" y="78" width="6" height="14" rx="2" fill="#1B3A6B"/></g>' +
+      '<g class="kf-studio-leg kf-studio-leg-b"><rect x="48" y="78" width="6" height="14" rx="2" fill="#1B3A6B"/></g>' +
+      '</g>' +
+      '<g class="kf-story-part kf-story-part-body">' +
+      svgShoulderGear() +
+      '<rect x="28" y="52" width="32" height="26" rx="8" fill="#243e78"/>' +
+      '<rect x="36" y="58" width="16" height="10" rx="2" fill="#0f172a"/>' +
+      '<g class="kf-studio-claw">' +
+      '<rect x="6" y="54" width="20" height="7" rx="3" fill="#1B3A6B"/>' +
+      '<path d="M8 61 l-6 8 M8 61 l-7 1" fill="none" stroke="#C4A35A" stroke-width="3" stroke-linecap="round"/>' +
+      '</g>' +
+      '</g>' +
+      '<g class="kf-story-part kf-story-part-head">' +
+      '<g class="kf-studio-head">' +
+      '<line x1="44" y1="14" x2="44" y2="22" stroke="#1B3A6B" stroke-width="3" stroke-linecap="round"/>' +
+      '<circle class="kf-studio-led kf-studio-antenna" cx="44" cy="10" r="4" fill="#C4A35A"/>' +
+      '<rect x="26" y="22" width="36" height="28" rx="10" fill="#1B3A6B"/>' +
+      '<circle class="kf-studio-led" cx="37" cy="34" r="4" fill="#7dd3fc"/>' +
+      '<circle class="kf-studio-led" cx="51" cy="34" r="4" fill="#7dd3fc"/>' +
+      '<path d="M36 42h16" stroke="#C4A35A" stroke-width="2" stroke-linecap="round"/>' +
+      '</g>' +
+      '</g>' +
+      '</svg>';
   }
 
   function setParallax(stage, camX) {

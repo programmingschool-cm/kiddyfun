@@ -723,13 +723,17 @@
       home: { sky: 'linear-gradient(180deg,#e0f2fe 0%,#bae6fd 40%,#d6d3d1 64%,#78716c 100%)', ground: '#78716c' },
       playground: { sky: 'linear-gradient(180deg,#38bdf8 0%,#7dd3fc 36%,#bbf7d0 60%,#4ade80 100%)', ground: '#16a34a' },
       space: { sky: 'radial-gradient(ellipse at 50% 20%,#312e81 0%,#0f172a 55%,#020617 100%)', ground: '#1e1b4b' },
-      default: { sky: 'linear-gradient(180deg,#c7d2fe 0%,#e0e7ff 40%,#cbd5e1 64%,#64748b 100%)', ground: '#64748b' },
+      default: { sky: 'linear-gradient(180deg,#f7f9fd 0%,#e7eef8 46%,#f6f1e6 100%)', ground: '#efe6d8' },
     };
     var t = themes[key] || themes.default;
     layers.sky.style.background = t.sky;
     if (layers.ground) {
-      var stripe = key === 'space' ? '' : 'repeating-linear-gradient(90deg, transparent 0 22px, rgba(0,0,0,0.05) 22px 24px), ';
-      layers.ground.style.background = stripe + 'linear-gradient(180deg, transparent 0%, ' + t.ground + ' 14%, ' + shade(t.ground, -22) + ' 100%)';
+      if (key === 'default') {
+        layers.ground.style.background = 'linear-gradient(180deg, rgba(255,255,255,0.72) 0%, ' + t.ground + ' 16%, ' + shade(t.ground, -10) + ' 100%)';
+      } else {
+        var stripe = key === 'space' ? '' : 'repeating-linear-gradient(90deg, transparent 0 22px, rgba(0,0,0,0.05) 22px 24px), ';
+        layers.ground.style.background = stripe + 'linear-gradient(180deg, transparent 0%, ' + t.ground + ' 14%, ' + shade(t.ground, -22) + ' 100%)';
+      }
     }
     stage.style.background = 'transparent';
   }

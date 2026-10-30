@@ -26,7 +26,7 @@
     jungle: { bg: 'linear-gradient(180deg,#2d5016 0%,#56ab2f 40%,#4a7c1f 55%)', emoji: '🌿', label: 'Jungle', deco: 'trees' },
     playground: { bg: 'linear-gradient(180deg,#81d4fa 0%,#81d4fa 50%,#a5d6a7 50%)', emoji: '🛝', label: 'Playground', deco: 'clouds' },
     space: { bg: 'linear-gradient(180deg,#0d0d2b 0%,#1a1a4e 50%,#0d0d2b 100%)', emoji: '🚀', label: 'Space', deco: 'stars' },
-    default: { bg: 'linear-gradient(180deg,#e8eaf6 0%,#e8eaf6 55%,#b0bec5 55%)', emoji: '🌍', label: 'Scene', deco: 'clouds' },
+    default: { bg: 'linear-gradient(180deg,#f4f7fb 0%,#f4f7fb 42%,#e7dfd2 42%)', emoji: '✦', label: 'KiddyFun', deco: 'studio' },
   };
 
   var GameRuntime = {
