@@ -239,36 +239,180 @@
     if (amb) amb.remove();
   }
 
+  function para(parent, depth, extra) {
+    var el = document.createElement('div');
+    el.className = 'kf-para ' + (extra || '');
+    el.dataset.depth = String(depth);
+    parent.appendChild(el);
+    return el;
+  }
+
+  function svgMount(html, className, style) {
+    var d = document.createElement('div');
+    d.className = className || 'kf-svg-prop';
+    if (style) d.style.cssText = style;
+    d.innerHTML = html;
+    return d;
+  }
+
   function applyAmbient(stage, sceneKey) {
     if (!stage) return;
     clearAmbient(stage);
+    var key = sceneKey || 'default';
     var amb = document.createElement('div');
     amb.className = 'kf-stage-ambient';
     amb.setAttribute('aria-hidden', 'true');
+    amb.dataset.scene = key;
     stage.appendChild(amb);
 
-    if (sceneKey === 'space') {
-      buildStars(amb, 48);
-      buildShootingStars(amb);
-      buildPlanets(amb);
-    } else if (sceneKey === 'jungle') {
-      buildSunRays(amb, '#86efac');
-      buildSwayingPlants(amb);
-      buildFireflies(amb, 12);
-    } else if (sceneKey === 'school' || sceneKey === 'playground' || sceneKey === 'home') {
-      buildSunRays(amb, '#fef9c3');
-      buildDriftClouds(amb, 4);
-      if (sceneKey === 'playground') buildPlayfulBirds(amb);
-    } else if (sceneKey === 'classroom') {
-      buildClassroomDust(amb);
-      buildBlackboard(amb);
-    } else if (sceneKey === 'restaurant') {
-      buildSteamPuffs(amb);
-      buildHangingLight(amb);
+    var sky = para(amb, 0.15, 'kf-para-sky');
+    var far = para(amb, 0.4, 'kf-para-far');
+    var near = para(amb, 0.72, 'kf-para-near');
+
+    if (key === 'space') {
+      buildStars(sky, 48);
+      buildShootingStars(sky);
+      buildPlanets(sky);
+      far.appendChild(svgMount(svgHills('#312e81', '#1e1b4b'), 'kf-svg-prop kf-prop-hills'));
+    } else if (key === 'jungle') {
+      buildSunRays(sky, '#86efac');
+      sky.appendChild(svgMount(svgCanopy(), 'kf-svg-prop kf-prop-canopy'));
+      far.appendChild(svgMount(svgJungleTrees(), 'kf-svg-prop kf-prop-trees'));
+      near.appendChild(svgMount(svgBushes('#166534', '#14532d'), 'kf-svg-prop kf-prop-bushes'));
+      buildFireflies(near, 10);
+    } else if (key === 'school') {
+      buildSunRays(sky, '#fef9c3');
+      buildDriftClouds(sky, 4);
+      far.appendChild(svgMount(svgSchool(), 'kf-svg-prop kf-prop-school'));
+      near.appendChild(svgMount(svgBushes('#22c55e', '#15803d'), 'kf-svg-prop kf-prop-bushes'));
+    } else if (key === 'playground') {
+      buildSunRays(sky, '#fef9c3');
+      buildDriftClouds(sky, 4);
+      far.appendChild(svgMount(svgHills('#4ade80', '#16a34a'), 'kf-svg-prop kf-prop-hills'));
+      near.appendChild(svgMount(svgSwing(), 'kf-svg-prop kf-prop-swing', 'left:8%;bottom:18%;width:120px;height:90px;'));
+      near.appendChild(svgMount(svgBird(), 'kf-amb-bird kf-svg-bird', 'top:14%;'));
+    } else if (key === 'home') {
+      buildSunRays(sky, '#fef9c3');
+      buildDriftClouds(sky, 3);
+      far.appendChild(svgMount(svgHome(), 'kf-svg-prop kf-prop-home'));
+    } else if (key === 'classroom') {
+      buildClassroomDust(sky);
+      far.appendChild(svgMount(svgClassroom(), 'kf-svg-prop kf-prop-class'));
+    } else if (key === 'restaurant') {
+      buildSteamPuffs(near);
+      near.appendChild(svgMount(svgLamp(), 'kf-svg-prop kf-prop-lamp', 'left:16%;top:0;width:36px;height:78px;'));
+      far.appendChild(svgMount(svgCounter(), 'kf-svg-prop kf-prop-counter'));
     } else {
-      buildDriftClouds(amb, 3);
-      buildSunRays(amb, '#e0e7ff');
+      buildDriftClouds(sky, 3);
+      buildSunRays(sky, '#e0e7ff');
+      far.appendChild(svgMount(svgHills('#c7d2fe', '#94a3b8'), 'kf-svg-prop kf-prop-hills'));
     }
+  }
+
+  function setParallax(stage, camX) {
+    if (!stage) return;
+    var nodes = stage.querySelectorAll('.kf-para');
+    var x = camX || 0;
+    for (var i = 0; i < nodes.length; i++) {
+      var depth = parseFloat(nodes[i].dataset.depth);
+      if (isNaN(depth)) depth = 0;
+      nodes[i].style.transform = 'translate3d(' + (-x * depth).toFixed(1) + 'px,0,0)';
+    }
+  }
+
+  function svgHills(a, b) {
+    return '<svg viewBox="0 0 600 160" preserveAspectRatio="none" class="kf-fill-svg">' +
+      '<path d="M0 110 C80 40 140 90 220 70 C300 48 360 100 440 64 C500 40 560 80 600 50 L600 160 L0 160 Z" fill="' + a + '"/>' +
+      '<path d="M0 130 C100 90 180 140 280 110 C380 80 460 130 600 100 L600 160 L0 160 Z" fill="' + b + '" opacity="0.9"/>' +
+      '</svg>';
+  }
+
+  function svgCanopy() {
+    return '<svg viewBox="0 0 600 120" preserveAspectRatio="none" class="kf-fill-svg">' +
+      '<ellipse cx="80" cy="40" rx="90" ry="36" fill="#14532d"/>' +
+      '<ellipse cx="220" cy="28" rx="110" ry="40" fill="#166534"/>' +
+      '<ellipse cx="380" cy="36" rx="100" ry="38" fill="#14532d"/>' +
+      '<ellipse cx="530" cy="30" rx="90" ry="34" fill="#15803d"/>' +
+      '</svg>';
+  }
+
+  function svgJungleTrees() {
+    return '<svg viewBox="0 0 600 200" preserveAspectRatio="none" class="kf-fill-svg">' +
+      '<rect x="70" y="70" width="14" height="130" rx="4" fill="#3f2a1d"/>' +
+      '<circle cx="77" cy="60" r="36" fill="#166534" stroke="#052e16" stroke-width="3"/>' +
+      '<rect x="250" y="40" width="16" height="160" rx="4" fill="#3f2a1d"/>' +
+      '<circle cx="258" cy="36" r="44" fill="#15803d" stroke="#052e16" stroke-width="3"/>' +
+      '<rect x="460" y="80" width="12" height="120" rx="4" fill="#3f2a1d"/>' +
+      '<circle cx="466" cy="70" r="32" fill="#166534" stroke="#052e16" stroke-width="3"/>' +
+      '</svg>';
+  }
+
+  function svgBushes(a, b) {
+    return '<svg viewBox="0 0 600 80" preserveAspectRatio="none" class="kf-fill-svg">' +
+      '<ellipse cx="40" cy="50" rx="46" ry="22" fill="' + a + '" stroke="' + b + '" stroke-width="3"/>' +
+      '<ellipse cx="200" cy="54" rx="54" ry="20" fill="' + b + '"/>' +
+      '<ellipse cx="420" cy="50" rx="50" ry="22" fill="' + a + '" stroke="' + b + '" stroke-width="3"/>' +
+      '<ellipse cx="560" cy="56" rx="40" ry="18" fill="' + b + '"/>' +
+      '</svg>';
+  }
+
+  function svgSchool() {
+    return '<svg viewBox="0 0 220 120" class="kf-spot-svg">' +
+      '<rect x="30" y="40" width="160" height="70" rx="4" fill="#f8fafc" stroke="#1e293b" stroke-width="3"/>' +
+      '<polygon points="20,44 110,8 200,44" fill="#ef4444" stroke="#1e293b" stroke-width="3"/>' +
+      '<rect x="96" y="72" width="28" height="38" fill="#93c5fd" stroke="#1e293b" stroke-width="3"/>' +
+      '<rect x="46" y="58" width="28" height="22" fill="#7dd3fc" stroke="#1e293b" stroke-width="3"/>' +
+      '<rect x="146" y="58" width="28" height="22" fill="#7dd3fc" stroke="#1e293b" stroke-width="3"/>' +
+      '</svg>';
+  }
+
+  function svgHome() {
+    return '<svg viewBox="0 0 200 110" class="kf-spot-svg">' +
+      '<polygon points="16,52 100,12 184,52" fill="#f59e0b" stroke="#1e293b" stroke-width="3"/>' +
+      '<rect x="40" y="50" width="120" height="52" fill="#ffedd5" stroke="#1e293b" stroke-width="3"/>' +
+      '<rect x="86" y="68" width="26" height="34" fill="#b45309" stroke="#1e293b" stroke-width="3"/>' +
+      '<rect x="54" y="64" width="22" height="18" fill="#7dd3fc" stroke="#1e293b" stroke-width="3"/>' +
+      '</svg>';
+  }
+
+  function svgSwing() {
+    return '<svg viewBox="0 0 120 90">' +
+      '<path d="M16 80 L30 16 L46 80" fill="none" stroke="#78350f" stroke-width="4" stroke-linecap="round"/>' +
+      '<path d="M74 80 L90 16 L106 80" fill="none" stroke="#78350f" stroke-width="4" stroke-linecap="round"/>' +
+      '<path d="M30 16 L90 16" stroke="#78350f" stroke-width="4"/>' +
+      '<path class="kf-swing-seat" d="M48 16 L44 52 L76 52 L72 16" fill="none" stroke="#1e293b" stroke-width="2"/>' +
+      '<rect class="kf-swing-seat" x="42" y="50" width="36" height="6" rx="2" fill="#ef4444" stroke="#1e293b" stroke-width="2"/>' +
+      '</svg>';
+  }
+
+  function svgBird() {
+    return '<svg viewBox="0 0 48 20" width="42" height="18">' +
+      '<path d="M2 12 Q14 2 24 10 Q34 2 46 12" fill="none" stroke="#1e293b" stroke-width="2.4" stroke-linecap="round"/>' +
+      '</svg>';
+  }
+
+  function svgClassroom() {
+    return '<svg viewBox="0 0 240 140" class="kf-spot-svg">' +
+      '<rect x="16" y="16" width="120" height="78" rx="4" fill="#166534" stroke="#78350f" stroke-width="6"/>' +
+      '<text x="76" y="52" text-anchor="middle" fill="#ecfccb" font-size="18" font-family="sans-serif">ABC</text>' +
+      '<text x="76" y="74" text-anchor="middle" fill="#ecfccb" font-size="16" font-family="sans-serif">123</text>' +
+      '<rect x="160" y="70" width="64" height="28" rx="3" fill="#d6d3d1" stroke="#1e293b" stroke-width="3"/>' +
+      '</svg>';
+  }
+
+  function svgLamp() {
+    return '<svg viewBox="0 0 36 78">' +
+      '<path d="M18 0 V28" stroke="#44403c" stroke-width="2"/>' +
+      '<path d="M6 28 H30 L24 48 H12 Z" fill="#fde68a" stroke="#1e293b" stroke-width="2"/>' +
+      '<ellipse cx="18" cy="52" rx="14" ry="6" fill="#fde68a" opacity="0.45"/>' +
+      '</svg>';
+  }
+
+  function svgCounter() {
+    return '<svg viewBox="0 0 600 80" preserveAspectRatio="none" class="kf-fill-svg">' +
+      '<rect x="0" y="36" width="600" height="28" fill="#b45309"/>' +
+      '<rect x="0" y="28" width="600" height="10" fill="#fde68a"/>' +
+      '</svg>';
   }
 
   function buildStars(parent, n) {
@@ -447,6 +591,7 @@
 
   function shake(stage, intensity) {
     if (!stage) return;
+    if (window.StageAnimator && StageAnimator.reducedMotion && StageAnimator.reducedMotion()) return;
     var cls = intensity === 'big' ? 'kf-stage-shake-big' : 'kf-stage-shake';
     stage.classList.remove(cls);
     void stage.offsetWidth;
@@ -519,6 +664,7 @@
     typeIntoNarrator: typeIntoNarrator,
     applyAmbient: applyAmbient,
     clearAmbient: clearAmbient,
+    setParallax: setParallax,
     placeCharacter: placeCharacter,
     shake: shake,
     flash: flash,

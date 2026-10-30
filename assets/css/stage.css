@@ -12,10 +12,10 @@
   z-index: 0;
 }
 .kf-layer-sky { z-index: 0; transition: background 1.2s ease; }
-.kf-layer-ground { z-index: 1; bottom: 0; height: 48%; top: auto; }
+.kf-layer-ground { z-index: 1; bottom: 0; height: 64%; top: auto; }
 .kf-stage-floor {
   position: absolute;
-  bottom: 50px;
+  bottom: 28px;
   left: 0;
   right: 0;
   height: 4px;
@@ -91,17 +91,19 @@
   position: absolute;
   inset: 0;
   z-index: 25;
-  background: white;
-  opacity: 0;
+  background: #0f172a;
+  opacity: 1;
   pointer-events: none;
-  transition: opacity 0.35s ease;
+  transform: translateX(-105%);
+  transition: transform 0.42s ease;
 }
-.kf-scene-veil.active { opacity: 0.55; }
+.kf-scene-veil.active { transform: translateX(0); }
+.kf-scene-veil.out { transform: translateX(105%); }
 
 /* ── Pro character ─────────────────────────────────────────────────── */
 .ss-character.kf-char-pro,
 .kf-char-pro {
-  bottom: 58px;
+  bottom: 36px;
   z-index: 8;
   filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.2));
 }
@@ -1238,7 +1240,7 @@
 }
 .kf-game-stats {
   position: absolute;
-  top: 10px;
+  top: 48px;
   left: 10px;
   z-index: 22;
   background: rgba(15, 23, 42, 0.88);
@@ -1299,9 +1301,15 @@
 .kf-game-particle {
   position: absolute;
   z-index: 12;
-  font-size: 0.9rem;
   pointer-events: none;
   animation: kf-particle-fly 0.65s ease-out forwards;
+}
+.kf-spark {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #fde68a;
+  box-shadow: 0 0 8px #fbbf24;
 }
 @keyframes kf-particle-fly {
   0% { opacity: 1; transform: translate(0, 0) scale(1); }
@@ -1333,22 +1341,63 @@
 }
 .kf-game-coin-inner {
   display: inline-block;
-  will-change: transform;
-  animation: kf-coin-float 2s ease-in-out infinite;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  animation: kf-coin-spin 0.9s linear infinite;
 }
-@keyframes kf-coin-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
+.kf-coin-svg { width: 100%; height: 100%; display: block; }
+@keyframes kf-coin-spin {
+  from { transform: rotateY(0deg); }
+  to { transform: rotateY(360deg); }
+}
+.kf-coin-collect {
+  animation: kf-coin-arc 0.45s ease-out forwards;
+  pointer-events: none;
+  z-index: 20;
+}
+@keyframes kf-coin-arc {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-52px) scale(0.35); }
 }
 .kf-game-obstacle-wall {
-  background: linear-gradient(180deg, #78716c, #57534e);
-  border-radius: 6px;
-  border: 2px solid rgba(0,0,0,0.2);
-  box-shadow: inset 0 2px 0 rgba(255,255,255,0.15);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.18), transparent 28%),
+    repeating-linear-gradient(90deg, #78716c 0 16px, #57534e 16px 18px),
+    linear-gradient(180deg, #a8a29e, #44403c);
+  border-radius: 5px 5px 2px 2px;
+  border: 2px solid #292524;
+  box-shadow: inset 0 2px 0 rgba(255,255,255,0.2);
+}
+.kf-tile-jungle.kf-game-obstacle-wall {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.12), transparent 30%),
+    repeating-linear-gradient(90deg, #3f6212 0 14px, #365314 14px 16px),
+    #14532d;
+  border-color: #052e16;
+}
+.kf-tile-space.kf-game-obstacle-wall {
+  background: linear-gradient(180deg, #6366f1, #312e81);
+  border-color: #c4b5fd;
+  box-shadow: 0 0 12px rgba(129, 140, 248, 0.45);
 }
 .kf-game-obstacle-platform {
-  background: linear-gradient(180deg, #86efac, #22c55e);
-  border-radius: 4px;
+  background:
+    linear-gradient(#4ade80, #4ade80) 0 0 / 100% 7px no-repeat,
+    linear-gradient(180deg, #a16207, #78350f);
+  border-radius: 5px;
+  border: 2px solid #422006;
+}
+.kf-tile-space.kf-game-obstacle-platform {
+  background: linear-gradient(180deg, #38bdf8, #1d4ed8);
+  border-color: #e0f2fe;
+}
+.kf-tile-school.kf-game-obstacle-platform,
+.kf-tile-classroom.kf-game-obstacle-platform {
+  background:
+    linear-gradient(#e2e8f0, #e2e8f0) 0 0 / 100% 6px no-repeat,
+    linear-gradient(180deg, #94a3b8, #475569);
+  border-color: #1e293b;
 }
 .kf-game-obstacle-coin { display: none; }
 .kf-game-hud {
@@ -1440,9 +1489,98 @@
   .kf-amb-steam,
   .kf-amb-shoot,
   .kf-amb-planet,
+  .kf-lid,
+  .kf-hair,
+  .kf-swing-seat,
+  .kf-game-coin-inner,
   .kf-pro-bubble-text::after {
-    animation-duration: 0.1s !important;
+    animation-duration: 0.01s !important;
     animation-iteration-count: 1 !important;
   }
+  .ss-stage.kf-stage-shake,
+  .ss-stage.kf-stage-shake-big {
+    animation: none !important;
+  }
   .kf-pro-bubble-text-done::after { display: none; }
+}
+
+.kf-char-svg .kf-ink {
+  stroke: #1e293b;
+  stroke-width: 2.4;
+  stroke-linejoin: round;
+  paint-order: stroke fill;
+}
+.kf-lid {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: kf-blink 4.6s infinite;
+}
+.kf-lid-r { animation-delay: 0.05s; }
+@keyframes kf-blink {
+  0%, 90%, 100% { transform: scaleY(0.08); }
+  94% { transform: scaleY(1); }
+}
+.kf-hair {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: kf-hair-sway 2.8s ease-in-out infinite;
+}
+@keyframes kf-hair-sway {
+  0%, 100% { transform: rotate(-2deg); }
+  50% { transform: rotate(3deg); }
+}
+.kf-talking .kf-mouth {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: kf-talk 0.26s ease-in-out infinite;
+}
+@keyframes kf-talk {
+  0%, 100% { transform: scaleY(0.55); }
+  50% { transform: scaleY(1.35); }
+}
+.kf-hit-squash .kf-char-body-wrap {
+  animation: kf-hit-squash 0.32s ease;
+}
+@keyframes kf-hit-squash {
+  0% { transform: scale(1.16, 0.78); }
+  100% { transform: scale(1, 1); }
+}
+.kf-para {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  will-change: transform;
+}
+.kf-fill-svg {
+  position: absolute;
+  left: 0;
+  width: 140%;
+  height: 46%;
+  bottom: 18%;
+}
+.kf-prop-canopy .kf-fill-svg { top: 0; bottom: auto; height: 42%; }
+.kf-prop-hills .kf-fill-svg,
+.kf-prop-bushes .kf-fill-svg,
+.kf-prop-trees .kf-fill-svg,
+.kf-prop-counter .kf-fill-svg { bottom: 8%; height: 42%; }
+.kf-spot-svg {
+  position: absolute;
+  width: 180px;
+  height: auto;
+  left: 8%;
+  bottom: 28%;
+}
+.kf-prop-class .kf-spot-svg { left: 6%; bottom: auto; top: 8%; width: 210px; }
+.kf-swing-seat {
+  transform-box: fill-box;
+  transform-origin: center top;
+  animation: kf-swing 2.4s ease-in-out infinite;
+}
+@keyframes kf-swing {
+  0%, 100% { transform: rotate(-8deg); }
+  50% { transform: rotate(8deg); }
+}
+.ss-stage.kf-game-mode .kf-scene-label,
+.ss-stage.kf-game-mode .ss-scene-label {
+  z-index: 23;
 }

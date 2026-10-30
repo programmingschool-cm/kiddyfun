@@ -83,10 +83,10 @@
       var stage = this.stage;
       stage.classList.add('kf-game-mode');
       stage.innerHTML =
-        '<div class="kf-layer-sky kf-layer"></div>' +
-        '<div class="kf-layer-ground kf-layer"></div>' +
+        '<div class="kf-stage-layer kf-layer-sky"></div>' +
+        '<div class="kf-stage-layer kf-layer-ground"></div>' +
         '<div class="kf-stage-floor"></div>' +
-        '<div class="kf-layer-mid kf-layer"></div>' +
+        '<div class="kf-stage-layer kf-layer-mid"></div>' +
         '<div class="kf-game-world-wrap" id="kf-game-world-wrap">' +
         '<div class="kf-game-layer" id="kf-game-layer"></div></div>' +
         '<div class="kf-game-stats" id="kf-game-stats"></div>' +
@@ -109,6 +109,12 @@
           this.stage.insertBefore(label, this.stage.firstChild);
         }
         label.textContent = def.emoji + ' ' + (def.label || name);
+      }
+      if (window.StageGraphics && StageGraphics.applySceneTheme) {
+        StageGraphics.applySceneTheme(this.stage, this.currentScene);
+      }
+      if (window.StagePro && StagePro.applyAmbient) {
+        StagePro.applyAmbient(this.stage, this.currentScene);
       }
       if (withWalls && this.world) {
         this.world.loadSceneData(this.currentScene);
@@ -181,12 +187,9 @@
         el.style.willChange = 'left, top';
         this._gameLayer.appendChild(el);
         ent.el = el;
-        if (window.StageAnimator && window.StageGraphics) {
+        if (window.StageGraphics) {
           var wrap = StageGraphics.getBodyWrap(el);
-          var t = el.dataset.charType;
-          if (wrap && (t === 'human' || t === 'robot')) {
-            StageAnimator.idleBreath(el, wrap);
-          }
+          if (wrap) StageGraphics.setMotion(el, 'idle');
         }
       }
       ent.active = true;
@@ -216,7 +219,12 @@
       if (ent && this._gameLayer) {
         var el = document.createElement('div');
         el.className = 'kf-game-coin';
-        el.innerHTML = '<span class="kf-game-coin-inner">🪙</span>';
+        el.innerHTML =
+          '<span class="kf-game-coin-inner">' +
+          '<svg viewBox="0 0 32 32" class="kf-coin-svg" aria-hidden="true">' +
+          '<ellipse cx="16" cy="16" rx="12" ry="12" fill="#fbbf24" stroke="#92400e" stroke-width="2"/>' +
+          '<ellipse cx="16" cy="16" rx="6" ry="6" fill="none" stroke="#fff7d6" stroke-width="2"/>' +
+          '</svg></span>';
         el.dataset.key = id;
         el.style.position = 'absolute';
         this._gameLayer.appendChild(el);
@@ -228,7 +236,8 @@
     addObstacleVisual: function (obs) {
       if (!this._gameLayer) return;
       var el = document.createElement('div');
-      el.className = 'kf-game-obstacle kf-game-obstacle-' + (obs.tag || 'wall');
+      el.className = 'kf-game-obstacle kf-game-obstacle-' + (obs.tag || 'wall') +
+        ' kf-tile-' + (this.currentScene || 'default');
       el.style.cssText =
         'left:' + obs.x + 'px;top:' + obs.y + 'px;width:' + obs.w + 'px;height:' + obs.h + 'px;';
       el.dataset.tag = obs.tag || 'wall';
@@ -257,18 +266,36 @@
           e.el.style.height = e.h + 'px';
         }
 
-        if (window.StageGraphics) {
+        if (window.StageGraphics && e.tags.indexOf('coin') < 0 && e.key.indexOf('coin') !== 0) {
           StageGraphics.setFacing(e.el, e.facing === 'left' ? 'left' : 'right');
+          var state = 'idle';
+          var speed = Math.abs(e.vx || 0);
           if (self.world.view === 'side') {
-            if (!e.onGround && e.vy < 0) StageGraphics.setMotion(e.el, 'jumps');
-            else if (!e.onGround) StageGraphics.setMotion(e.el, 'walks');
-            else if (Math.abs(e.vx) > 0.5) StageGraphics.setMotion(e.el, 'runs');
-            else StageGraphics.setMotion(e.el, 'idle');
-          } else if (e.tags.indexOf('coin') < 0 && e.key.indexOf('coin') !== 0) {
-            var moving = e._movedThisFrame;
-            e.el.classList.toggle('kf-game-moving', !!moving);
-            StageGraphics.setMotion(e.el, moving ? 'walks' : 'idle');
+            var airborne = !e.onGround;
+            if (airborne && e.vy < 0) {
+              e._airborne = true;
+              state = 'rise';
+            } else if (airborne) {
+              e._airborne = true;
+              state = 'fall';
+            } else if (e._airborne) {
+              e._airborne = false;
+              e._landUntil = performance.now() + 180;
+              state = 'land';
+              var H = self.stage ? self.stage.clientHeight : 360;
+              StageGraphics.spawnDust(self._gameLayer || self.stage, e.x + (e.w || 40) * 0.5, Math.max(8, H - (e.y + (e.h || 40))), speed > 2);
+            } else if (e._landUntil && performance.now() < e._landUntil) {
+              state = 'land';
+            } else if (speed > 4) {
+              state = 'run';
+            } else if (speed > 0.35 || e._movedThisFrame) {
+              state = 'walk';
+            }
+          } else if (e._movedThisFrame || speed > 0.35) {
+            state = 'walk';
           }
+          var cycle = 760 - Math.min(480, speed * 140);
+          StageGraphics.setMotion(e.el, state, { cycleMs: cycle });
         }
         e._movedThisFrame = false;
       });
@@ -389,18 +416,34 @@
       if (!wrap || !this.world) return;
       wrap.style.width = this.world.bounds.w + 'px';
       wrap.style.height = this.world.bounds.h + 'px';
-      if (!this.gameState || !this.gameState.cameraFollow) {
-        wrap.style.transform = '';
-        return;
-      }
-      var pk = this.gameState.cameraFollow.toLowerCase();
-      var p = this.world.entities[pk];
-      if (!p || !p.active) return;
       var stageW = this.stage ? this.stage.clientWidth : 600;
-      var target = p.x + p.w / 2 - stageW / 2;
-      var maxCam = Math.max(0, this.world.bounds.w - stageW);
-      this._camX = Math.max(0, Math.min(maxCam, target));
-      wrap.style.transform = 'translate(' + Math.round(-this._camX) + 'px, 0)';
+      var worldW = this.world.bounds.w || stageW;
+      var maxCam = Math.max(0, worldW - stageW);
+      var cam = this._camX || 0;
+      var target = cam;
+      var followName = this.gameState && this.gameState.cameraFollow;
+      var player = null;
+      if (followName) player = this.world.entities[String(followName).toLowerCase()];
+      if (!player && this.world.playerKey) player = this.world.entities[this.world.playerKey];
+      if (player && player.active) {
+        var cx = player.x + (player.w || 48) / 2;
+        if (followName) {
+          target = cx - stageW / 2 + (player.vx || 0) * 18;
+        } else {
+          var margin = stageW * 0.22;
+          if (cx < cam + margin) target = cx - margin;
+          else if (cx > cam + stageW - margin) target = cx - (stageW - margin);
+        }
+      } else if (!followName) {
+        target = 0;
+      }
+      if (target < 0) target = 0;
+      if (target > maxCam) target = maxCam;
+      cam = cam + (target - cam) * 0.14;
+      if (Math.abs(cam - target) < 0.35) cam = target;
+      this._camX = cam;
+      wrap.style.transform = 'translate3d(' + (-cam).toFixed(1) + 'px,0,0)';
+      if (window.StagePro && StagePro.setParallax) StagePro.setParallax(this.stage, cam);
     },
 
     _addLog: function (msg) {

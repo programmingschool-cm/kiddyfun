@@ -522,6 +522,13 @@
           gs.loseLife(node.amount || 1);
           R.updateGameHud();
           if (window.KiddyGameFx && R.stage) KiddyGameFx.stageShake(R.stage, false);
+          var pKey = R.world && R.world.playerKey;
+          var pEnt = pKey && R.world.getEntity(pKey);
+          if (pEnt && pEnt.el) {
+            pEnt.el.classList.remove('kf-hit-squash');
+            void pEnt.el.offsetWidth;
+            pEnt.el.classList.add('kf-hit-squash');
+          }
           if (gs.lives <= 0) this._onGameLost();
         }
         break;
@@ -537,6 +544,12 @@
             if (c && c.active && (c.tags.indexOf('coin') >= 0) && R.world._aabb(actor, c)) {
               cx = c.x;
               cy = c.y;
+              if (c.el && c.el.parentNode) {
+                var ghost = c.el.cloneNode(true);
+                ghost.classList.add('kf-coin-collect');
+                c.el.parentNode.appendChild(ghost);
+                setTimeout(function () { if (ghost.parentNode) ghost.remove(); }, 460);
+              }
             }
           });
           KiddyGameFx.coinBurst(R._gameLayer, cx, cy);

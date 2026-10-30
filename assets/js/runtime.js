@@ -146,7 +146,6 @@
           /* StagePro provides much richer ambient — skip legacy decorations */
           StagePro.applyAmbient(self.stage, name);
           StagePro.showSceneTitle(self.stage, def.emoji, def.label);
-          StagePro.flash(self.stage, 'rgba(255,255,255,0.35)');
         } else {
           self._addSceneDecorations(def.deco);
         }
@@ -250,8 +249,7 @@
       setTimeout(function () {
         if (!self.characters[key] || !window.StageAnimator || !window.StageGraphics) return;
         var wrap = StageGraphics.getBodyWrap(el);
-        var t = el.dataset.charType;
-        if (wrap && (t === 'human' || t === 'robot')) StageAnimator.idleBreath(el, wrap);
+        if (wrap && !el.dataset.animState) StageGraphics.setMotion(el, 'idle');
       }, 750);
       this._addLog('✅ ' + name + ' appears');
     },

@@ -40,7 +40,20 @@
     { thighL: 10, shinL: 5, thighR: -5, shinR: 0, armUL: -15, armLL: -5, armUR: 15, armLR: 0, head: 0, torso: 0, bodyY: -12, lean: -3 },
   ];
 
-  var POSE_WAVE = { thighL: 0, shinL: 0, thighR: 0, shinR: 0, armUL: 5, armLL: 0, armUR: -62, armLR: -15, head: 4, torso: 2, bodyY: 0, lean: 0 };
+  var ANIMAL_WALK = [
+    { legL: 22, legR: -18, tail: 14, wing: -26, bodyY: -2, lean: -2 },
+    { legL: 4, legR: -4, tail: -6, wing: 8, bodyY: -6, lean: 0 },
+    { legL: -18, legR: 22, tail: -16, wing: 28, bodyY: -3, lean: 2 },
+    { legL: -6, legR: 6, tail: 4, wing: -8, bodyY: -6, lean: 0 },
+  ];
+  var FLY_CYCLE = [
+    { wing: -34, bodyY: -6, lean: -4, legL: 8, legR: -8 },
+    { wing: 10, bodyY: -14, lean: 0, legL: -4, legR: 4 },
+    { wing: 32, bodyY: -8, lean: 3, legL: 6, legR: -6 },
+    { wing: -8, bodyY: -12, lean: -2, legL: -2, legR: 2 },
+  ];
+  var POSE_WAVE = { thighL: 0, shinL: 0, thighR: 0, shinR: 0, armUL: 5, armLL: 0, armUR: -62, armLR: -15, head: 4, torso: 2, bodyY: 0, lean: 0, scaleX: 1, scaleY: 1 };
+  var POSE_WAVE_2 = { thighL: 0, shinL: 0, thighR: 0, shinR: 0, armUL: 8, armLL: 4, armUR: -40, armLR: 10, head: -2, torso: 1, bodyY: -2, lean: 1, scaleX: 1, scaleY: 1 };
   var POSE_JUMP = [
     { thighL: -8, shinL: 20, thighR: 8, shinR: 20, armUL: -25, armLL: -10, armUR: 25, armLR: 10, head: -5, torso: 5, bodyY: 0, lean: 0 },
     { thighL: -20, shinL: 35, thighR: 20, shinR: 35, armUL: -55, armLL: -20, armUR: 55, armLR: 20, head: -8, torso: -5, bodyY: -38, lean: -3 },
@@ -98,7 +111,7 @@
           '</g>' +
         '</g>' +
         '<g class="kf-torso">' +
-          '<path d="M36 70 Q60 60 84 70 L88 98 Q60 106 32 98 Z" fill="url(#kg-shirt-' + opts.id + ')"/>' +
+          '<path class="kf-ink" d="M36 70 Q60 60 84 70 L88 98 Q60 106 32 98 Z" fill="url(#kg-shirt-' + opts.id + ')"/>' +
           '<path d="M40 76 L80 76" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>' +
         '</g>' +
         '<g class="kf-arms">' +
@@ -122,8 +135,8 @@
           '</g>' +
         '</g>' +
         '<g class="kf-head" transform-origin="60 52">' +
-          '<ellipse cx="60" cy="48" rx="27" ry="29" fill="url(#kg-skin-' + opts.id + ')"/>' +
-          '<path d="M33 36 Q60 14 87 36 Q90 24 60 18 Q30 24 33 36" fill="' + hair + '"/>' +
+          '<ellipse class="kf-ink" cx="60" cy="48" rx="27" ry="29" fill="url(#kg-skin-' + opts.id + ')"/>' +
+          '<g class="kf-hair"><path class="kf-ink" d="M33 36 Q60 14 87 36 Q90 24 60 18 Q30 24 33 36" fill="' + hair + '"/></g>' +
           '<g class="kf-eyes">' +
             '<ellipse class="kf-eye kf-eye-l" cx="50" cy="45" rx="6" ry="7" fill="#fff"/>' +
             '<circle class="kf-pupil kf-pupil-l" cx="51" cy="46" r="3" fill="#1e293b"/>' +
@@ -131,6 +144,8 @@
             '<ellipse class="kf-eye kf-eye-r" cx="70" cy="45" rx="6" ry="7" fill="#fff"/>' +
             '<circle class="kf-pupil kf-pupil-r" cx="71" cy="46" r="3" fill="#1e293b"/>' +
             '<circle cx="72" cy="45" r="1" fill="#fff" opacity="0.7"/>' +
+            '<ellipse class="kf-lid kf-lid-l" cx="50" cy="45" rx="7" ry="7.2" fill="' + skin + '"/>' +
+            '<ellipse class="kf-lid kf-lid-r" cx="70" cy="45" rx="7" ry="7.2" fill="' + skin + '"/>' +
           '</g>' +
           '<ellipse class="kf-mouth" cx="60" cy="57" rx="6" ry="3.5" fill="#d4767a"/>' +
           '<ellipse cx="41" cy="51" rx="6" ry="3.5" fill="rgba(255,100,100,0.2)"/>' +
@@ -147,7 +162,7 @@
         '<g class="kf-char-root">' +
         '<ellipse class="kf-leg-l" cx="45" cy="118" rx="4" ry="14" fill="#e67e22"/>' +
         '<ellipse class="kf-leg-r" cx="75" cy="118" rx="4" ry="14" fill="#d35400"/>' +
-        '<ellipse cx="60" cy="75" rx="32" ry="28" fill="' + c + '"/>' +
+        '<ellipse class="kf-ink" cx="60" cy="75" rx="32" ry="28" fill="' + c + '"/>' +
         '<g class="kf-wing-l" transform-origin="35 70"><ellipse cx="28" cy="68" rx="18" ry="10" fill="' + shade(c, 20) + '"/></g>' +
         '<g class="kf-wing-r" transform-origin="85 70"><ellipse cx="92" cy="68" rx="18" ry="10" fill="' + shade(c, 10) + '"/></g>' +
         '<circle cx="60" cy="55" r="22" fill="' + shade(c, 15) + '"/>' +
@@ -163,9 +178,10 @@
         : '<ellipse cx="42" cy="28" rx="12" ry="18" fill="' + c + '"/><ellipse cx="78" cy="28" rx="12" ry="18" fill="' + c + '"/>';
       return '<svg class="kf-char-svg" viewBox="0 0 120 140" xmlns="http://www.w3.org/2000/svg">' +
         '<g class="kf-char-root">' +
+        '<g class="kf-tail"><path d="M30 74 Q12 66 16 48" fill="none" stroke="' + shade(c, -28) + '" stroke-width="7" stroke-linecap="round"/></g>' +
         '<g class="kf-legs"><rect class="kf-leg-l" x="38" y="95" width="12" height="28" rx="5" fill="' + shade(c, -20) + '"/>' +
         '<rect class="kf-leg-r" x="70" y="95" width="12" height="28" rx="5" fill="' + shade(c, -30) + '"/></g>' +
-        '<ellipse cx="60" cy="78" rx="34" ry="26" fill="' + c + '"/>' +
+        '<ellipse class="kf-ink" cx="60" cy="78" rx="34" ry="26" fill="' + c + '"/>' +
         '<circle cx="60" cy="52" r="24" fill="' + shade(c, 10) + '"/>' + ears +
         '<circle class="kf-eye-l" cx="50" cy="50" r="5" fill="#fff"/><circle cx="51" cy="51" r="2" fill="#1e293b"/>' +
         '<circle class="kf-eye-r" cx="70" cy="50" r="5" fill="#fff"/><circle cx="71" cy="51" r="2" fill="#1e293b"/>' +
@@ -176,11 +192,12 @@
     /* lion / monkey default quadruped */
     return '<svg class="kf-char-svg" viewBox="0 0 120 140" xmlns="http://www.w3.org/2000/svg">' +
       '<g class="kf-char-root">' +
+      '<g class="kf-tail"><path d="M26 70 Q8 78 18 98" fill="none" stroke="' + shade(c, -30) + '" stroke-width="8" stroke-linecap="round"/></g>' +
       '<g class="kf-legs">' +
       '<rect class="kf-leg-l" x="32" y="88" width="16" height="38" rx="7" fill="' + shade(c, -15) + '"/>' +
       '<rect class="kf-leg-r" x="72" y="88" width="16" height="38" rx="7" fill="' + shade(c, -25) + '"/>' +
       '</g>' +
-      '<ellipse cx="60" cy="72" rx="38" ry="30" fill="' + c + '"/>' +
+      '<ellipse class="kf-ink" cx="60" cy="72" rx="38" ry="30" fill="' + c + '"/>' +
       (type === 'lion' ? '<circle cx="60" cy="48" r="32" fill="' + shade(c, 15) + '" opacity="0.85"/>' : '') +
       '<circle cx="60" cy="48" r="22" fill="' + c + '"/>' +
       '<circle class="kf-eye-l" cx="50" cy="46" r="5" fill="#fff"/><circle cx="51" cy="47" r="2.5" fill="#1e293b"/>' +
@@ -195,7 +212,7 @@
       '<g class="kf-char-root">' +
       '<rect class="kf-leg-l" x="42" y="100" width="14" height="32" rx="4" fill="' + shade(c, -20) + '"/>' +
       '<rect class="kf-leg-r" x="64" y="100" width="14" height="32" rx="4" fill="' + shade(c, -30) + '"/>' +
-      '<rect x="34" y="58" width="52" height="48" rx="8" fill="url(#kg-robot-' + id + ')"/>' +
+      '<rect class="kf-ink" x="34" y="58" width="52" height="48" rx="8" fill="url(#kg-robot-' + id + ')"/>' +
       '<defs><linearGradient id="kg-robot-' + id + '" x1="0" y1="0" x2="0" y2="1">' +
       '<stop offset="0%" stop-color="' + c + '"/><stop offset="100%" stop-color="' + shade(c, -35) + '"/></linearGradient></defs>' +
       '<rect x="38" y="30" width="44" height="32" rx="10" fill="' + shade(c, 10) + '"/>' +
@@ -264,48 +281,69 @@
     return el && el.querySelector('.kf-char-body-wrap');
   }
 
-  function setMotion(el, motion) {
+  var STATE_ALIAS = {
+    walks: 'walk', moves_right: 'walk', moves_left: 'walk', walk: 'walk',
+    runs: 'run', run: 'run',
+    jumps: 'jump', jump: 'jump',
+    rise: 'rise', fall: 'fall', land: 'land',
+    waves: 'wave', wave: 'wave',
+    bows: 'bow', nods: 'nod', cheers: 'cheer', dances: 'dance',
+    smiles: 'smile', handshakes: 'wave', hides: 'hide', shows: 'idle',
+    flies: 'fly', flaps: 'fly', fly: 'fly',
+    idle: 'idle',
+  };
+
+  function toState(motion) {
+    return STATE_ALIAS[motion] || 'jump';
+  }
+
+  function clipFor(el, state) {
+    var type = (el && el.dataset.charType) || 'human';
+    var animal = type !== 'human' && type !== 'robot';
+    if (state === 'walk' || state === 'run') {
+      if (type === 'robot' || animal) return ANIMAL_WALK;
+      return state === 'run' ? RUN_CYCLE : WALK_CYCLE;
+    }
+    if (state === 'fly') return FLY_CYCLE;
+    if (state === 'wave') return [POSE_WAVE, POSE_WAVE_2, POSE_WAVE];
+    if (state === 'jump') return POSE_JUMP;
+    if (state === 'dance' || state === 'cheer') return RUN_CYCLE;
+    if (state === 'bow' || state === 'nod' || state === 'smile') return [POSE_WAVE_2, POSE_WAVE];
+    return null;
+  }
+
+  function setMotion(el, motion, opts) {
     var wrap = getBodyWrap(el);
-    if (!wrap) return;
-    stopPoseLoop(el);
+    if (!wrap || !el) return;
+    opts = opts || {};
+    var state = toState(motion);
+    var anim = window.StageAnimator;
+    if (el.dataset.animState === state && anim && anim.nudge) {
+      anim.nudge(el, opts);
+      return;
+    }
+    el.dataset.animState = state;
     wrap.classList.remove(
       'kf-act-idle', 'kf-act-walk', 'kf-act-run', 'kf-act-wave', 'kf-act-jump',
       'kf-act-bow', 'kf-act-fly', 'kf-act-hide', 'kf-act-smile', 'kf-act-nod',
       'kf-act-cheer', 'kf-act-handshake', 'kf-act-dance', 'kf-sprite-active'
     );
-    var map = {
-      walks: 'kf-act-walk', runs: 'kf-act-run', waves: 'kf-act-wave', jumps: 'kf-act-jump',
-      bows: 'kf-act-bow', flies: 'kf-act-fly', flaps: 'kf-act-fly', hides: 'kf-act-hide',
-      smiles: 'kf-act-smile', nods: 'kf-act-nod', cheers: 'kf-act-cheer',
-      handshakes: 'kf-act-handshake', dances: 'kf-act-dance', shows: 'kf-act-idle',
-      idle: 'kf-act-idle',
+    var cls = {
+      walk: 'kf-act-walk', run: 'kf-act-run', wave: 'kf-act-wave', jump: 'kf-act-jump',
+      rise: 'kf-act-jump', fall: 'kf-act-jump', land: 'kf-act-jump',
+      bow: 'kf-act-bow', fly: 'kf-act-fly', hide: 'kf-act-hide',
+      smile: 'kf-act-smile', nod: 'kf-act-nod', cheer: 'kf-act-cheer',
+      dance: 'kf-act-dance', idle: 'kf-act-idle',
     };
-    wrap.classList.add(map[motion] || 'kf-act-jump');
+    wrap.classList.add(cls[state] || 'kf-act-idle');
     wrap.classList.add('kf-sprite-active');
-
-    var type = el.dataset.charType || 'human';
-    var anim = window.StageAnimator;
-    if (type === 'human' && anim) {
-      if (motion === 'walks' || motion === 'moves_right' || motion === 'moves_left') {
-        startPoseLoop(el, WALK_CYCLE, 680);
-      } else if (motion === 'runs') {
-        startPoseLoop(el, RUN_CYCLE, 480);
-      } else if (motion === 'waves') {
-        anim.stop(el);
-        anim.applyPose(wrap, POSE_WAVE);
-      } else if (motion === 'jumps') {
-        startPoseLoop(el, POSE_JUMP, 650);
-      } else if (motion === 'idle' || motion === 'shows') {
-        anim.idleBreath(el, wrap);
-      }
-    } else if (type === 'robot') {
-      if (motion === 'walks' || motion === 'moves_right' || motion === 'moves_left') {
-        startPoseLoop(el, WALK_CYCLE, 680);
-      } else if (motion === 'runs') {
-        startPoseLoop(el, RUN_CYCLE, 480);
-      }
-    }
     el.classList.remove('ss-anim-walk', 'ss-anim-run', 'ss-anim-wave', 'ss-anim-jump');
+    if (!anim || !anim.play) return;
+    var cycle = opts.cycleMs;
+    if (!cycle && (state === 'walk' || state === 'run')) {
+      cycle = state === 'run' ? 420 : 680;
+    }
+    anim.play(el, wrap, state, clipFor(el, state), { cycleMs: cycle });
   }
 
   function setFacing(el, facing) {
@@ -342,58 +380,89 @@
   }
 
   function buildSceneLayers(stage) {
-    if (!stage || stage.querySelector('.kf-layer-sky')) return;
-    var sky = document.createElement('div');
+    if (!stage) return null;
+    var sky = stage.querySelector('.kf-layer-sky');
+    if (sky) {
+      sky.classList.add('kf-stage-layer');
+      var ground = stage.querySelector('.kf-layer-ground');
+      var floor = stage.querySelector('.kf-stage-floor');
+      var mid = stage.querySelector('.kf-layer-mid');
+      if (ground) ground.classList.add('kf-stage-layer');
+      if (mid) mid.classList.add('kf-stage-layer');
+      if (!floor) {
+        floor = document.createElement('div');
+        floor.className = 'kf-stage-floor';
+        stage.insertBefore(floor, ground ? ground.nextSibling : sky.nextSibling);
+      }
+      if (!stage.querySelector('.kf-stage-vignette')) {
+        var vignette = document.createElement('div');
+        vignette.className = 'kf-stage-vignette';
+        stage.appendChild(vignette);
+      }
+      if (!stage.querySelector('.kf-stage-light')) {
+        var light = document.createElement('div');
+        light.className = 'kf-stage-light';
+        stage.appendChild(light);
+      }
+      return { sky: sky, ground: ground, floor: floor, mid: mid };
+    }
+    sky = document.createElement('div');
     sky.className = 'kf-stage-layer kf-layer-sky';
-    var ground = document.createElement('div');
-    ground.className = 'kf-stage-layer kf-layer-ground';
-    var floor = document.createElement('div');
-    floor.className = 'kf-stage-floor';
-    var mid = document.createElement('div');
-    mid.className = 'kf-stage-layer kf-layer-mid';
-    var vignette = document.createElement('div');
-    vignette.className = 'kf-stage-vignette';
-    var light = document.createElement('div');
-    light.className = 'kf-stage-light';
+    var groundEl = document.createElement('div');
+    groundEl.className = 'kf-stage-layer kf-layer-ground';
+    var floorEl = document.createElement('div');
+    floorEl.className = 'kf-stage-floor';
+    var midEl = document.createElement('div');
+    midEl.className = 'kf-stage-layer kf-layer-mid';
+    var vignetteEl = document.createElement('div');
+    vignetteEl.className = 'kf-stage-vignette';
+    var lightEl = document.createElement('div');
+    lightEl.className = 'kf-stage-light';
     stage.insertBefore(sky, stage.firstChild);
-    stage.insertBefore(ground, sky.nextSibling);
-    stage.insertBefore(floor, ground.nextSibling);
-    stage.insertBefore(mid, floor.nextSibling);
-    stage.appendChild(light);
-    stage.appendChild(vignette);
-    return { sky: sky, ground: ground, floor: floor, mid: mid };
+    stage.insertBefore(groundEl, sky.nextSibling);
+    stage.insertBefore(floorEl, groundEl.nextSibling);
+    stage.insertBefore(midEl, floorEl.nextSibling);
+    stage.appendChild(lightEl);
+    stage.appendChild(vignetteEl);
+    return { sky: sky, ground: groundEl, floor: floorEl, mid: midEl };
   }
 
   function applySceneTheme(stage, sceneKey) {
     var layers = buildSceneLayers(stage);
-    if (!layers) return;
+    if (!layers || !layers.sky) return;
+    var key = sceneKey || 'default';
+    stage.dataset.sceneKey = key;
     var themes = {
-      school: { sky: 'linear-gradient(180deg,#7dd3fc 0%,#bae6fd 55%,#86efac 55%,#4ade80 100%)', ground: '#22c55e' },
-      classroom: { sky: 'linear-gradient(180deg,#fef9c3 0%,#fef08a 70%,#d4a574 70%,#a1887f 100%)', ground: '#8d6e63' },
-      jungle: { sky: 'linear-gradient(180deg,#14532d 0%,#166534 45%,#3f6212 55%,#365314 100%)', ground: '#3f6212' },
-      restaurant: { sky: 'linear-gradient(180deg,#fff7ed 0%,#ffedd5 65%,#d6b896 65%,#a1887f 100%)', ground: '#8d6e63' },
-      home: { sky: 'linear-gradient(180deg,#e0f2fe 0%,#bae6fd 55%,#a8a29e 55%,#78716c 100%)', ground: '#78716c' },
-      playground: { sky: 'linear-gradient(180deg,#38bdf8 0%,#7dd3fc 50%,#86efac 50%,#4ade80 100%)', ground: '#22c55e' },
-      space: { sky: 'radial-gradient(ellipse at 50% 30%,#312e81 0%,#0f172a 60%,#020617 100%)', ground: '#1e1b4b' },
-      default: { sky: 'linear-gradient(180deg,#c7d2fe 0%,#e0e7ff 55%,#94a3b8 55%,#64748b 100%)', ground: '#64748b' },
+      school: { sky: 'linear-gradient(180deg,#7dd3fc 0%,#bae6fd 38%,#d9f99d 62%,#4ade80 100%)', ground: '#22c55e' },
+      classroom: { sky: 'linear-gradient(180deg,#fef9c3 0%,#fde68a 46%,#d6b896 70%,#a1887f 100%)', ground: '#8d6e63' },
+      jungle: { sky: 'linear-gradient(180deg,#14532d 0%,#166534 36%,#3f6212 58%,#365314 100%)', ground: '#3f6212' },
+      restaurant: { sky: 'linear-gradient(180deg,#fff7ed 0%,#ffedd5 42%,#e7d3b0 68%,#a1887f 100%)', ground: '#8d6e63' },
+      home: { sky: 'linear-gradient(180deg,#e0f2fe 0%,#bae6fd 40%,#d6d3d1 64%,#78716c 100%)', ground: '#78716c' },
+      playground: { sky: 'linear-gradient(180deg,#38bdf8 0%,#7dd3fc 36%,#bbf7d0 60%,#4ade80 100%)', ground: '#16a34a' },
+      space: { sky: 'radial-gradient(ellipse at 50% 20%,#312e81 0%,#0f172a 55%,#020617 100%)', ground: '#1e1b4b' },
+      default: { sky: 'linear-gradient(180deg,#c7d2fe 0%,#e0e7ff 40%,#cbd5e1 64%,#64748b 100%)', ground: '#64748b' },
     };
-    var t = themes[sceneKey] || themes.default;
-    if (layers.sky) layers.sky.style.background = t.sky;
-    if (layers.ground) layers.ground.style.background = 'linear-gradient(180deg, transparent 0%, ' + t.ground + ' 40%)';
+    var t = themes[key] || themes.default;
+    layers.sky.style.background = t.sky;
+    if (layers.ground) {
+      var stripe = key === 'space' ? '' : 'repeating-linear-gradient(90deg, transparent 0 22px, rgba(0,0,0,0.05) 22px 24px), ';
+      layers.ground.style.background = stripe + 'linear-gradient(180deg, transparent 0%, ' + t.ground + ' 14%, ' + shade(t.ground, -22) + ' 100%)';
+    }
     stage.style.background = 'transparent';
   }
 
   function transitionScene(stage, cb) {
     if (!stage) { if (cb) cb(); return; }
     var veil = document.createElement('div');
-    veil.className = 'kf-scene-veil';
+    veil.className = 'kf-scene-veil kf-scene-wipe';
     stage.appendChild(veil);
     requestAnimationFrame(function () { veil.classList.add('active'); });
     setTimeout(function () {
       if (cb) cb();
+      veil.classList.add('out');
       veil.classList.remove('active');
-      setTimeout(function () { if (veil.parentNode) veil.remove(); }, 500);
-    }, 350);
+      setTimeout(function () { if (veil.parentNode) veil.remove(); }, 480);
+    }, 280);
   }
 
   window.StageGraphics = {

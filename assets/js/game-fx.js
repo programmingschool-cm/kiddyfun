@@ -22,8 +22,8 @@
       if (!layer) return;
       for (var i = 0; i < 6; i++) {
         var p = document.createElement('span');
-        p.className = 'kf-game-particle';
-        p.textContent = '✨';
+        p.className = 'kf-game-particle kf-spark';
+        p.textContent = '';
         p.style.left = (x + 8) + 'px';
         p.style.top = (y + 4) + 'px';
         p.style.setProperty('--kf-dx', ((Math.random() - 0.5) * 48) + 'px');
@@ -39,6 +39,7 @@
 
     stageShake: function (stage, big) {
       if (!stage) return;
+      if (window.StageAnimator && StageAnimator.reducedMotion && StageAnimator.reducedMotion()) return;
       stage.classList.remove('kf-stage-shake', 'kf-stage-shake-big');
       void stage.offsetWidth;
       stage.classList.add(big ? 'kf-stage-shake-big' : 'kf-stage-shake');
