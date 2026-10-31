@@ -257,6 +257,12 @@
     return { phrase: m[1], start: pos - m[1].length };
   }
 
+  /* When rewriting inside scene/sound/map quotes, include leftover name + closing " */
+  function quotedArgReplaceEnd(text, pos) {
+    var m = text.slice(pos).match(/^[^"\n]*"/);
+    return m ? pos + m[0].length : pos;
+  }
+
   function fuzzyScore(query, target) {
     if (!query) return 50;
     var q = query.toLowerCase().trim();
@@ -290,23 +296,26 @@
 
     /* scene "…" */
     if (/scene\s+"[^"]*$/i.test(text.slice(info.lineStart, pos)) || /scene\s+"$/i.test(trimmed)) {
+      var sceneReplaceEnd = quotedArgReplaceEnd(text, pos);
       SCENES.forEach(function (s) {
         add({ label: 'scene "' + s + '"', insert: 'scene "' + s + '"', detail: '🎬 Scene', score: 95,
-          replaceStart: info.lineStart, replaceEnd: pos });
+          replaceStart: info.lineStart, replaceEnd: sceneReplaceEnd });
       });
     }
 
     if (/play\s+sound\s+"[^"]*$/i.test(text.slice(info.lineStart, pos))) {
+      var soundReplaceEnd = quotedArgReplaceEnd(text, pos);
       SOUNDS.forEach(function (s) {
         add({ label: 'play sound "' + s + '"', insert: 'play sound "' + s + '"', detail: '🔊 Sound', score: 95,
-          replaceStart: info.lineStart, replaceEnd: pos });
+          replaceStart: info.lineStart, replaceEnd: soundReplaceEnd });
       });
     }
 
     if (/load\s+map\s+"[^"]*$/i.test(text.slice(info.lineStart, pos))) {
+      var mapReplaceEnd = quotedArgReplaceEnd(text, pos);
       MAPS.forEach(function (s) {
         add({ label: 'load map "' + s + '"', insert: 'load map "' + s + '"', detail: '🗺️ Map', score: 95,
-          replaceStart: info.lineStart, replaceEnd: pos });
+          replaceStart: info.lineStart, replaceEnd: mapReplaceEnd });
       });
     }
 
@@ -464,12 +473,13 @@
     var insert = best.insert;
     var prefix = text.slice(best.replaceStart != null ? best.replaceStart : wb.start, pos);
 
+    var ghostReplaceEnd = best.replaceEnd != null ? best.replaceEnd : pos;
     if (insert.toLowerCase().indexOf(word.toLowerCase()) === 0 && insert.length > word.length) {
       return {
         suffix: insert.slice(word.length),
         insert: insert,
         replaceStart: best.replaceStart != null ? best.replaceStart : wb.start,
-        replaceEnd: pos,
+        replaceEnd: ghostReplaceEnd,
         type: 'word',
       };
     }
@@ -478,7 +488,7 @@
         suffix: insert.slice(prefix.length),
         insert: insert,
         replaceStart: best.replaceStart != null ? best.replaceStart : wb.start,
-        replaceEnd: pos,
+        replaceEnd: ghostReplaceEnd,
         type: 'word',
       };
     }
@@ -1143,7 +1153,7 @@
       if (state.items.length && wordLen >= minWord) {
         state.selected = 0;
         state.replaceStart = state.items[0].replaceStart != null ? state.items[0].replaceStart : wb.start;
-        state.replaceEnd = pos;
+        state.replaceEnd = state.items[0].replaceEnd != null ? state.items[0].replaceEnd : pos;
         renderAutocomplete();
       } else {
         closeAutocomplete();
