@@ -3224,3 +3224,208 @@ select:focus-visible,
     scroll-behavior: auto !important;
   }
 }
+
+/* ── Friend rooms ────────────────────────────────────────────────────── */
+.kf-room-composer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+.kf-room-starters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.kf-room-chip,
+.kf-btn-show-friends,
+.kf-room-react-btn {
+  border: 2px solid var(--kf-border);
+  background: white;
+  border-radius: 999px;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.kf-room-chip {
+  padding: 6px 10px;
+  font-size: 0.85rem;
+}
+.kf-room-chip:active,
+.kf-btn-show-friends:active,
+.kf-room-react-btn:active { transform: scale(0.98); }
+.kf-btn-show-friends {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: var(--kf-radius-sm);
+  color: white;
+  background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+  box-shadow: 0 4px 14px rgba(109, 40, 217, 0.28);
+  font-size: 1rem;
+}
+.kf-room-from {
+  position: absolute;
+  z-index: 6;
+  top: 10px;
+  left: 10px;
+  max-width: calc(100% - 20px);
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.88);
+  color: white;
+  font-weight: 700;
+  font-size: 0.9rem;
+  pointer-events: none;
+}
+.kf-room-burst {
+  position: absolute;
+  z-index: 7;
+  font-size: 2.2rem;
+  pointer-events: none;
+  animation: kf-room-pop 1.2s ease forwards;
+}
+@keyframes kf-room-pop {
+  0% { transform: translate(-50%, 8px) scale(0.6); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translate(-50%, -36px) scale(1.15); opacity: 0; }
+}
+.kf-friend-body {
+  overflow: auto;
+  gap: 8px;
+}
+.kf-room-next {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border-radius: var(--kf-radius-sm);
+  background: #f5f3ff;
+  border: 2px solid #ddd6fe;
+}
+.kf-friend-how {
+  margin: 0;
+  color: var(--kf-dark);
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+.kf-friend-lead,
+.kf-room-until,
+.kf-room-you,
+.kf-friend-empty,
+.kf-friend-composing {
+  margin: 0;
+  color: var(--kf-text-muted);
+  font-size: 0.92rem;
+}
+.kf-friend-status {
+  min-height: 1.2em;
+  margin: 8px 0 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--kf-text-muted);
+}
+.kf-friend-status-bad { color: #b91c1c; }
+#kf-friend-join:disabled { opacity: 0.55; }
+.kf-friend-or {
+  text-align: center;
+  margin: 8px 0;
+  color: var(--kf-text-muted);
+  font-size: 0.85rem;
+}
+.kf-room-code {
+  margin: 0;
+  text-align: center;
+  font-size: clamp(1.8rem, 5vw, 2.4rem);
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: var(--kf-dark);
+}
+.kf-room-code-input {
+  text-align: center;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.kf-room-actions,
+.kf-room-react,
+.kf-friend-people {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.kf-room-person {
+  background: var(--kf-primary-light);
+  color: var(--kf-dark);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+.kf-friend-composing { min-height: 1.2em; }
+.kf-friend-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 38vh;
+  overflow: auto;
+}
+.kf-room-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  text-align: left;
+  border: 2px solid var(--kf-border);
+  background: #f8fafc;
+  border-radius: var(--kf-radius-sm);
+  padding: 8px 10px;
+  cursor: pointer;
+}
+.kf-room-card-who { font-weight: 800; font-size: 0.82rem; }
+.kf-room-card-line { font-size: 0.95rem; }
+.kf-room-react-btn {
+  width: 44px;
+  height: 44px;
+  font-size: 1.3rem;
+  padding: 0;
+}
+#friends-col { display: none; }
+
+@media (min-width: 992px) {
+  body.kf-friends-open #friends-col {
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 260px;
+    width: 260px;
+    max-width: 260px;
+    height: 100%;
+    min-height: 0;
+  }
+  body.kf-friends-open .kf-col-code {
+    flex: 0 0 34%;
+    max-width: 34%;
+  }
+  body.kf-friends-open .kf-col-output {
+    flex: 1 1 0;
+    width: auto;
+    max-width: none;
+    min-width: 0;
+  }
+  body.kf-editor-maximized #friends-col { display: none !important; }
+}
+
+@media (max-width: 991px) {
+  #friends-col { display: none !important; }
+  body.kf-tab-friends-active #friends-col {
+    display: flex !important;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    animation: kf-mobile-panel-in 0.28s ease;
+  }
+  .kf-friend-cards { max-height: none; flex: 1 1 auto; }
+  .kf-tab-btn { font-size: 0.85rem; padding: 10px 6px; }
+}

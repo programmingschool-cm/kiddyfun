@@ -4,7 +4,7 @@
   "private": true,
   "description": "KiddyFun Code — kids programming and English",
   "scripts": {
-    "test": "node tests/parser.test.js && node tests/blocks-script.test.js",
+    "test": "node tests/parser.test.js && node tests/blocks-script.test.js && node tests/room-message.test.js",
     "test:examples": "node tests/examples-smoke.js"
   }
 }

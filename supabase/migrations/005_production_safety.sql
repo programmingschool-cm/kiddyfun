@@ -43,34 +43,49 @@ begin
 end;
 $$;
 
+-- Helpers live in 001. Recreate them here so an older database can run 005 alone.
+create or replace function public.current_user_role()
+returns text
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select p.role from public.profiles p where p.id = auth.uid()
+$$;
+
+create or replace function public.current_user_class_code()
+returns text
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select p.class_code from public.profiles p where p.id = auth.uid()
+$$;
+
+revoke all on function public.current_user_role() from public;
+revoke all on function public.current_user_class_code() from public;
+grant execute on function public.current_user_role() to authenticated;
+grant execute on function public.current_user_class_code() to authenticated;
+
 -- ── Classes: only a teacher profile may own a class ─────────────────────────
+-- Role is read through a security-definer helper. Selecting profiles from a
+-- profiles policy makes Postgres recurse and PostgREST return 500.
 drop policy if exists classes_teacher_all on public.classes;
 create policy classes_teacher_all on public.classes
   for all
-  using (
-    auth.uid() = teacher_id
-    and exists (
-      select 1 from public.profiles p
-      where p.id = auth.uid() and p.role = 'teacher'
-    )
-  )
-  with check (
-    auth.uid() = teacher_id
-    and exists (
-      select 1 from public.profiles p
-      where p.id = auth.uid() and p.role = 'teacher'
-    )
-  );
+  using (auth.uid() = teacher_id and public.current_user_role() = 'teacher')
+  with check (auth.uid() = teacher_id and public.current_user_role() = 'teacher');
 
 drop policy if exists profiles_teacher_read_class on public.profiles;
 create policy profiles_teacher_read_class on public.profiles
   for select using (
-    exists (
+    public.current_user_role() = 'teacher'
+    and exists (
       select 1
       from public.classes c
-      join public.profiles tp on tp.id = auth.uid()
       where c.teacher_id = auth.uid()
-        and tp.role = 'teacher'
         and c.class_code = profiles.class_code
     )
   );
@@ -78,13 +93,12 @@ create policy profiles_teacher_read_class on public.profiles
 drop policy if exists class_members_teacher_read on public.class_members;
 create policy class_members_teacher_read on public.class_members
   for select using (
-    exists (
+    public.current_user_role() = 'teacher'
+    and exists (
       select 1
       from public.classes c
-      join public.profiles tp on tp.id = auth.uid()
       where c.id = class_members.class_id
         and c.teacher_id = auth.uid()
-        and tp.role = 'teacher'
     )
   );
 

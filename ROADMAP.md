@@ -136,6 +136,7 @@
 ### D1. Child safety
 
 - [x] No public chat (by design)
+- [x] Invite-only friend rooms (12 hours, story code only, not a public directory)
 - [x] Gallery moderation doc
 - [x] Privacy checklist ([PRIVACY.md](docs/PRIVACY.md))
 
@@ -159,7 +160,8 @@
 
 - [ ] Full Blockly drag-and-drop AST
 - [ ] Canvas/WebGL renderer
-- [ ] Multiplayer
+- [x] Friend story rooms (invite code)
+- [ ] Multiplayer games
 - [ ] Plugin system
 - [ ] AI hint bot (LLM)
 
@@ -169,6 +171,7 @@
 
 | Date | Item | Notes |
 |------|------|-------|
+| 2026-11-01 | Friend story rooms | Invite code, Supabase Realtime, story programs only |
 | 2026-05-28 | **v1.2 full platform** | A/B/C/D v1, blocks, 30 lessons, tests, Bangla UI, hints, themes |
 | 2026-05-28 | E2 + E3 + B1/B2/B5/C1/C3 v1 | G8, Studio, curriculum starter |
 | 2026-05-28 | E1 complete | Gallery, Creator modes |

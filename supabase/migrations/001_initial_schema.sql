@@ -109,6 +109,33 @@ alter table public.badges enable row level security;
 alter table public.classes enable row level security;
 alter table public.class_members enable row level security;
 
+-- Read the signed-in row without row level security.
+-- A policy that selects profiles while protecting profiles loops forever.
+create or replace function public.current_user_role()
+returns text
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select p.role from public.profiles p where p.id = auth.uid()
+$$;
+
+create or replace function public.current_user_class_code()
+returns text
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select p.class_code from public.profiles p where p.id = auth.uid()
+$$;
+
+revoke all on function public.current_user_role() from public;
+revoke all on function public.current_user_class_code() from public;
+grant execute on function public.current_user_role() to authenticated;
+grant execute on function public.current_user_class_code() to authenticated;
+
 -- Profiles: own row
 drop policy if exists profiles_select_own on public.profiles;
 create policy profiles_select_own on public.profiles
@@ -157,11 +184,7 @@ create policy classes_teacher_all on public.classes
 -- Students can read class row by code (to validate join)
 drop policy if exists classes_student_read_by_code on public.classes;
 create policy classes_student_read_by_code on public.classes
-  for select using (
-    class_code = (
-      select p.class_code from public.profiles p where p.id = auth.uid()
-    )
-  );
+  for select using (class_code = public.current_user_class_code());
 
 -- Class members: student sees own; teacher sees class roster
 drop policy if exists class_members_student_own on public.class_members;
@@ -174,8 +197,7 @@ create policy class_members_student_insert on public.class_members
     auth.uid() = student_id
     and exists (
       select 1 from public.classes c
-      join public.profiles p on p.id = auth.uid()
-      where c.class_code = p.class_code
+      where c.class_code = public.current_user_class_code()
         and c.id = class_id
     )
   );

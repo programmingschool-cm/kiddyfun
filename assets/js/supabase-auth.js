@@ -13,9 +13,26 @@
   };
   var signInFlight = null;
   var signInFlightUid = '';
+  var currentSession = null;
+  var readySettled = false;
+  var readyResolve = function () {};
+  var readyPromise = new Promise(function (resolve) { readyResolve = resolve; });
+
+  function settleReady() {
+    if (readySettled) return;
+    readySettled = true;
+    readyResolve();
+  }
 
   function sb() {
     return window.KiddyCloud && window.KiddyCloud.getClient();
+  }
+
+  function applyRealtimeAuth(session) {
+    var client = sb();
+    var token = session && session.access_token;
+    if (!client || !client.realtime || !client.realtime.setAuth || !token) return;
+    try { client.realtime.setAuth(token); } catch (e) { /* join retries the socket */ }
   }
 
   function cloudEnabled() {
@@ -349,22 +366,34 @@
       }
 
       var sessionRes = await client.auth.getSession();
-      if (sessionRes.data.session) {
-        await afterSignIn(sessionRes.data.session);
+      currentSession = sessionRes.data.session || null;
+      applyRealtimeAuth(currentSession);
+
+      // Keep this callback synchronous. Awaiting getSession inside it
+      // deadlocks sign-in, and Join then sits on the lobby with no change.
+      client.auth.onAuthStateChange(function (event, session) {
+        currentSession = session || null;
+        applyRealtimeAuth(session);
+        setTimeout(function () {
+          if (event === 'SIGNED_IN' && session) afterSignIn(session);
+          else if (event === 'SIGNED_OUT') applyState(null, null);
+        }, 0);
+      });
+
+      // Rooms only need a session. Profile sync can keep running after Join.
+      settleReady();
+      if (currentSession) {
+        afterSignIn(currentSession).catch(function (e) {
+          console.warn('[KiddyAuth] sync after sign-in', e);
+        });
       } else {
         applyState(null, null);
       }
-
-      client.auth.onAuthStateChange(async function (event, session) {
-        if (event === 'SIGNED_IN' && session) {
-          await afterSignIn(session);
-        } else if (event === 'SIGNED_OUT') {
-          applyState(null, null);
-        }
-      });
     } catch (e) {
       console.warn('[KiddyAuth] init failed', e);
       refreshSyncStatus();
+    } finally {
+      settleReady();
     }
   }
 
@@ -375,6 +404,8 @@
     openSyncPanel: openSyncPanel,
     isSignedIn: function () { return state.signedIn; },
     cloudEnabled: cloudEnabled,
+    whenReady: function () { return readyPromise; },
+    currentSession: function () { return currentSession; },
   };
 
   document.addEventListener('DOMContentLoaded', function () {

@@ -18,6 +18,8 @@
 | [`003_published_programs.sql`](../supabase/migrations/003_published_programs.sql) | **৩য়** | গ্যালারি টেবিল ও `publish_program` |
 | [`004_published_insert_policy.sql`](../supabase/migrations/004_published_insert_policy.sql) | **৪র্থ** | পুরনো পাবলিক insert (005 এটা বন্ধ করে) |
 | [`005_production_safety.sql`](../supabase/migrations/005_production_safety.sql) | **৫ম** | শুধু সাইন-ইন করা লেখক পাবলিশ করতে পারে, নতুন অ্যাকাউন্ট `student`, ক্লাস শুধু teacher |
+| [`006_friend_rooms.sql`](../supabase/migrations/006_friend_rooms.sql) | **৬ষ্ঠ** | বন্ধুদের ঘর, সদস্য, গল্পের কোড, RLS, Realtime |
+| [`007_profile_rls_recursion.sql`](../supabase/migrations/007_profile_rls_recursion.sql) | **৭ম** | প্রোফাইল লোডের ৫০০ বন্ধ করে (RLS লুপ) |
 
 ### টেবিল ↔ অ্যাপ ম্যাপিং
 
@@ -29,6 +31,9 @@
 | `badges` | ব্যাজ | `awardBadge` |
 | `classes` | শিক্ষকের ক্লাস | SQL/Dashboard (UI পরে) |
 | `class_members` | রোস্টার | `join_class_by_code` RPC |
+| `rooms` | বন্ধুদের ঘর (১২ ঘণ্টা) | `create_friend_room` |
+| `room_members` | ঘরের ডাকনাম | `join_friend_room` |
+| `room_messages` | গল্পের কোড | `send_room_message` + Realtime |
 
 **ক্লাউডে যায় না (ইচ্ছেকৃত):** শেষ লেখা কোড (`ss_last_code`) — শুধু `localStorage`।
 
@@ -89,6 +94,24 @@
 **Database** → **Policies** (বা Table → RLS): প্রতি টেবিলে policies দেখা যাচ্ছে কিনা।
 
 **Database** → **Functions**: `join_class_by_code`, `handle_new_user` আছে কিনা।
+
+### 2.4 বন্ধুদের ঘর (আগের প্রজেক্টেও চালান)
+
+1. **SQL Editor** → **New query**
+2. `supabase/migrations/006_friend_rooms.sql` পুরোটা কপি → **Run**
+3. **Database** → **Publications** → `supabase_realtime` → `room_messages` চালু আছে কিনা দেখুন। SQL নিজে টেবিলটা publication-এ যোগ করে। না থাকলে টিক দিন।
+4. **Table Editor**-এ `rooms`, `room_members`, `room_messages` দেখা যাবে।
+5. Anonymous sign-in আগে থেকেই চালু থাকতে হবে। ঘর খুলতে বাচ্চার আলাদা ইমেইল লাগে না।
+
+লাইভ সাইটে মেনু → **Friends** → **Make a room**। কোড না এলে SQL আবার চালান। ফাংশন না থাকলে অ্যাপ বলবে সেটআপ বাকি।
+
+### 2.5 প্রোফাইল ৫০০ (আগের প্রজেক্টেও চালান)
+
+কনসোলে `profiles?select=display_name` **500** এলে এই ফাইলটা চালান। নিয়ম নিজেই `profiles` পড়ছিল, তাই ডেটাবেস লুপে আটকে যেত।
+
+1. [SQL Editor → New query](https://supabase.com/dashboard/project/rajrmkalqxhalvtsejpo/sql/new)
+2. `supabase/migrations/007_profile_rls_recursion.sql` পুরোটা কপি → **Run**
+3. পেজ রিফ্রেশ করুন। ৫০০ আর আসা উচিত নয়।
 
 ---
 
@@ -309,6 +332,8 @@ select * from public.class_members;
 □ Supabase New project
 □ SQL: 001_initial_schema.sql → Run
 □ SQL: 002_security_hardening.sql → Run
+□ SQL: 003, 004, 005, 006_friend_rooms.sql, তারপর 007_profile_rls_recursion.sql → Run
+□ Realtime publication-এ room_messages চালু
 □ Auth: Anonymous ON, Email ON
 □ Auth URL: github.io/kiddyfun + localhost
 □ API: copy URL + anon key → supabase-config.js

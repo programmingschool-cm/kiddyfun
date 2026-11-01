@@ -6,6 +6,8 @@
 
   var interpreter = null;
   var runSeq = 0;
+  var runOwner = null;
+  var friendQueue = [];
 
   document.addEventListener('DOMContentLoaded', function () {
 
@@ -107,6 +109,7 @@
           Storage.saveLastCode(editorEl.value);
           if (window.KiddyProjectFiles && KiddyProjectFiles.syncFromEditor) KiddyProjectFiles.syncFromEditor();
           UI.syncLineNumbers();
+          if (window.KiddyRoom && KiddyRoom.noteTyping) KiddyRoom.noteTyping();
         },
         onScroll: function () { UI.syncLineNumbers(); },
       });
@@ -114,6 +117,7 @@
       editorEl.addEventListener('input', function () {
         Storage.saveLastCode(editorEl.value);
         UI.syncLineNumbers();
+        if (window.KiddyRoom && KiddyRoom.noteTyping) KiddyRoom.noteTyping();
       });
       editorEl.addEventListener('scroll', function () { UI.syncLineNumbers(); });
     }
@@ -146,6 +150,11 @@
     });
     bind('tab-output-btn', function () {
       setMobileTab('output');
+    });
+    bind('tab-friends-btn', function () {
+      unlockMobileTab();
+      if (window.KiddyRoom && KiddyRoom.open) KiddyRoom.open();
+      else setMobileTab('friends');
     });
     bind('ss-badge-overlay', function () { $id('ss-badge-overlay').classList.add('d-none'); });
 
@@ -185,6 +194,8 @@
         $id('code-col').classList.remove('mobile-hidden');
         $id('output-col').classList.remove('mobile-hidden');
         document.body.classList.remove('kf-mobile-mode');
+        document.body.classList.remove('kf-tab-friends-active');
+        document.body.classList.remove('kf-tab-output-active');
         return;
       }
       document.body.classList.add('kf-mobile-mode');
@@ -208,10 +219,16 @@
       var target = e.target;
       if (!target) return;
       var outCol = $id('output-col');
+      var friendsCol = $id('friends-col');
       var editor = $id('ss-editor');
       if (editor && (target === editor || editor.contains(target))) {
         unlockMobileTab();
         setMobileTab('code');
+        return;
+      }
+      if (friendsCol && friendsCol.contains(target)) {
+        unlockMobileTab();
+        setMobileTab('friends');
         return;
       }
       if (target.id === 'kf-dialog-input' || target.id === 'kf-input-field' ||
@@ -280,7 +297,7 @@
 
     function setMobileTab(tab, silent) {
       if (!isMobileLayout()) return;
-      if (tab !== 'code' && tab !== 'output') return;
+      if (tab !== 'code' && tab !== 'output' && tab !== 'friends') return;
       if (!silent && tab === 'code' && shouldForceOutputTab()) {
         tab = 'output';
       }
@@ -290,18 +307,16 @@
       var outCol  = $id('output-col');
       var tabCode = $id('tab-code-btn');
       var tabOut  = $id('tab-output-btn');
-      if (tab === 'code') {
-        codeCol.classList.remove('mobile-hidden');
-        outCol.classList.add('mobile-hidden');
-        if (tabCode) tabCode.classList.add('active');
-        if (tabOut) tabOut.classList.remove('active');
-        document.body.classList.remove('kf-tab-output-active');
-      } else {
-        codeCol.classList.add('mobile-hidden');
-        outCol.classList.remove('mobile-hidden');
-        if (tabCode) tabCode.classList.remove('active');
-        if (tabOut) tabOut.classList.add('active');
-        document.body.classList.add('kf-tab-output-active');
+      var tabFriends = $id('tab-friends-btn');
+      if (codeCol) codeCol.classList.toggle('mobile-hidden', tab !== 'code');
+      if (outCol) outCol.classList.toggle('mobile-hidden', tab !== 'output');
+      if (tabCode) tabCode.classList.toggle('active', tab === 'code');
+      if (tabOut) tabOut.classList.toggle('active', tab === 'output');
+      if (tabFriends) tabFriends.classList.toggle('active', tab === 'friends');
+      document.body.classList.toggle('kf-tab-output-active', tab === 'output');
+      document.body.classList.toggle('kf-tab-friends-active', tab === 'friends');
+
+      if (tab === 'output') {
         requestAnimationFrame(function () {
           var stage = $id('ss-stage');
           if (stage) void stage.offsetHeight;
@@ -368,6 +383,8 @@
       lockMobileTab: lockMobileTab,
       unlockMobileTab: unlockMobileTab,
       runProgram: runProgram,
+      runSource: runSource,
+      editorCode: editorCode,
     };
 
     tryLoadSharedFromUrl();
@@ -375,6 +392,12 @@
     console.log('✅ KiddyFun Code v1.2 ready');
 
     function tryLoadSharedFromUrl() {
+      var search = new URLSearchParams(window.location.search);
+      var roomCode = search.get('room');
+      if (roomCode && window.KiddyRoom && KiddyRoom.joinFromUrl) {
+        KiddyRoom.joinFromUrl(roomCode);
+        return;
+      }
       if (!window.KiddyPublish) return;
       var params = KiddyPublish.getParamsFromLocation();
       if (!params.shareId && !params.urlCode) return;
@@ -435,8 +458,7 @@
       if (window.KiddyTour && KiddyTour.maybeStart) KiddyTour.maybeStart();
     }
 
-    function runProgram() {
-      if (window.KiddyMapHelper && KiddyMapHelper.stop) KiddyMapHelper.stop();
+    function editorCode() {
       var code = editorEl.value.trim();
       if (window.KiddyProjectFiles && KiddyProjectFiles.syncFromEditor) KiddyProjectFiles.syncFromEditor();
       if (window.KiddyProjectFiles && KiddyProjectFiles.mergeForRun) {
@@ -445,23 +467,64 @@
       if (window.KiddySmartEditor && window.KiddySmartEditor.expandForRun) {
         code = KiddySmartEditor.expandForRun(code).trim();
       }
-      if (!code) { UI.showToast('✏️ Write some code first!'); return; }
-      UI.clearErrors();
-      UI.setRunning(true);
+      return code;
+    }
 
-      if (isMobileLayout()) lockMobileTab('output');
+    function enqueueFriend(code) {
+      friendQueue.push(code);
+      if (friendQueue.length > 8) friendQueue.shift();
+    }
+
+    function drainFriendQueue() {
+      if (runOwner) return;
+      var next = friendQueue.shift();
+      if (!next) return;
+      runSource(next, { fromFriend: true, award: false });
+    }
+
+    function runProgram() {
+      var code = editorCode();
+      if (!code) { UI.showToast('✏️ Write some code first!'); return; }
+      return runSource(code, { award: true });
+    }
+
+    function runSource(code, options) {
+      options = options || {};
+      code = String(code || '').trim();
+      if (!code) {
+        if (!options.fromFriend) UI.showToast('✏️ Write some code first!');
+        return Promise.resolve();
+      }
+      if (options.fromFriend && runOwner === 'user') {
+        enqueueFriend(code);
+        return Promise.resolve();
+      }
 
       var ast;
       try {
         ast = Parser.parseProgram(code);
       } catch (err) {
-        var fe = Errors.friendlyError(err);
-        UI.showErrors(Errors.renderError(fe), fe.line);
+        if (options.fromFriend) {
+          UI.showToast('A friend story had a problem');
+          return Promise.resolve();
+        }
+        var feParse = Errors.friendlyError(err);
+        UI.showErrors(Errors.renderError(feParse), feParse.line);
         UI.setRunning(false);
         unlockMobileTab();
         if (window.KiddyAudio) KiddyAudio.playSound('wrong');
-        return;
+        return Promise.resolve();
       }
+
+      if (ast.mode === 'game' && options.fromFriend) {
+        UI.showToast('A friend story had a problem');
+        return Promise.resolve();
+      }
+
+      if (window.KiddyMapHelper && KiddyMapHelper.stop) KiddyMapHelper.stop();
+      UI.clearErrors();
+      UI.setRunning(true);
+      if (isMobileLayout()) lockMobileTab('output');
 
       if (editorMaximized && window.innerWidth >= 992) {
         toggleMaxEditor();
@@ -474,15 +537,25 @@
 
       runSeq += 1;
       var myRun = runSeq;
+      runOwner = options.fromFriend ? 'friend' : 'user';
+      var award = options.award !== false && !options.fromFriend;
 
       function finishRun() {
         if (myRun !== runSeq) return;
+        var wasFriend = runOwner === 'friend';
         UI.setRunning(false);
         interpreter = null;
+        runOwner = null;
+        if (wasFriend && !friendQueue.length && isMobileLayout() &&
+            document.body.classList.contains('kf-friends-open')) {
+          unlockMobileTab();
+          setMobileTab('friends');
+        }
+        drainFriendQueue();
       }
 
       function onRunSuccess() {
-        if (myRun !== runSeq) return;
+        if (myRun !== runSeq || !award) return;
         checkMissions(code);
         if (window.KiddyCurriculum && KiddyCurriculum.completeIfMatches) {
           if (KiddyCurriculum.completeIfMatches(code) && KiddyCurriculum.buildPanel) {
@@ -493,31 +566,36 @@
 
       if (ast.mode === 'game') {
         if (!GameRuntime || !GameInterpreter) {
+          runOwner = null;
           UI.showErrors('Game mode is not loaded. Check game-*.js scripts in index.html.');
           UI.setRunning(false);
           unlockMobileTab();
-          return;
+          return Promise.resolve();
         }
         if (editorEl && editorEl.blur) editorEl.blur();
         Runtime.reset();
         interpreter = new GameInterpreter(GameRuntime);
-        interpreter.run(ast).then(onRunSuccess).catch(function (err) {
+        return interpreter.run(ast).then(onRunSuccess).catch(function (err) {
           if (myRun !== runSeq) return;
           var fe = Errors.friendlyError(err);
           UI.showErrors(Errors.renderError(fe), fe.line);
         }).finally(finishRun);
-        return;
       }
 
       interpreter = new Interpreter(Runtime);
-      interpreter.run(ast.nodes || ast).then(onRunSuccess).catch(function (err) {
+      return interpreter.run(ast.nodes || ast).then(onRunSuccess).catch(function (err) {
         if (myRun !== runSeq) return;
+        if (options.fromFriend) {
+          UI.showToast('A friend story had a problem');
+          return;
+        }
         var fe = Errors.friendlyError(err);
         UI.showErrors(Errors.renderError(fe), fe.line);
       }).finally(finishRun);
     }
 
     function stopProgram() {
+      friendQueue = [];
       if (interpreter) interpreter.stop();
       if (GameRuntime && GameRuntime.loop) GameRuntime.loop.stop();
       UI.setRunning(false);
@@ -526,6 +604,8 @@
     }
 
     function resetStage() {
+      friendQueue = [];
+      runOwner = null;
       if (window.KiddyMapHelper && KiddyMapHelper.stop) KiddyMapHelper.stop();
       if (interpreter) interpreter.stop();
       interpreter = null;

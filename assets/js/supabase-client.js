@@ -47,6 +47,18 @@
     });
   }
 
+  function fetchWithTimeout(input, init) {
+    var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    var opts = init ? Object.assign({}, init) : {};
+    if (ctrl && !opts.signal) opts.signal = ctrl.signal;
+    var timer = setTimeout(function () {
+      if (ctrl) ctrl.abort();
+    }, 15000);
+    return fetch(input, opts).finally(function () {
+      clearTimeout(timer);
+    });
+  }
+
   function getClient() {
     if (!isConfigured()) return null;
     if (client) return client;
@@ -58,10 +70,14 @@
     var c = cfg();
     try {
       client = lib.createClient(c.url, c.anonKey, {
+        global: { fetch: fetchWithTimeout },
         auth: {
           persistSession: true,
           autoRefreshToken: true,
           detectSessionInUrl: true,
+          // Another open tab can hold the browser lock forever, and Join
+          // then stays on "Joining…". Run the auth step without that lock.
+          lock: function (_name, _acquireTimeout, fn) { return fn(); },
         },
       });
     } catch (e) {

@@ -245,7 +245,7 @@
     },
 
     showPanel: function(name) {
-      ['guide', 'lessons', 'tutorial', 'missions', 'saved', 'gallery', 'badges', 'parent', 'privacy', 'python', 'themes', 'teacher', 'sync'].forEach(function (p) {
+      ['guide', 'lessons', 'tutorial', 'missions', 'saved', 'gallery', 'badges', 'parent', 'privacy', 'python', 'themes', 'teacher', 'sync', 'friends'].forEach(function (p) {
         var el = document.getElementById('panel-' + p);
         if (el) el.classList.toggle('d-none', p !== name);
       });
@@ -260,6 +260,9 @@
       });
       if (name === 'sync' && window.KiddyAuth && window.KiddyAuth.buildSyncPanel) {
         window.KiddyAuth.buildSyncPanel();
+      }
+      if (name === 'friends' && window.KiddyRoom && window.KiddyRoom.open) {
+        window.KiddyRoom.open();
       }
       if (name === 'gallery' && window.KiddyGallery && window.KiddyGallery.buildPanel) {
         window.KiddyGallery.buildPanel();

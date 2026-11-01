@@ -10,7 +10,7 @@ The app stays **offline-first**: `localStorage` is the source of truth on device
 ## Setup
 
 1. Create a free project at [supabase.com](https://supabase.com).
-2. In **SQL Editor**, run migrations in order: `001_initial_schema.sql`, `002_security_hardening.sql`, `003_published_programs.sql`, `004_published_insert_policy.sql`, then [`005_production_safety.sql`](../supabase/migrations/005_production_safety.sql). Migration 005 closes public gallery inserts, forces new profiles to `student`, and limits class creation to teacher accounts. Run it on existing projects too.
+2. In **SQL Editor**, run migrations in order: `001_initial_schema.sql`, `002_security_hardening.sql`, `003_published_programs.sql`, `004_published_insert_policy.sql`, [`005_production_safety.sql`](../supabase/migrations/005_production_safety.sql), [`006_friend_rooms.sql`](../supabase/migrations/006_friend_rooms.sql), then [`007_profile_rls_recursion.sql`](../supabase/migrations/007_profile_rls_recursion.sql). Migration 005 closes public gallery inserts, forces new profiles to `student`, and limits class creation to teacher accounts. Migration 007 stops profile reads from looping inside row level security (that loop shows up as HTTP 500). Run 007 on existing projects too.
 3. In **Authentication → Providers**, enable:
    - **Anonymous sign-ins** (for kid-friendly one-tap sync)
    - **Email** (optional — for parent magic link)
@@ -32,6 +32,9 @@ Optional local override (not committed): copy `supabase-config.local.js.example`
 | `classes` | Teacher-created class + unique `class_code` |
 | `class_members` | Student ↔ class membership |
 | `published_programs` | Public gallery rows (code, title, share id). `author_id` is not readable by the API. |
+| `rooms` | Invite-only friend room (6-character code, host, 12-hour expiry) |
+| `room_members` | Who is in a room, plus a fun nickname |
+| `room_messages` | Short story source sent in a room. Realtime INSERT for members only |
 
 ## Child safety
 
@@ -40,6 +43,7 @@ Optional local override (not committed): copy `supabase-config.local.js.example`
 - New sign-ups are always `role = student`. Set `teacher` in the Supabase dashboard (SQL / Table Editor). The app cannot change `role` or `class_code` except through `join_class_by_code`.
 - Gallery publish requires a signed-in user, at most 20,000 characters, and at most 10 publishes an hour. The author can delete their own row.
 - A magic-link sign-in starts that email's session. It does not attach the email onto the previous anonymous user.
+- Friend rooms are not a public chat. Join needs the code, six people is the maximum, and expired rooms are deleted. Story text is written only through `send_room_message`.
 - Signing in as a different person does not upload the previous child's local programs.
 
 ## Client modules

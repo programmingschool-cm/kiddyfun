@@ -31,6 +31,7 @@ flowchart LR
 | `storage.js` | localStorage + cloud hooks |
 | `supabase-sync.js` | Cloud merge |
 | `publish.js` | Share URLs `?p=` / `?z=` |
+| `friend-room.js` | Invite-only story rooms `?room=` |
 | `game-combat.js` | G8 health, bullets, chase |
 | `game-maps.js` | Built-in map layouts |
 

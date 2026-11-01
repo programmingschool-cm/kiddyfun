@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#10b981"/>
   <meta name="description" content="KiddyFun Code — A fun English programming language for kids. Write simple code, watch stories come alive, learn vocabulary and logic!"/>
   <title>KiddyFun Code — Learn Programming &amp; English</title>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; media-src 'self' blob:; worker-src 'self'; frame-ancestors 'self'; base-uri 'self'; object-src 'none'; form-action 'self'" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; media-src 'self' blob:; worker-src 'self'; base-uri 'self'; object-src 'none'; form-action 'self'" />
 
   <link rel="icon" href="assets/icons/icon-192.png" type="image/png" />
   <link rel="apple-touch-icon" href="assets/icons/icon-192.png" />
@@ -47,6 +47,9 @@
       </div>
 
       <div class="d-flex align-items-center gap-1 gap-md-2">
+        <button class="btn btn-light kf-pill-btn border shadow-sm d-inline-flex align-items-center" id="btn-friends-nav" type="button" title="Play with friends" aria-label="Play with friends">
+          👫 <span class="d-none d-sm-inline" id="kf-nav-friends-label">Friends</span>
+        </button>
         <div class="dropdown kf-examples-dropdown">
           <button class="btn btn-light kf-pill-btn dropdown-toggle border shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
             📚 <span class="d-none d-sm-inline">Examples</span>
@@ -116,6 +119,7 @@
       <div class="ss-nav-scroll">
       <div class="ss-nav-panel" role="tablist" aria-label="Menu sections">
         <button class="ss-nav-btn active" type="button" data-panel="guide"><span class="ss-nav-ico" aria-hidden="true">📖</span><span class="ss-nav-label">Guide</span></button>
+        <button class="ss-nav-btn" type="button" data-panel="friends"><span class="ss-nav-ico" aria-hidden="true">👫</span><span class="ss-nav-label">Friends</span></button>
         <button class="ss-nav-btn" type="button" data-panel="lessons"><span class="ss-nav-ico" aria-hidden="true">📚</span><span class="ss-nav-label">Lessons</span></button>
         <button class="ss-nav-btn" type="button" data-panel="tutorial"><span class="ss-nav-ico" aria-hidden="true">📘</span><span class="ss-nav-label">Tutorial</span></button>
         <button class="ss-nav-btn" type="button" data-panel="missions"><span class="ss-nav-ico" aria-hidden="true">🎯</span><span class="ss-nav-label">Missions</span></button>
@@ -132,6 +136,10 @@
       </div>
       <div class="ss-side-panel flex-grow-1">
         <div id="panel-guide"></div>
+        <div id="panel-friends" class="d-none p-3">
+          <h6 class="ss-panel-title">👫 Play with friends</h6>
+          <p class="small mb-0">Make a room, share the code, and send a story from your code. The room controls open beside the stage.</p>
+        </div>
         <div id="panel-lessons" class="d-none p-3"></div>
         <div id="panel-tutorial" class="d-none ss-tutorial-panel"></div>
         <div id="panel-missions" class="d-none"></div>
@@ -144,7 +152,7 @@
             <li>Gallery posts are public. Sign in to publish, and you can unpublish your own.</li>
             <li>Share links load code into the editor. Press Run yourself. They do not start automatically.</li>
             <li>Repeat-after-me may send your voice to the browser speech service. This app does not store the audio.</li>
-            <li>There is no public chat. Reset can clear this device, and a separate step can delete cloud copies of programs.</li>
+            <li id="kf-privacy-chat">There is no public chat. A friend room opens only with a code or link, and it disappears after 12 hours. Reset can clear this device, and a separate step can delete cloud copies of programs.</li>
           </ul>
           <p class="small text-muted mb-0">On a shared computer, use Sync → Sign out and clear this device.</p>
         </div>
@@ -165,8 +173,9 @@
   <main class="kf-workspace" id="workspace">
     <!-- Mobile tab switcher -->
     <div class="d-flex d-lg-none kf-mobile-tabs" id="mobile-tabs">
-      <button class="kf-tab-btn active" id="tab-code-btn">✏️ Code</button>
-      <button class="kf-tab-btn" id="tab-output-btn">📺 Output</button>
+      <button class="kf-tab-btn active" id="tab-code-btn" type="button">✏️ Code</button>
+      <button class="kf-tab-btn" id="tab-output-btn" type="button">📺 Output</button>
+      <button class="kf-tab-btn" id="tab-friends-btn" type="button">👫 <span id="kf-tab-friends-label">Friends</span></button>
     </div>
 
     <div class="row g-0 kf-main-row mx-0" id="main-row">
@@ -256,6 +265,7 @@
 
           <div class="kf-panel-body">
             <div class="kf-stage-wrap flex-grow-1">
+              <div class="kf-room-from d-none" id="kf-room-from"></div>
               <div class="ss-stage" id="ss-stage" role="img" aria-label="Story stage">
                 <div class="kf-stage-particles" id="kf-particles" aria-hidden="true"></div>
                 <div class="kf-voice-indicator" id="kf-voice-indicator" aria-live="polite">
@@ -292,6 +302,16 @@
           </div>
         </div>
       </div>
+
+      <div class="col-12 kf-col kf-col-friends" id="friends-col">
+        <div class="kf-panel kf-friend-panel">
+          <div class="kf-panel-header">
+            <h2 class="kf-panel-title"><span aria-hidden="true">👫</span> <span id="kf-friend-heading-label">Friends</span></h2>
+            <button type="button" class="btn btn-sm btn-light kf-pill-btn border d-none d-lg-inline-block" id="kf-friend-hide" aria-label="Hide friends">✕</button>
+          </div>
+          <div class="kf-panel-body kf-friend-body" id="kf-friend-body"></div>
+        </div>
+      </div>
     </div>
   </main>
 
@@ -326,6 +346,7 @@
   <script src="assets/js/lexer.js"></script>
   <script src="assets/js/expr.js"></script>
   <script src="assets/js/parser.js"></script>
+  <script src="assets/js/room-message.js"></script>
   <script src="assets/js/errors.js"></script>
   <script src="assets/js/storage.js"></script>
   <script src="assets/js/experience-mode.js"></script>
@@ -383,5 +404,6 @@
   <script src="assets/js/avatar-themes.js"></script>
   <script src="assets/js/game-tile-painter.js"></script>
   <script src="assets/js/ui.js"></script>
+  <script src="assets/js/friend-room.js"></script>
   <script src="assets/js/app.js"></script>
 </html>
