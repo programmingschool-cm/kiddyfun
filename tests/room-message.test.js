@@ -59,29 +59,29 @@ test('game mode is rejected', function () {
   assert(res.error === 'game', res.error);
 });
 
-test('ask user is rejected', function () {
+test('ask user is ok', function () {
   var res = check('ask user "What is your name?"');
-  assert(res.error === 'ask', res.error);
+  assert(res.ok, res.error || 'expected ok');
 });
 
-test('quiz is rejected', function () {
+test('quiz is ok', function () {
   var res = check('ask "What is 2 + 2?"\nchoice "3" wrong\nchoice "4" correct');
-  assert(res.error === 'quiz', res.error);
+  assert(res.ok, res.error || 'expected ok');
 });
 
-test('choose is rejected', function () {
+test('choose is ok', function () {
   var res = check('scene "school"\nchoose "Go left" or "Go right"');
-  assert(res.error === 'choose', res.error);
+  assert(res.ok, res.error || 'expected ok');
 });
 
-test('repeat while is rejected', function () {
+test('repeat while is ok', function () {
   var res = check('set n to 1\nrepeat while n is less than 4\n    set n to n plus 1\nend');
-  assert(res.error === 'repeat_while', res.error);
+  assert(res.ok, res.error || 'expected ok');
 });
 
-test('ask nested in repeat is rejected', function () {
+test('ask nested in repeat is ok', function () {
   var res = check('repeat 2 times\n    ask user "Name?"\nend');
-  assert(res.error === 'ask', res.error);
+  assert(res.ok, res.error || 'expected ok');
 });
 
 test('too long code is rejected', function () {

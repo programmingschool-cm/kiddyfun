@@ -19,9 +19,9 @@
   var hooked = false;
   var showAllBlocks = false;
   var STORY_CHIPS = { appears: 1, says: 1, narrator: 1, action: 1, wait: 1, word: 1, choose: 1, quiz: 1 };
-  var CHAT_CHIPS = { scene: 1, appears: 1, says: 1, action: 1, repeat: 1, wait: 1 };
   var chatPalette = false;
   var GAME_CHIPS = {
+    game: 1,
     player: 1, everyFrame: 1, spawn: 1, wall: 1, move: 1, whenKey: 1, whileKey: 1, jump: 1,
     touches: 1, lives: 1, timer: 1, goal: 1, loseLife: 1, message: 1, removeCoin: 1,
     enemy: 1, isEnemy: 1, patrol: 1, map: 1, speed: 1, camera: 1, pause: 1, level: 1,
@@ -807,6 +807,7 @@
     if (!tree.children.length) {
       var html = '<div class="kf-blocks-empty"><p>Tap a block on the left and it will show up here.</p>';
       api.STARTERS.forEach(function (starter) {
+        if (chatPalette && starter.id === 'coin') return;
         html += '<button type="button" class="kf-starter" data-starter="' + esc(starter.id) + '">' +
           '<strong>' + esc(starter.label) + '</strong><span>' + esc(starter.hint) + '</span></button>';
       });
@@ -874,7 +875,7 @@
       var safeChips = palette.querySelectorAll('.kf-block-chip');
       var n;
       for (n = 0; n < safeChips.length; n++) {
-        safeChips[n].hidden = !CHAT_CHIPS[safeChips[n].getAttribute('data-template')];
+        safeChips[n].hidden = safeChips[n].getAttribute('data-scope') === 'game';
       }
       var safeCats = palette.querySelectorAll('.kf-blocks-cat');
       for (n = 0; n < safeCats.length; n++) {
@@ -1366,8 +1367,14 @@
   }
 
   function setChatMode(on) {
-    chatPalette = !!on;
-    applyPaletteMode();
+    var next = !!on;
+    if (chatPalette === next) {
+      applyPaletteMode();
+      return;
+    }
+    chatPalette = next;
+    if (tree) renderCanvas();
+    else applyPaletteMode();
   }
 
   window.KiddyBlocksMode = {

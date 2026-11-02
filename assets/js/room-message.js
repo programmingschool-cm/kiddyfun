@@ -1,19 +1,12 @@
 /**
  * KiddyFun — which programs are safe to send into a friend room.
- * Story programs that finish on their own. No games, questions, or open loops.
+ * Story, logic, data, and score programs. No games.
  */
 (function (root) {
   'use strict';
 
   var MAX_CHARS = 800;
   var BLOCKED = {
-    ask_user_stmt: 'ask',
-    quiz: 'quiz',
-    quiz_start: 'quiz',
-    quiz_choice: 'quiz',
-    story_choose: 'choose',
-    if_choice_equals: 'choose',
-    repeat_while: 'repeat_while',
     game_start: 'game',
     game_view: 'game',
     every_frame: 'game',

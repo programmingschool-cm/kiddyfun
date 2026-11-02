@@ -1140,6 +1140,7 @@ body.kf-mobile-mode.kf-tab-output-active .kf-tab-btn#tab-output-btn {
 .ss-quiz-btn {
   background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
   border: 2px solid var(--kf-border);
+  color: #0f172a;
   padding: 12px 16px;
   border-radius: var(--kf-radius-sm);
   font-weight: 600;
@@ -1154,7 +1155,7 @@ body.kf-mobile-mode.kf-tab-output-active .kf-tab-btn#tab-output-btn {
 .ss-quiz-btn::before {
   content: '○';
   font-size: 1.1rem;
-  color: var(--kf-text-muted);
+  color: #475569;
   flex-shrink: 0;
 }
 .ss-quiz-btn:hover:not(:disabled) {
