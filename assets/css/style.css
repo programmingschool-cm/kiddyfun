@@ -3777,7 +3777,12 @@ body.kf-chat-mode.kf-stories-open:not(.kf-chat-lobby) #kf-chat-starters {
   box-shadow: 0 12px 32px rgba(15, 23, 42, 0.14);
 }
 body.kf-chat-mode #btn-stop { display: none !important; }
-body.kf-chat-mode #btn-run { width: auto; flex: 1 1 auto; }
+body.kf-chat-mode #btn-run,
+body.kf-chat-mode #btn-run.d-none {
+  display: block !important;
+  width: auto;
+  flex: 1 1 auto;
+}
 body.kf-chat-mode:not(.kf-chat-lobby) #code-col .kf-panel-body {
   overflow: hidden;
 }

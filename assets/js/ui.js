@@ -997,8 +997,9 @@
     setRunning: function(running) {
       var runBtn  = document.getElementById('btn-run');
       var stopBtn = document.getElementById('btn-stop');
-      if (runBtn)  runBtn.classList.toggle('d-none', running);
-      if (stopBtn) stopBtn.classList.toggle('d-none', !running);
+      var chat = document.body.classList.contains('kf-chat-mode');
+      if (runBtn) runBtn.classList.toggle('d-none', !!running && !chat);
+      if (stopBtn) stopBtn.classList.toggle('d-none', !running || chat);
     },
 
     /* ── Line numbers ────────────────────────────────────────────────── */

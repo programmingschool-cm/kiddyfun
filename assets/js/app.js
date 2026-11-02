@@ -580,6 +580,24 @@
         }
       }
 
+      function runJob(start) {
+        var job;
+        try {
+          job = start();
+        } catch (err) {
+          job = Promise.reject(err);
+        }
+        return Promise.resolve(job).then(onRunSuccess).catch(function (err) {
+          if (myRun !== runSeq) return;
+          if (options.fromFriend) {
+            UI.showToast('A friend story had a problem');
+            return;
+          }
+          var fe = Errors.friendlyError(err);
+          UI.showErrors(Errors.renderError(fe), fe.line);
+        }).finally(finishRun);
+      }
+
       if (ast.mode === 'game') {
         if (!GameRuntime || !GameInterpreter) {
           runOwner = null;
@@ -591,11 +609,7 @@
         if (editorEl && editorEl.blur) editorEl.blur();
         Runtime.reset();
         interpreter = new GameInterpreter(GameRuntime);
-        return interpreter.run(ast).then(onRunSuccess).catch(function (err) {
-          if (myRun !== runSeq) return;
-          var fe = Errors.friendlyError(err);
-          UI.showErrors(Errors.renderError(fe), fe.line);
-        }).finally(finishRun);
+        return runJob(function () { return interpreter.run(ast); });
       }
 
       interpreter = new Interpreter(Runtime);
@@ -606,15 +620,7 @@
       } else {
         Runtime.sceneCard = true;
       }
-      return interpreter.run(ast.nodes || ast, runOpts).then(onRunSuccess).catch(function (err) {
-        if (myRun !== runSeq) return;
-        if (options.fromFriend) {
-          UI.showToast('A friend story had a problem');
-          return;
-        }
-        var fe = Errors.friendlyError(err);
-        UI.showErrors(Errors.renderError(fe), fe.line);
-      }).finally(finishRun);
+      return runJob(function () { return interpreter.run(ast.nodes || ast, runOpts); });
     }
 
     function stopProgram() {
