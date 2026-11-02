@@ -52,12 +52,12 @@
     this._continueLoop = false;
   }
 
-  Interpreter.prototype.run = function (nodes) {
+  Interpreter.prototype.run = function (nodes, options) {
     this._stopped = false;
     this._returning = false;
     this._breakLoop = false;
     this._continueLoop = false;
-    this.runtime.reset();
+    if (!options || !options.keepStage) this.runtime.reset();
     return this._execNodes(nodes, this.globalEnv);
   };
 

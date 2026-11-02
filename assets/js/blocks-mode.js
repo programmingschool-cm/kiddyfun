@@ -19,6 +19,8 @@
   var hooked = false;
   var showAllBlocks = false;
   var STORY_CHIPS = { appears: 1, says: 1, narrator: 1, action: 1, wait: 1, word: 1, choose: 1, quiz: 1 };
+  var CHAT_CHIPS = { scene: 1, appears: 1, says: 1, action: 1, repeat: 1, wait: 1 };
+  var chatPalette = false;
   var GAME_CHIPS = {
     player: 1, everyFrame: 1, spawn: 1, wall: 1, move: 1, whenKey: 1, whileKey: 1, jump: 1,
     touches: 1, lives: 1, timer: 1, goal: 1, loseLife: 1, message: 1, removeCoin: 1,
@@ -34,8 +36,10 @@
     try { return localStorage.getItem(KEY_VIEW) || 'text'; } catch (e) { return 'text'; }
   }
 
-  function setView(v) {
-    try { localStorage.setItem(KEY_VIEW, v); } catch (e) { /* ignore */ }
+  function setView(v, persist) {
+    if (persist !== false) {
+      try { localStorage.setItem(KEY_VIEW, v); } catch (e) { /* ignore */ }
+    }
     applyView(v);
   }
 
@@ -866,6 +870,27 @@
     var bar = document.getElementById('kf-blocks-modebar');
     if (bar) bar.hidden = !noteText && (!btn || btn.hidden);
     var title = document.getElementById('kf-blocks-title');
+    if (chatPalette) {
+      var safeChips = palette.querySelectorAll('.kf-block-chip');
+      var n;
+      for (n = 0; n < safeChips.length; n++) {
+        safeChips[n].hidden = !CHAT_CHIPS[safeChips[n].getAttribute('data-template')];
+      }
+      var safeCats = palette.querySelectorAll('.kf-blocks-cat');
+      for (n = 0; n < safeCats.length; n++) {
+        safeCats[n].hidden = !safeCats[n].querySelector('.kf-block-chip:not([hidden])');
+      }
+      if (bar) bar.hidden = true;
+      if (title) {
+        var waiting = document.body.classList.contains('kf-chat-locked');
+        var label = waiting ? 'Waiting' : 'Your turn';
+        if (window.KiddyLocale && KiddyLocale.text) {
+          label = KiddyLocale.text(waiting ? 'roomWaitShort' : 'roomYourTurn', label);
+        }
+        title.textContent = label;
+      }
+      return;
+    }
     if (title) title.textContent = (mode === 'game' || mode === 'mixed') ? 'My game' : 'My story';
   }
 
@@ -1283,7 +1308,10 @@
     var orig = KiddySmartEditor.notifyExternalChange;
     KiddySmartEditor.notifyExternalChange = function () {
       var result = orig.apply(this, arguments);
-      if (!writing && getView() === 'blocks') reloadFromEditor();
+      if (!writing && document.getElementById('btn-view-blocks') &&
+          document.getElementById('btn-view-blocks').classList.contains('active')) {
+        reloadFromEditor();
+      }
       return result;
     };
     hooked = true;
@@ -1320,7 +1348,8 @@
     if (editor) {
       editor.addEventListener('input', function () {
         if (writing) return;
-        if (getView() === 'blocks') reloadFromEditor();
+        var blocksBtn = document.getElementById('btn-view-blocks');
+        if (blocksBtn && blocksBtn.classList.contains('active')) reloadFromEditor();
       });
     }
     hookExternal();
@@ -1328,14 +1357,25 @@
     applyView(getView());
     var btnT = document.getElementById('btn-view-text');
     var btnB = document.getElementById('btn-view-blocks');
-    if (btnT) btnT.addEventListener('click', function () { setView('text'); });
-    if (btnB) btnB.addEventListener('click', function () { setView('blocks'); });
+    if (btnT) btnT.addEventListener('click', function () {
+      setView('text', !document.body.classList.contains('kf-chat-mode'));
+    });
+    if (btnB) btnB.addEventListener('click', function () {
+      setView('blocks', !document.body.classList.contains('kf-chat-mode'));
+    });
+  }
+
+  function setChatMode(on) {
+    chatPalette = !!on;
+    applyPaletteMode();
   }
 
   window.KiddyBlocksMode = {
     init: init,
     exportToText: exportToText,
     getView: getView,
+    setView: setView,
+    setChatMode: setChatMode,
     reloadFromEditor: reloadFromEditor,
     BLOCKS: (window.KiddyBlocksScript && KiddyBlocksScript.PALETTE) || []
   };

@@ -138,7 +138,7 @@
         <div id="panel-guide"></div>
         <div id="panel-friends" class="d-none p-3">
           <h6 class="ss-panel-title">👫 Play with friends</h6>
-          <p class="small mb-0">Make a room, share the code, and send a story from your code. The room controls open beside the stage.</p>
+          <p class="small mb-0">Open Friends to chat in code. You write on the left. Everyone shows up on the stage.</p>
         </div>
         <div id="panel-lessons" class="d-none p-3"></div>
         <div id="panel-tutorial" class="d-none ss-tutorial-panel"></div>
@@ -185,7 +185,7 @@
           <div id="kf-studio-tabs" class="kf-studio-tabs d-none" data-studio-only aria-label="Project files"></div>
           <div class="kf-editor-toolbar">
             <span class="fw-bold d-flex align-items-center gap-2 flex-wrap">
-              <span class="text-warning">✏️</span> Your Code
+              <span class="text-warning" aria-hidden="true">✏️</span> <span id="kf-code-heading">Your Code</span>
               <span class="kf-smart-badge d-none d-sm-inline">Type or click blocks</span>
               <span class="btn-group btn-group-sm kf-view-toggle" role="group">
                 <button type="button" class="btn btn-outline-secondary btn-sm active" id="btn-view-text">Text</button>
@@ -242,7 +242,7 @@
               <button type="button" class="kf-status-suggest d-lg-none" id="btn-suggest" title="Show suggestions" aria-label="Show suggestions">✨</button>
             </div>
 
-            <div class="d-flex gap-2 mt-2">
+            <div class="d-flex gap-2 mt-2" id="kf-run-row">
               <button class="kf-btn-run flex-fill" id="btn-run">▶️ RUN</button>
               <button class="kf-btn-stop flex-fill d-none" id="btn-stop">⏹️ STOP</button>
             </div>
@@ -256,7 +256,7 @@
       <div class="col-12 kf-col-output d-flex flex-column kf-col" id="output-col">
         <div class="kf-panel">
           <div class="kf-panel-header">
-            <h2 class="kf-panel-title"><span>📺</span> Live Output</h2>
+            <h2 class="kf-panel-title"><span>📺</span> <span id="kf-output-heading">Live Output</span></h2>
             <div class="d-flex gap-2">
               <button class="btn btn-sm btn-outline-primary kf-pill-btn d-none d-lg-inline-block" id="btn-toggle-code">🔲 Full Screen</button>
               <button class="btn btn-sm btn-light kf-pill-btn border" id="btn-reset" aria-label="Reset stage">🔄 Reset</button>
@@ -347,6 +347,7 @@
   <script src="assets/js/expr.js"></script>
   <script src="assets/js/parser.js"></script>
   <script src="assets/js/room-message.js"></script>
+  <script src="assets/js/room-turn.js"></script>
   <script src="assets/js/errors.js"></script>
   <script src="assets/js/storage.js"></script>
   <script src="assets/js/experience-mode.js"></script>

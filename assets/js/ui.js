@@ -4,6 +4,12 @@
 (function () {
   'use strict';
 
+  function leaveChatForCoding() {
+    if (document.body.classList.contains('kf-chat-mode') && window.KiddyRoom && KiddyRoom.exitToCoding) {
+      KiddyRoom.exitToCoding();
+    }
+  }
+
   var GUIDE_SECTIONS = [
     { icon:'🌟', title:'Story mode vs Game mode',
       items:[
@@ -369,7 +375,9 @@
         editor.value = editor.value.slice(0, pos) + prefix + snippet + suffix + editor.value.slice(pos);
       }
       editor.focus();
-      if (window.SpeakStorage) window.SpeakStorage.saveLastCode(editor.value);
+      if (window.SpeakStorage && !document.body.classList.contains('kf-chat-mode')) {
+        window.SpeakStorage.saveLastCode(editor.value);
+      }
       this.syncLineNumbers();
       if (window.KiddySmartEditor && window.KiddySmartEditor.refresh) KiddySmartEditor.refresh();
       this.showToast('📋 Code added to editor');
@@ -418,6 +426,7 @@
     },
 
     loadMissionCode: function(missionId) {
+      leaveChatForCoding();
       var self = this;
       var mission = null;
       window.SpeakMissions.forEach(function(m) { if (m.id === missionId) mission = m; });
@@ -533,6 +542,7 @@
     },
 
     loadSavedProgram: function(name) {
+      leaveChatForCoding();
       var prog = window.SpeakStorage.loadAllPrograms()[name];
       if (!prog) return;
       var editor = document.getElementById('ss-editor');
@@ -573,6 +583,7 @@
 
     /* ── Save dialog ─────────────────────────────────────────────────── */
     promptSaveProgram: function() {
+      leaveChatForCoding();
       var self = this;
       var editor = document.getElementById('ss-editor');
       if (!editor || !editor.value.trim()) {
@@ -595,6 +606,7 @@
 
     /* ── Publish & share link ─────────────────────────────────────────── */
     publishProgram: function () {
+      leaveChatForCoding();
       var self = this;
       var editor = document.getElementById('ss-editor');
       if (!editor || !editor.value.trim()) {
@@ -664,6 +676,7 @@
     },
 
     loadSharedCode: function (code, title, autoRun, options) {
+      leaveChatForCoding();
       options = options || {};
       var editor = document.getElementById('ss-editor');
       if (!editor || !code) return;
@@ -707,6 +720,7 @@
 
     /* ── Download ────────────────────────────────────────────────────── */
     downloadProgram: function() {
+      leaveChatForCoding();
       var editor = document.getElementById('ss-editor');
       if (!editor || !editor.value.trim()) {
         this.showAlert('Nothing to download!', { title: 'Empty editor', icon: '📥' });
@@ -721,6 +735,7 @@
 
     /* ── Load example ───────────────────────────────────────────────── */
     loadExample: function(id) {
+      leaveChatForCoding();
       var ex = null;
       window.SpeakExamples.forEach(function(e) { if (e.id === id) ex = e; });
       if (!ex) return;

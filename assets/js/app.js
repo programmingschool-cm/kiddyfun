@@ -106,18 +106,26 @@
     if (window.KiddySmartEditor && window.KiddySmartEditor.init) {
       KiddySmartEditor.init(editorEl, {
         onChange: function () {
+          if (document.body.classList.contains('kf-chat-mode')) {
+            UI.syncLineNumbers();
+            if (window.KiddyRoom && KiddyRoom.noteTyping) KiddyRoom.noteTyping();
+            return;
+          }
           Storage.saveLastCode(editorEl.value);
           if (window.KiddyProjectFiles && KiddyProjectFiles.syncFromEditor) KiddyProjectFiles.syncFromEditor();
           UI.syncLineNumbers();
-          if (window.KiddyRoom && KiddyRoom.noteTyping) KiddyRoom.noteTyping();
         },
         onScroll: function () { UI.syncLineNumbers(); },
       });
     } else {
       editorEl.addEventListener('input', function () {
+        if (document.body.classList.contains('kf-chat-mode')) {
+          UI.syncLineNumbers();
+          if (window.KiddyRoom && KiddyRoom.noteTyping) KiddyRoom.noteTyping();
+          return;
+        }
         Storage.saveLastCode(editorEl.value);
         UI.syncLineNumbers();
-        if (window.KiddyRoom && KiddyRoom.noteTyping) KiddyRoom.noteTyping();
       });
       editorEl.addEventListener('scroll', function () { UI.syncLineNumbers(); });
     }
@@ -384,6 +392,7 @@
       unlockMobileTab: unlockMobileTab,
       runProgram: runProgram,
       runSource: runSource,
+      resetStage: resetStage,
       editorCode: editorCode,
     };
 
@@ -460,6 +469,12 @@
 
     function editorCode() {
       var code = editorEl.value.trim();
+      if (document.body.classList.contains('kf-chat-mode')) {
+        if (window.KiddySmartEditor && window.KiddySmartEditor.expandForRun) {
+          return KiddySmartEditor.expandForRun(code).trim();
+        }
+        return code;
+      }
       if (window.KiddyProjectFiles && KiddyProjectFiles.syncFromEditor) KiddyProjectFiles.syncFromEditor();
       if (window.KiddyProjectFiles && KiddyProjectFiles.mergeForRun) {
         code = KiddyProjectFiles.mergeForRun(code);
@@ -483,6 +498,7 @@
     }
 
     function runProgram() {
+      if (document.body.classList.contains('kf-chat-mode')) return;
       var code = editorCode();
       if (!code) { UI.showToast('✏️ Write some code first!'); return; }
       return runSource(code, { award: true });
@@ -583,7 +599,8 @@
       }
 
       interpreter = new Interpreter(Runtime);
-      return interpreter.run(ast.nodes || ast).then(onRunSuccess).catch(function (err) {
+      var runOpts = options.chat ? { keepStage: true } : undefined;
+      return interpreter.run(ast.nodes || ast, runOpts).then(onRunSuccess).catch(function (err) {
         if (myRun !== runSeq) return;
         if (options.fromFriend) {
           UI.showToast('A friend story had a problem');
