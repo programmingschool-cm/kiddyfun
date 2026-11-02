@@ -22,8 +22,6 @@
     try { localStorage.setItem(KEY, th.id); } catch (e) { /* ignore */ }
     if (document.documentElement) {
       document.documentElement.style.setProperty('--kf-primary', th.primary);
-      var dark = th.primary;
-      document.documentElement.style.setProperty('--kf-primary-dark', dark);
     }
     if (!silent && window.UI && UI.showToast) UI.showToast('🎨 Theme: ' + th.name);
   }

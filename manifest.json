@@ -4,8 +4,8 @@
   "description": "Learn programming and English with stories and games",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#10b981",
+  "background_color": "#070b10",
+  "theme_color": "#070b10",
   "icons": [
     {
       "src": "assets/icons/icon-192.png",
