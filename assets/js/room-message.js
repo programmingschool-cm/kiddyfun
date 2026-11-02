@@ -73,8 +73,43 @@
     return { ok: true, preview: firstSay(ast.nodes) };
   }
 
+  var CHAT_SCENES = {
+    school: 1,
+    classroom: 1,
+    jungle: 1,
+    restaurant: 1,
+    home: 1,
+    playground: 1,
+    space: 1,
+  };
+
+  function sceneToken(raw) {
+    return String(raw || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  }
+
+  /**
+   * Chat never shows the studio. An explicit default or unknown scene becomes school.
+   * A snippet with no scene line keeps the stage that is already showing.
+   * A real catalog scene is left alone.
+   */
+  function prepareChatCode(code) {
+    var text = String(code || '').replace(/^\uFEFF/, '');
+    if (!text.trim()) return text;
+    var re = /^([ \t]*)scene([ \t]+)(["'])([^"']*)\3(.*)$/i;
+    var lines = text.split(/\r?\n/);
+    var i;
+    for (i = 0; i < lines.length; i++) {
+      var match = re.exec(lines[i]);
+      if (!match) continue;
+      if (CHAT_SCENES[sceneToken(match[4])]) continue;
+      lines[i] = match[1] + 'scene' + match[2] + match[3] + 'school' + match[3] + match[5];
+    }
+    return lines.join('\n');
+  }
+
   root.KiddyRoomMessage = {
     MAX_CHARS: MAX_CHARS,
     check: check,
+    prepareChatCode: prepareChatCode,
   };
 })(typeof window !== 'undefined' ? window : global);

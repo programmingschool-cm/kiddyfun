@@ -93,5 +93,35 @@ test('broken code is rejected', function () {
   assert(check('scene school').error === 'parse');
 });
 
+var prepare = KiddyRoomMessage.prepareChatCode;
+
+test('a story with no scene keeps going on the current stage', function () {
+  var code = 'Rafi appears\nRafi says "Hello"';
+  assert(prepare(code) === code);
+});
+
+test('default scene becomes school', function () {
+  var code = prepare('scene "default"\nRafi waves');
+  assert(code.indexOf('scene "school"') === 0, code);
+  assert(code.indexOf('default') === -1, code);
+});
+
+test('an unknown scene becomes school and keeps the rest of the line', function () {
+  var code = prepare('scene "park" with walls\nCat appears');
+  assert(code.indexOf('scene "school" with walls') === 0, code);
+});
+
+test('a real scene is left alone', function () {
+  var code = 'scene "playground"\nMina waves';
+  assert(prepare(code) === code);
+});
+
+test('every unknown scene in the snippet becomes school', function () {
+  var code = prepare('scene "beach"\nscene "party"\nRafi dances');
+  assert(code.indexOf('beach') === -1, code);
+  assert(code.indexOf('party') === -1, code);
+  assert(code.split('scene "school"').length === 3, code);
+});
+
 console.log('\n' + passed + ' passed, ' + failed + ' failed');
 if (failed) process.exit(1);

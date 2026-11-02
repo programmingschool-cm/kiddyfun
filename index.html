@@ -47,6 +47,11 @@
       </div>
 
       <div class="d-flex align-items-center gap-1 gap-md-2">
+        <div id="kf-nav-room" class="kf-nav-room">
+          <button type="button" class="kf-nav-action" id="kf-chat-coding">Coding</button>
+          <button type="button" class="kf-nav-action" id="kf-chat-leave">Leave</button>
+          <button type="button" class="kf-nav-action kf-nav-action-danger d-none" id="kf-chat-close">Close room</button>
+        </div>
         <button class="btn btn-light kf-pill-btn border shadow-sm d-inline-flex align-items-center" id="btn-friends-nav" type="button" title="Play with friends" aria-label="Play with friends">
           👫 <span class="d-none d-sm-inline" id="kf-nav-friends-label">Friends</span>
         </button>
@@ -56,12 +61,6 @@
           </button>
           <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-3 mt-2 py-2 kf-examples-menu" id="example-dropdown-menu"></ul>
         </div>
-        <button class="btn btn-light kf-pill-btn border shadow-sm d-inline-flex align-items-center" id="btn-ui-lang" type="button" title="UI language: English / বাংলা" aria-label="Switch language">
-          🇧🇩
-        </button>
-        <button class="btn btn-light kf-pill-btn border shadow-sm d-inline-flex align-items-center" type="button" id="btn-experience-mode" title="Switch Kid / Creator / Studio" aria-label="Switch mode">
-          🧒
-        </button>
       </div>
     </div>
   </nav>
@@ -243,6 +242,7 @@
             </div>
 
             <div class="d-flex gap-2 mt-2" id="kf-run-row">
+              <button type="button" class="kf-chat-stories" id="kf-chat-stories" aria-expanded="false" aria-label="Quick stories">✨</button>
               <button class="kf-btn-run flex-fill" id="btn-run">▶️ RUN</button>
               <button class="kf-btn-stop flex-fill d-none" id="btn-stop">⏹️ STOP</button>
             </div>

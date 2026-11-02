@@ -57,7 +57,10 @@
     this._returning = false;
     this._breakLoop = false;
     this._continueLoop = false;
-    if (!options || !options.keepStage) this.runtime.reset();
+    if (!options || !options.keepStage) {
+      var opening = options && options.resetScene;
+      this.runtime.reset(opening ? { scene: opening } : undefined);
+    }
     return this._execNodes(nodes, this.globalEnv);
   };
 

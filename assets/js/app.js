@@ -599,7 +599,13 @@
       }
 
       interpreter = new Interpreter(Runtime);
-      var runOpts = options.chat ? { keepStage: true } : undefined;
+      var runOpts;
+      if (options.chat) {
+        Runtime.sceneCard = options.sceneCard !== false;
+        runOpts = options.keepStage ? { keepStage: true } : { resetScene: 'school' };
+      } else {
+        Runtime.sceneCard = true;
+      }
       return interpreter.run(ast.nodes || ast, runOpts).then(onRunSuccess).catch(function (err) {
         if (myRun !== runSeq) return;
         if (options.fromFriend) {

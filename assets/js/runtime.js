@@ -72,13 +72,13 @@
       this._startAmbientParticles();
     },
 
-    reset: function () {
+    reset: function (options) {
       this.characters    = {};
       this.score         = 0;
       this.quizResult    = null;
       this.charPositions = {};
       this.charCount     = 0;
-      this.currentScene  = 'default';
+      this.currentScene  = (options && options.scene) || 'default';
       if (this._narratorHideTimer) {
         clearTimeout(this._narratorHideTimer);
         this._narratorHideTimer = null;
@@ -106,7 +106,8 @@
         if (window.StageActions) StageActions.init(this.stage);
         if (window.StagePro) StagePro.clearAmbient(this.stage);
         this._startAmbientParticles();
-        this._setScene('default');
+        var opening = (options && options.scene) || 'default';
+        this._setScene(opening);
       }
       if (this.logPanel)     this.logPanel.innerHTML = '';
       if (this.vocabPanel)   this.vocabPanel.innerHTML = '';
@@ -145,7 +146,7 @@
         if (window.StagePro) {
           /* StagePro provides much richer ambient — skip legacy decorations */
           StagePro.applyAmbient(self.stage, name);
-          StagePro.showSceneTitle(self.stage, def.emoji, def.label);
+          if (self.sceneCard !== false) StagePro.showSceneTitle(self.stage, def.emoji, def.label);
         } else {
           self._addSceneDecorations(def.deco);
         }
@@ -509,6 +510,8 @@
       /* Wait for BOTH typewriter and speech to finish */
       return Promise.all([typingPromise, speechPromise]).then(function () {
         if (window.StageGraphics) StageGraphics.setTalking(charEl, false);
+        var holding = document.body && document.body.classList.contains('kf-chat-mode');
+        if (holding) return;
         if (window.StagePro) StagePro.fadeBubble(charEl, 450);
         var legacy = charEl.querySelector('.ss-bubble');
         if (legacy) {

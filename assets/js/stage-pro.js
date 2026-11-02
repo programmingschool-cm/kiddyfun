@@ -201,7 +201,12 @@
     return typewrite(textEl, fullText, spokenMs);
   }
 
+  function chatHolding() {
+    return !!(document.body && document.body.classList.contains('kf-chat-mode'));
+  }
+
   function fadeBubble(charEl, delay) {
+    if (chatHolding()) return;
     if (!charEl) return;
     var bubble = charEl.querySelector('.kf-pro-bubble');
     if (!bubble) return;

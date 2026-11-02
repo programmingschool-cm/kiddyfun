@@ -63,6 +63,7 @@
   var codingView = 'text';
   var chatView = 'text';
   var codingStashed = false;
+  var stageHeld = false;
 
   function text(key, fallback) {
     if (window.KiddyLocale && KiddyLocale.text) return KiddyLocale.text(key, fallback);
@@ -82,22 +83,27 @@
   }
 
   function randomNick() {
-    return ADJ[Math.floor(Math.random() * ADJ.length)] + ' ' +
-      ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
+    var pool = ADJ.concat(ANIMALS);
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  function firstWord(value) {
+    var raw = String(value || '').replace(/[\u0000-\u001F\u007F]/g, '').trim();
+    var word = raw.split(/\s+/)[0] || '';
+    if (word.length > 24) word = word.slice(0, 24);
+    return word;
   }
 
   function nickname() {
     try {
       var saved = localStorage.getItem(NICK_KEY);
-      if (saved && saved.trim()) return saved.trim().slice(0, 24);
+      if (saved && firstWord(saved)) return setNickname(saved);
     } catch (e) { /* ignore */ }
-    var nick = randomNick();
-    try { localStorage.setItem(NICK_KEY, nick); } catch (e2) { /* ignore */ }
-    return nick;
+    return setNickname(randomNick());
   }
 
   function setNickname(value) {
-    var nick = String(value || '').trim().slice(0, 24);
+    var nick = firstWord(value);
     if (!nick) nick = randomNick();
     try { localStorage.setItem(NICK_KEY, nick); } catch (e) { /* ignore */ }
     return nick;
@@ -185,6 +191,13 @@
   function checkMessage(code) {
     if (!window.KiddyRoomMessage) return { ok: false, error: 'parse' };
     return KiddyRoomMessage.check(code);
+  }
+
+  function prepareCode(code) {
+    if (window.KiddyRoomMessage && KiddyRoomMessage.prepareChatCode) {
+      return KiddyRoomMessage.prepareChatCode(code);
+    }
+    return String(code || '');
   }
 
   function explainCheck(result) {
@@ -294,17 +307,17 @@
   }
 
   function placeTurnRow() {
-    var turn = $('kf-chat-turn');
-    if (!turn) return;
+    var bar = $('kf-chat-bar');
+    if (!bar) return;
     var tabs = $('mobile-tabs');
     var panel = document.querySelector('#code-col .kf-panel');
     var workspace = $('workspace');
     if (window.innerWidth < 992) {
-      if (tabs && tabs.parentNode) tabs.insertAdjacentElement('afterend', turn);
-      else if (workspace) workspace.insertBefore(turn, workspace.firstChild);
+      if (tabs && tabs.parentNode) tabs.insertAdjacentElement('afterend', bar);
+      else if (workspace) workspace.insertBefore(bar, workspace.firstChild);
       return;
     }
-    if (panel) panel.insertBefore(turn, panel.firstChild);
+    if (panel) panel.insertBefore(bar, panel.firstChild);
   }
 
   function packDock() {
@@ -319,7 +332,7 @@
     var status = $('kf-status-bar');
     var err = $('ss-error-panel');
     var editor = $('ss-editor');
-    if (starters) dock.appendChild(starters);
+    if (starters) runRow.insertBefore(starters, runRow.firstChild);
     if (toggle) {
       toggleHome = toggle.parentNode;
       dock.appendChild(toggle);
@@ -374,6 +387,12 @@
     hint.textContent = text('roomStageHint', 'Friends appear here');
   }
 
+  function setStoriesOpen(on) {
+    document.body.classList.toggle('kf-stories-open', !!on);
+    var btn = $('kf-chat-stories');
+    if (btn) btn.setAttribute('aria-expanded', on ? 'true' : 'false');
+  }
+
   function enterChatMode() {
     if (!inChat()) stashCoding();
     document.body.classList.remove('kf-friends-open');
@@ -413,6 +432,8 @@
     if (runBtn) runBtn.disabled = false;
     if (window.KiddyBlocksMode && KiddyBlocksMode.setChatMode) KiddyBlocksMode.setChatMode(false);
     showStageHint(false);
+    setStoriesOpen(false);
+    stageHeld = false;
     if (window.KiddyApp && KiddyApp.resetStage) KiddyApp.resetStage();
     updateRoomPill();
     refreshLabels();
@@ -527,6 +548,7 @@
   }
 
   function spawnMemberAvatars() {
+    if (stageHeld) return;
     if (!inChat() || !room || !window.SpeakRuntime || !SpeakRuntime.characterAppears) return;
     var stage = $('ss-stage');
     memberList.forEach(function (m) {
@@ -646,27 +668,8 @@
     if (list) list.textContent = '';
   }
 
-  function appendTranscript(row) {
-    var list = $('kf-chat-transcript');
-    if (!list || !row) return;
-    var info = actorFor(row.sender_id, row.nickname);
-    var result = checkMessage(row.code || '');
-    var line = (result.ok && result.preview) ? result.preview : text('roomStoryCard', 'A little story');
-    var bubble = document.createElement('div');
-    bubble.className = 'kf-chat-bubble';
-    if (myId && String(row.sender_id) === String(myId)) bubble.classList.add('kf-chat-bubble-mine');
-    bubble.style.borderColor = info.color;
-    var who = document.createElement('span');
-    who.className = 'kf-chat-bubble-who';
-    who.style.color = info.color;
-    who.textContent = row.nickname || info.label;
-    var msg = document.createElement('span');
-    msg.className = 'kf-chat-bubble-line';
-    msg.textContent = line;
-    bubble.appendChild(who);
-    bubble.appendChild(msg);
-    list.appendChild(bubble);
-    list.scrollTop = list.scrollHeight;
+  function appendTranscript() {
+    /* The writing area uses this space. Stories stay on the stage. */
   }
 
   function updateRoomPill() {
@@ -713,29 +716,38 @@
     var row = playQueue[0];
     if (!row) {
       updateRoomPill();
-      spawnMemberAvatars();
+      if (!stageHeld) spawnMemberAvatars();
       return;
     }
-    var result = checkMessage(row.code || '');
+    var code = prepareCode(row.code || '');
+    var result = checkMessage(code);
     if (!result.ok) {
       playQueue.shift();
       updateRoomPill();
       drainQueue();
       return;
     }
+    var carry = stageHeld;
     playing = true;
+    stageHeld = true;
     var gen = playGen;
-    clearBubbles();
+    if (!carry) clearBubbles();
     showFrom(row.nickname);
     var job = Promise.resolve();
+    var mine = !!(myId && String(row.sender_id) === String(myId));
     if (window.KiddyApp && KiddyApp.runSource) {
-      job = KiddyApp.runSource(row.code, { fromFriend: true, award: false, chat: true }) || Promise.resolve();
+      job = KiddyApp.runSource(code, {
+        fromFriend: true,
+        award: false,
+        chat: true,
+        keepStage: carry,
+        sceneCard: !mine,
+      }) || Promise.resolve();
     }
     Promise.resolve(job).then(function () {
       if (gen !== playGen) return;
       if (playQueue[0] === row) playQueue.shift();
       playing = false;
-      spawnMemberAvatars();
       updateRoomPill();
       drainQueue();
     }, function () {
@@ -911,6 +923,7 @@
     seenPlay = {};
     lastSenderId = '';
     actorByUser = {};
+    stageHeld = false;
     clearTranscript();
     updateRoomPill();
   }
@@ -992,7 +1005,7 @@
 
   function starterCode(kind) {
     var actor = myActorName();
-    var scenes = { hello: 'school', wave: 'park', dance: 'party', scene: 'beach' };
+    var scenes = { hello: 'school', wave: 'playground', dance: 'jungle', scene: 'space' };
     var lines = { hello: 'Hello!', wave: 'Hi friends!', dance: "Let's dance!", scene: 'Come see this!' };
     var actions = { hello: 'waves', wave: 'waves', dance: 'dances', scene: 'smiles' };
     var scene = scenes[kind] || 'school';
@@ -1031,6 +1044,7 @@
       open();
       return;
     }
+    code = prepareCode(code);
     var result = checkMessage(code);
     if (!result.ok) {
       toast(explainCheck(result));
@@ -1174,6 +1188,7 @@
     if (line) line.textContent = '';
     if (inChat()) {
       document.body.classList.add('kf-chat-lobby');
+      setStoriesOpen(false);
       showLobby();
       if (window.KiddyApp && KiddyApp.resetStage) KiddyApp.resetStage();
       showStageHint(true);
@@ -1272,23 +1287,25 @@
     if (!body || body.dataset.ready === '1') return;
     body.dataset.ready = '1';
     body.innerHTML =
-      '<div id="kf-chat-turn" class="kf-chat-turn" role="status">' +
-        '<span id="kf-chat-turn-text" class="kf-chat-turn-text" aria-live="polite"></span>' +
-        '<div class="kf-chat-turn-actions">' +
-          '<button type="button" class="btn btn-sm btn-outline-primary" id="kf-chat-coding"></button>' +
-          '<button type="button" class="btn btn-sm btn-outline-secondary" id="kf-chat-leave"></button>' +
-          '<button type="button" class="btn btn-sm btn-outline-danger d-none" id="kf-chat-close"></button>' +
-        '</div>' +
-      '</div>' +
       '<div id="kf-chat-bar" class="kf-chat-bar">' +
         '<div class="kf-chat-meta">' +
-          '<div class="kf-chat-code-chip">' +
-            '<button type="button" class="kf-chat-code" id="kf-chat-code"></button>' +
-            '<button type="button" class="kf-chat-link" id="kf-chat-copy-link">🔗</button>' +
+          '<div class="kf-chat-brand">' +
+            '<div class="kf-chat-code-chip">' +
+              '<button type="button" class="kf-chat-code" id="kf-chat-code"></button>' +
+              '<button type="button" class="kf-chat-link" id="kf-chat-copy-link" aria-label="Copy link">' +
+                '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.07 0l2.12-2.12a5 5 0 0 0-7.07-7.07L10.5 5.4"/><path d="M14 11a5 5 0 0 0-7.07 0L4.8 13.12a5 5 0 0 0 7.07 7.07L13.5 18.6"/></svg>' +
+              '</button>' +
+            '</div>' +
+            '<div class="kf-chat-status">' +
+              '<span id="kf-chat-turn-text" class="kf-chat-turn-text" role="status" aria-live="polite"></span>' +
+              '<span class="kf-chat-dot" aria-hidden="true"></span>' +
+              '<span class="kf-chat-sub" id="kf-chat-until"></span>' +
+            '</div>' +
           '</div>' +
-          '<span class="kf-chat-sub" id="kf-chat-you"></span>' +
-          '<span class="kf-chat-sub" id="kf-chat-until"></span>' +
-          '<div class="kf-chat-people" id="kf-chat-people"></div>' +
+          '<div class="kf-chat-side">' +
+            '<span class="kf-chat-sub" id="kf-chat-you"></span>' +
+            '<div class="kf-chat-people" id="kf-chat-people"></div>' +
+          '</div>' +
         '</div>' +
       '</div>' +
       '<div id="kf-friend-lobby">' +
@@ -1297,7 +1314,8 @@
         '<div id="kf-friend-lobby-form">' +
           '<p class="kf-friend-lead" id="kf-friend-lead"></p>' +
           '<label class="form-label small fw-semibold" for="kf-friend-nick" id="kf-friend-nick-label"></label>' +
-          '<input type="text" class="form-control mb-2" id="kf-friend-nick" maxlength="24" autocomplete="nickname">' +
+          '<input type="text" class="form-control mb-1" id="kf-friend-nick" maxlength="24" autocomplete="nickname" autocapitalize="off">' +
+          '<p class="kf-friend-lead mb-2" id="kf-friend-nick-hint"></p>' +
           '<button type="button" class="btn btn-success w-100 mb-2" id="kf-friend-make"></button>' +
           '<p class="kf-friend-or" id="kf-friend-or"></p>' +
           '<input type="text" class="form-control mb-2 kf-room-code-input" id="kf-friend-code-input" maxlength="7" autocapitalize="characters" autocomplete="off" spellcheck="false">' +
@@ -1309,7 +1327,7 @@
         '<button type="button" class="kf-room-chip" data-starter="hello">👋 <span class="kf-starter-label">Hello</span></button>' +
         '<button type="button" class="kf-room-chip" data-starter="wave">🙋 <span class="kf-starter-label">Wave</span></button>' +
         '<button type="button" class="kf-room-chip" data-starter="dance">💃 <span class="kf-starter-label">Dance</span></button>' +
-        '<button type="button" class="kf-room-chip" data-starter="scene">🏖️ <span class="kf-starter-label">My scene</span></button>' +
+        '<button type="button" class="kf-room-chip" data-starter="scene">🚀 <span class="kf-starter-label">My scene</span></button>' +
       '</div>' +
       '<div id="kf-chat-transcript" class="kf-chat-transcript" aria-live="polite"></div>' +
       '<p class="kf-friend-composing" id="kf-friend-composing" aria-live="polite"></p>' +
@@ -1325,6 +1343,13 @@
     $('kf-friend-code-input').addEventListener('keydown', function (e) {
       if (e.key === 'Enter') joinRoom(e.target.value);
     });
+    $('kf-friend-nick').addEventListener('keydown', function (e) {
+      if (e.key === ' ') e.preventDefault();
+    });
+    $('kf-friend-nick').addEventListener('input', function (e) {
+      var word = firstWord(e.target.value);
+      if (e.target.value !== word) e.target.value = word;
+    });
     $('kf-friend-nick').addEventListener('change', function () { readNickInput(); });
     $('kf-chat-code').addEventListener('click', function () {
       if (room) copyText(formatCode(room.code));
@@ -1338,6 +1363,20 @@
     var lobbyCoding = $('kf-lobby-coding');
     if (lobbyCoding) lobbyCoding.addEventListener('click', exitToCoding);
     $('kf-room-pill').addEventListener('click', open);
+    var storiesBtn = $('kf-chat-stories');
+    if (storiesBtn) {
+      storiesBtn.addEventListener('click', function () {
+        setStoriesOpen(!document.body.classList.contains('kf-stories-open'));
+      });
+    }
+    document.addEventListener('click', function (e) {
+      if (!document.body.classList.contains('kf-stories-open')) return;
+      var btn = $('kf-chat-stories');
+      var box = $('kf-chat-starters');
+      if (btn && btn.contains(e.target)) return;
+      if (box && box.contains(e.target)) return;
+      setStoriesOpen(false);
+    });
     document.querySelectorAll('#kf-chat-starters [data-starter]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         if (!room || !myTurn()) {
@@ -1345,6 +1384,7 @@
           return;
         }
         applyDraft(starterCode(btn.getAttribute('data-starter')));
+        setStoriesOpen(false);
       });
     });
     var runBtn = $('btn-run');
@@ -1381,6 +1421,8 @@
     if (lead) lead.textContent = text('roomLead', 'Make a room and share the code. Friends send stories by writing code.');
     var nickLabel = $('kf-friend-nick-label');
     if (nickLabel) nickLabel.textContent = text('roomNick', 'Fun name');
+    var nickHint = $('kf-friend-nick-hint');
+    if (nickHint) nickHint.textContent = text('roomNickHint', 'One word, like Panda');
     var make = $('kf-friend-make');
     if (make) make.textContent = text('roomMake', 'Make a room');
     var or = $('kf-friend-or');
@@ -1394,16 +1436,24 @@
     }
     var copyLink = $('kf-chat-copy-link');
     if (copyLink) {
-      copyLink.textContent = '🔗';
       copyLink.title = text('roomCopyLink', 'Copy link');
       copyLink.setAttribute('aria-label', text('roomCopyLink', 'Copy link'));
     }
     var leave = $('kf-chat-leave');
-    if (leave) leave.textContent = text('roomLeave', 'Leave');
+    if (leave) {
+      leave.textContent = text('roomLeave', 'Leave');
+      leave.title = leave.textContent;
+    }
     var close = $('kf-chat-close');
-    if (close) close.textContent = text('roomClose', 'Close room');
+    if (close) {
+      close.textContent = text('roomClose', 'Close room');
+      close.title = close.textContent;
+    }
     var coding = $('kf-chat-coding');
-    if (coding) coding.textContent = text('roomCoding', 'Coding');
+    if (coding) {
+      coding.textContent = text('roomCoding', 'Coding');
+      coding.title = coding.textContent;
+    }
     var lobbyCoding = $('kf-lobby-coding');
     if (lobbyCoding) lobbyCoding.textContent = text('roomBackToCoding', 'Back to coding');
     var codeInput = $('kf-friend-code-input');
@@ -1416,6 +1466,11 @@
     if (wave) wave.textContent = text('starterWave', 'Wave');
     if (dance) dance.textContent = text('starterDance', 'Dance');
     if (scene) scene.textContent = text('starterScene', 'My scene');
+    var storiesBtn = $('kf-chat-stories');
+    if (storiesBtn) {
+      storiesBtn.title = text('roomStories', 'Quick stories');
+      storiesBtn.setAttribute('aria-label', text('roomStories', 'Quick stories'));
+    }
     syncMobileTabs();
     if (room) fillLiveChrome();
     else updateRoomPill();
